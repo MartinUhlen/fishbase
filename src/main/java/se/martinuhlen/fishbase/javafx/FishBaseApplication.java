@@ -1,7 +1,7 @@
 package se.martinuhlen.fishbase.javafx;
 
 import static javafx.beans.binding.Bindings.createStringBinding;
-import static javafx.geometry.Pos.CENTER;
+import static javafx.geometry.Side.BOTTOM;
 import static javafx.scene.control.Alert.AlertType.CONFIRMATION;
 import static javafx.scene.control.ButtonBar.ButtonData.OK_DONE;
 import static javafx.scene.control.ButtonType.CANCEL;
@@ -16,12 +16,13 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 import javafx.application.Application;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.Tooltip;
@@ -94,18 +95,16 @@ public class FishBaseApplication extends Application
 		drivePersistence = new DrivePersistence(driveService);
 		dao = FishBaseDao.create(drivePersistence);
 
-		Tab startTab = new Tab("Start", createStartTab());
-		startTab.setClosable(false);
-		tabPane.getTabs().add(startTab);
 		tabPane.getSelectionModel().selectedItemProperty().addListener((obs, oldTab, newTab) -> selectView());
 		tabPane.setTabClosingPolicy(ALL_TABS);
 
-		Button addButton = createButton("Add", "add.png", "CTRL+N", addAction);
-		Button saveButton = createButton("Save", "save.png", "CTRL+S", saveAction);
-		Button refreshButton = createButton("Refresh", "refresh.png", "F5", refreshAction);
-		Button deleteButton = createButton("Delete", "delete.png", "CTRL+D", deleteAction);
+		Button startButton = createStartButton();
+		Button addButton = createActionButton("Add", "add.png", "CTRL+N", addAction);
+		Button saveButton = createActionButton("Save", "save.png", "CTRL+S", saveAction);
+		Button refreshButton = createActionButton("Refresh", "refresh.png", "F5", refreshAction);
+		Button deleteButton = createActionButton("Delete", "delete.png", "CTRL+D", deleteAction);
 		saveAction.enabledProperty().addListener((obs, old, enabled) ->	refreshButton.setGraphic(image(enabled ? "undo.png" : "refresh.png")));
-		HBox toolbar = new HBox(addButton, saveButton, refreshButton, deleteButton);
+		HBox toolbar = new HBox(startButton, addButton, saveButton, refreshButton, deleteButton);
 
 		BorderPane borderPane = new BorderPane();
 		borderPane.setTop(toolbar);
@@ -134,17 +133,48 @@ public class FishBaseApplication extends Application
 		});
 	}
 
-	private Button createButton(String text, String imageName, String shortcut, Action action)
+	private Button createStartButton()
+    {
+	    ContextMenu menu = new ContextMenu(
+                createOpenItem("Trips", TripView.class),
+                createOpenItem("Specimens", SpecimenView.class),
+                createOpenItem("Species", SpecieView.class),
+                createOpenItem("Photos", PhotoView.class));
+	    menu.setAutoHide(true);
+
+	    Button button = createButton("Menu", "menu.png", "CTRL+SPACE");
+	    button.setOnAction(e ->
+	    {
+	        menu.show(button, BOTTOM, 0, 0);
+	        menu.requestFocus();
+	    });
+	    return button;
+    }
+
+    private <V extends View> MenuItem createOpenItem(String text, Class<V> typeOfView)
+    {
+        MenuItem item = new MenuItem(text);
+        item.setOnAction(e -> openTab(typeOfView));
+        return item;
+    }
+
+    private Button createActionButton(String text, String imageName, String shortcut, Action action)
 	{
-		KeyCombination keyCombination = KeyCombination.valueOf(shortcut);
-		Button button = new Button();
-		button.setGraphic(image(imageName));
-		button.setTooltip(new Tooltip(text + " (" + keyCombination.getDisplayText() + ")"));
-		scene.getAccelerators().put(keyCombination, () -> button.fire());
-		button.setOnAction(action);
+        Button button = createButton(text, imageName, shortcut);
+        button.setOnAction(action);
 		button.disableProperty().bind(action.enabledProperty().not());
 		return button;
 	}
+
+    private Button createButton(String text, String imageName, String shortcut)
+    {
+        KeyCombination keyCombination = KeyCombination.valueOf(shortcut);
+        Button button = new Button();
+        button.setGraphic(image(imageName));
+        button.setTooltip(new Tooltip(text + " (" + keyCombination.getDisplayText() + ")"));
+        scene.getAccelerators().put(keyCombination, () -> button.fire());
+        return button;
+    }
 
 	private ImageView image(String name)
 	{
@@ -166,24 +196,6 @@ public class FishBaseApplication extends Application
 		return tabToView.getOrDefault(selectedTab, EMPTY_VIEW);
 	}
 
-	private Node createStartTab()
-	{
-		HBox buttons = new HBox(10,
-				createOpenButton("Trips", TripView.class),
-				createOpenButton("Specimens", SpecimenView.class),
-				createOpenButton("Species", SpecieView.class),
-				createOpenButton("Photos", PhotoView.class));
-		buttons.setAlignment(CENTER);
-		return buttons;
-	}
-
-	private <V extends View> Button createOpenButton(String text, Class<V> typeOfView)
-	{
-		Button button = new Button(text);
-		button.setOnAction(e -> openTab(typeOfView));
-		return button;
-	}
-
 	private <V extends View> V openTab(Class<V> typeOfView)
 	{
 		Optional<Entry<Tab, View>> tabWithView = tabToView
@@ -201,35 +213,31 @@ public class FishBaseApplication extends Application
 		return view;
 	}
 
-	private <V extends View> void addTab(Class<V> typeOfView) // FIXME Merge with createTab(View view)?
-	{
-		@SuppressWarnings("unchecked")
-		Supplier<V> supplier = (Supplier<V>) viewSuppliers.get(typeOfView);
-		V view = supplier.get();
-		view.refreshAction().handle(null);
-		Tab tab = createTab(view);
-		tabPane.getTabs().add(tab);
-		selectTab(tab);
-	}
+    private <V extends View> void addTab(Class<V> typeOfView)
+    {
+        @SuppressWarnings("unchecked")
+        Supplier<V> supplier = (Supplier<V>) viewSuppliers.get(typeOfView);
+        V view = supplier.get();
+        view.refreshAction().handle(null);
 
-	private Tab createTab(View view)
-	{
-		Tab tab = new Tab("", view.getContent());
-		tabToView.put(tab, view);
-		tab.textProperty().bind(createStringBinding(
-				() -> view.getTitle() + (view.hasChanges() ? " *" : ""),
-				view.titleProperty(), saveAction.enabledProperty()));
+        Tab tab = new Tab("", view.getContent());
+        tabToView.put(tab, view);
+        tab.textProperty().bind(createStringBinding(
+                () -> view.getTitle() + (view.hasChanges() ? " *" : ""),
+                view.titleProperty(), saveAction.enabledProperty()));
 
-		tab.setOnCloseRequest(e ->
-		{
-			if (view.hasChanges() && !view.discardChanges())
-			{
-				e.consume();
-			}
-		});
-		tab.setOnClosed(e -> tabToView.remove(tab));
-		return tab;
-	}
+        tab.setOnCloseRequest(e ->
+        {
+            if (view.hasChanges() && !view.discardChanges())
+            {
+                e.consume();
+            }
+        });
+        tab.setOnClosed(e -> tabToView.remove(tab));
+
+        tabPane.getTabs().add(tab);
+        selectTab(tab);
+    }
 
 	private void selectTab(Tab tab)
 	{
