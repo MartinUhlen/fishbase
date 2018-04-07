@@ -120,7 +120,7 @@ public final class Specimen extends Domain<Specimen>
 	{
 		return new EqualsBuilder()
 				.append(this.tripId, that.tripId)
-				.append(this.specie, that.specie)
+				.append(this.specie.getId(), that.specie.getId())
 				.append(this.weight, that.weight)
 				.append(this.length, that.length)
 				.append(this.location, that.location)

@@ -1,5 +1,6 @@
 package se.martinuhlen.fishbase.dao;
 
+import java.util.Collection;
 import java.util.List;
 
 import se.martinuhlen.fishbase.domain.Specie;
@@ -19,11 +20,11 @@ public interface FishBaseDao
 
 	void saveSpecie(Specie specie);
 
-	void saveSpecies(Iterable<? extends Specie> species);
+	void saveSpecies(Collection<? extends Specie> species);
 
 	boolean isSpecieDeletable(Specie specie);
 
-	void deleteSpecies(Iterable<? extends Specie> species);
+	void deleteSpecies(Collection<? extends Specie> species);
 
 	List<Specimen> getSpecimens();
 
@@ -31,9 +32,9 @@ public interface FishBaseDao
 
 	void saveSpecimen(Specimen specimen);
 
-	void saveSpecimens(Iterable<? extends Specimen> specimens);
+	void saveSpecimens(Collection<? extends Specimen> specimens);
 
-	void deleteSpecimens(Iterable<? extends Specimen> specimens);
+	void deleteSpecimens(Collection<? extends Specimen> specimens);
 
 	List<Trip> getTrips();
 

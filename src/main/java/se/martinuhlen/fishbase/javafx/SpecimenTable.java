@@ -7,39 +7,134 @@ import static se.martinuhlen.fishbase.javafx.Converters.lengthConverter;
 import static se.martinuhlen.fishbase.javafx.Converters.specieConverter;
 import static se.martinuhlen.fishbase.javafx.Converters.timeConverter;
 import static se.martinuhlen.fishbase.javafx.utils.Constants.RIGHT_ALIGNMENT;
+import static se.martinuhlen.fishbase.javafx.utils.Images.getImageView16;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
-import javafx.scene.control.TableCell;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
 import javafx.scene.control.cell.ComboBoxTableCell;
 import javafx.scene.control.cell.ProgressBarTableCell;
-import javafx.util.Callback;
 import javafx.util.converter.IntegerStringConverter;
 import se.martinuhlen.fishbase.domain.Specie;
+import se.martinuhlen.fishbase.domain.Specimen;
+import se.martinuhlen.fishbase.domain.Trip;
 import se.martinuhlen.fishbase.javafx.data.SpecimenWrapper;
 
 class SpecimenTable extends TableView<SpecimenWrapper>
 {
+    private final ObservableList<SpecimenWrapper> specimens;
 	private final Collection<Specie> species;
+    private final Supplier<Trip> tripSupplier;
+    private final Consumer<String> tripOpener;
 
-	SpecimenTable(ObservableList<SpecimenWrapper> specimens, Collection<Specie> species)
+    private SpecimenTable(ObservableList<SpecimenWrapper> sourceSpecimens, ObservableList<SpecimenWrapper> tableSpecimens, Collection<Specie> species, Supplier<Trip> tripSupplier, Consumer<String> tripOpener)
+    {
+        this.specimens = sourceSpecimens;
+        this.species = species;
+        this.tripSupplier = tripSupplier;
+        this.tripOpener = tripOpener;
+        setSpecimens(tableSpecimens);
+        getColumns().setAll(createColumns());
+        setContextMenu(createContextMenu());
+        setEditable(true);
+    }
+
+    SpecimenTable(ObservableList<SpecimenWrapper> specimens, Collection<Specie> species, Supplier<Trip> tripSupplier)
+    {
+        this(specimens, specimens, species, tripSupplier, null);
+    }
+
+	@SuppressWarnings("unchecked")
+    SpecimenTable(FilteredList<SpecimenWrapper> filteredSpecimens, Collection<Specie> species, Consumer<String> tripOpener)
 	{
-		this.species = species;
-		setSpecimens(specimens);
-		getColumns().setAll(createColumns());
-		setEditable(true);
+	    this((ObservableList<SpecimenWrapper>) filteredSpecimens.getSource(), filteredSpecimens, species, null, tripOpener);
 	}
 
-	private void setSpecimens(ObservableList<SpecimenWrapper> specimens)
+    private ContextMenu createContextMenu()
+    {
+	    List<MenuItem> items = new ArrayList<>();
+	    MenuItem openTrip = new MenuItem("Open trip", getImageView16("window_next.png"));
+	    if (tripOpener != null)
+	    {
+    	    openTrip.setOnAction(e -> tripOpener.accept(getSelectedSpecimen().getTripId()));
+    	    items.add(openTrip);
+    	    items.add(new SeparatorMenuItem());
+	    }
+
+        MenuItem add = new MenuItem("Add", getImageView16("add.png"));
+        if (tripSupplier != null)
+        {
+            add.setOnAction(e -> editSpecimen(true, createNewSpecimen(), s -> specimens.add(new SpecimenWrapper(s)))); // FIXME Must also add a listener (SpecimenView)?
+            items.add(add);
+        }
+
+        MenuItem copy = new MenuItem("Copy", getImageView16("copy.png"));
+        copy.setOnAction(e -> editSpecimen(true, getSelectedSpecimen().copyAsNew(), s -> specimens.add(new SpecimenWrapper(s))));
+        items.add(copy);
+
+        MenuItem edit = new MenuItem("Edit", getImageView16("edit.png"));
+        edit.setOnAction(e -> editSpecimen(false, getSelectedSpecimen().copy(), s -> getSelectedSpecimenWrapper().setWrapee(s)));
+        items.add(edit);
+
+        MenuItem remove = new MenuItem("Remove", getImageView16("delete.png"));
+        remove.setOnAction(e -> specimens.remove(getSelectedSpecimenWrapper()));
+        items.add(remove);
+
+        ContextMenu menu = new ContextMenu();
+        menu.getItems().setAll(items);
+        menu.setOnShowing(e -> asList(openTrip, copy, edit, remove).forEach(item -> item.setDisable(getSelectionModel().isEmpty())));
+        return menu;
+    }
+
+    private Specimen getSelectedSpecimen()
+    {
+        return getSelectedSpecimenWrapper().getWrapee();
+    }
+
+    private SpecimenWrapper getSelectedSpecimenWrapper()
+    {
+        return getSelectionModel().getSelectedItem();
+    }
+
+    private void editSpecimen(boolean add, Specimen initialSpecimen, Consumer<Specimen> handler)
+    {
+        new SpecimenDialog(add, species, initialSpecimen)
+            .showAndWait()
+            .ifPresent(specimen ->
+            {
+                handler.accept(specimen);
+                requestFocus();
+                getItems().stream().filter(s -> s.getWrapee().equalsId(specimen)).findAny().ifPresent(sw ->
+                {
+                    getSelectionModel().select(sw);
+                });
+            });
+    }
+
+    private Specimen createNewSpecimen()
+    {
+        Trip trip = tripSupplier.get();
+        return Specimen.asNew(trip.getId())
+                        .setInstant(trip.getStartDate().atStartOfDay());
+    }
+
+    private void setSpecimens(ObservableList<SpecimenWrapper> tableSpecimens)
 	{
-		SortedList<SpecimenWrapper> sortedList = new SortedList<>(specimens);
+		SortedList<SpecimenWrapper> sortedList = new SortedList<>(tableSpecimens);
 		setItems(sortedList);
 		sortedList.comparatorProperty().bind(comparatorProperty());
 	}
@@ -48,17 +143,13 @@ class SpecimenTable extends TableView<SpecimenWrapper>
 	{
 		TableColumn<SpecimenWrapper, Specie> specieColumn = new TableColumn<>("Specie");
 		specieColumn.setCellValueFactory(cdf -> cdf.getValue().specieProperty());
-		specieColumn.setCellFactory(new Callback<>()
-		{
-			@Override
-			public TableCell<SpecimenWrapper, Specie> call(TableColumn<SpecimenWrapper, Specie> c)
-			{
-				ComboBoxTableCell<SpecimenWrapper, Specie> cell = new ComboBoxTableCell<>();
-				cell.getItems().setAll(species);
-				cell.setConverter(specieConverter());
-				return cell;
-			}
-		});
+		specieColumn.setCellFactory(c ->
+        {
+        	ComboBoxTableCell<SpecimenWrapper, Specie> cell = new ComboBoxTableCell<>();
+        	cell.getItems().setAll(species);
+        	cell.setConverter(specieConverter());
+        	return cell;
+        });
 
 		TableColumn<SpecimenWrapper, Integer> weightColumn = new TableColumn<>("Weight");
 		weightColumn.setCellValueFactory(cdf -> cdf.getValue().weightProperty());
@@ -67,37 +158,30 @@ class SpecimenTable extends TableView<SpecimenWrapper>
 
 		TableColumn<SpecimenWrapper, Double> ratioColumn = new TableColumn<>("Ratio");
 		ratioColumn.setCellValueFactory(cdf -> cdf.getValue().ratioProperty());
-		ratioColumn.setCellFactory(new Callback<>()
-		{
-			@Override
-			public TableCell<SpecimenWrapper, Double> call(TableColumn<SpecimenWrapper, Double> column)
-			{
-				return new ProgressBarTableCell<>()
-				{
-					@Override
-					public void updateItem(Double ratio, boolean empty)
-					{
-						super.updateItem(ratio, empty);
-						setTooltip(empty ? null : new Tooltip(((int) (ratio * 100)) + "%"));
-						if (!empty)
-						{
-							if (ratio >= 1.0)
-							{
-								getGraphic().setStyle("-fx-accent: green;");
-							}
-							else if (ratio <= 0.5)
-							{
-								getGraphic().setStyle("-fx-accent: red;");
-							}
-							else
-							{
-								getGraphic().setStyle(null);
-							}
-						}
-					}
-				};
-			}
-		});
+		ratioColumn.setCellFactory(column -> new ProgressBarTableCell<>()
+        {
+        	@Override
+        	public void updateItem(Double ratio, boolean empty)
+        	{
+        		super.updateItem(ratio, empty);
+        		setTooltip(empty ? null : new Tooltip(((int) (ratio * 100)) + "%"));
+        		if (!empty)
+        		{
+        			if (ratio >= 1.0)
+        			{
+        				getGraphic().setStyle("-fx-accent: green;");
+        			}
+        			else if (ratio <= 0.5)
+        			{
+        				getGraphic().setStyle("-fx-accent: red;");
+        			}
+        			else
+        			{
+        				getGraphic().setStyle(null);
+        			}
+        		}
+        	}
+        });
 
 		TableColumn<SpecimenWrapper, Float> lengthColumn = new TableColumn<>("Length");
 		lengthColumn.setStyle(RIGHT_ALIGNMENT);

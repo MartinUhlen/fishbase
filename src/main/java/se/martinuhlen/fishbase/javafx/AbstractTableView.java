@@ -10,6 +10,7 @@ import static javafx.scene.control.ButtonBar.ButtonData.OK_DONE;
 import static javafx.scene.control.ButtonType.CANCEL;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -41,8 +42,8 @@ abstract class AbstractTableView<W extends Wrapper<D>, D extends Domain<D>> impl
 	private final Logger logger = Logger.getLogger(getClass());
 	private final ReadOnlyStringProperty titleProperty;
 	private final Supplier<List<D>> loader;
-	private final Consumer<Iterable<D>> saver;
-	private final Consumer<Iterable<D>> deleter;
+	private final Consumer<Collection<D>> saver;
+	private final Consumer<Collection<D>> deleter;
 
 	private final TextField filterField;
 	private TableView<W> table;
@@ -56,7 +57,7 @@ abstract class AbstractTableView<W extends Wrapper<D>, D extends Domain<D>> impl
 
 	private Node content;
 
-	AbstractTableView(String title, Supplier<List<D>> loader, Consumer<Iterable<D>> saver, Consumer<Iterable<D>> deleter)
+	AbstractTableView(String title, Supplier<List<D>> loader, Consumer<Collection<D>> saver, Consumer<Collection<D>> deleter)
 	{
 		this.titleProperty = new ReadOnlyStringWrapper(title).getReadOnlyProperty();
 		this.loader = loader;
@@ -162,11 +163,16 @@ abstract class AbstractTableView<W extends Wrapper<D>, D extends Domain<D>> impl
 			Set<String> currentIds = currentList().stream().map(Domain::getId).collect(toSet());
 			List<D> rowsToDelete = unchangedList.stream().filter(t -> !currentIds.contains(t.getId())).collect(toList());
 			logger.log("Deleting: (" + rowsToDelete.size() + ") " + rowsToDelete);
-			deleter.accept(rowsToDelete);
+			deleteRows(rowsToDelete);
 
 			refresh();
 		}
 	}
+
+    void deleteRows(List<D> rowsToDelete)
+    {
+        deleter.accept(rowsToDelete);
+    }
 
 	@Override
 	public final Action refreshAction()

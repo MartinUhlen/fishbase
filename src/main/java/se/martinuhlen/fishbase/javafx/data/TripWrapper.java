@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.property.Property;
@@ -103,13 +105,37 @@ public class TripWrapper extends Wrapper<Trip>
 				change.getRemoved().forEach(s -> s.removeAllListeners());
 			}
 		});
+		specimenWrappers.addListener((Change<? extends SpecimenWrapper> change) ->
+		{
+		    if (!syncing.get())
+		    {
+		        while(change.next())
+		        {
+		            removeSpecimensFromPhotos(change.getRemoved());
+		        }
+		    }
+		});
 		property.addListener(obs -> sync(syncing, () ->
 		{
 			specimenWrappers.setAll(property.getValue().stream().map(s -> new SpecimenWrapper(s)).collect(toList()));
 		}));
 	}
 
-	private void sync(AtomicBoolean syncing, Runnable action)
+    private void removeSpecimensFromPhotos(List<? extends SpecimenWrapper> removedSpecimens)
+    {
+        Set<String> removedSpecimenIds = removedSpecimens.stream().map(sw -> sw.getWrapee().getId()).collect(toSet());
+        List<FishingPhoto> photosWithoutSpecimens = photos()
+                .stream()
+                .map(photo -> photo.withoutSpecimens(removedSpecimenIds))
+                .collect(toList());
+
+        if (!photos().equals(photosWithoutSpecimens))
+        {
+            photos().setAll(photosWithoutSpecimens);
+        }
+    }
+
+    private void sync(AtomicBoolean syncing, Runnable action)
 	{
 		if (!syncing.get())
 		{
@@ -119,27 +145,13 @@ public class TripWrapper extends Wrapper<Trip>
 		}
 	}
 
-	public SpecimenWrapper addSpecimen()
+    @VisibleForTesting
+	SpecimenWrapper addSpecimen()
 	{
-		return addSpecimen(Specimen.asNew(getWrapee().getId()));
-	}
-
-	public SpecimenWrapper addSpecimen(Specimen newSpecimen)
-	{
-		SpecimenWrapper newWrapper = new SpecimenWrapper(newSpecimen);
-		specimenWrappers().add(newWrapper);
-		return newWrapper;
-	}
-
-	public void removeSpecimen(SpecimenWrapper specimen)
-	{
-		String specimenId = specimen.getWrapee().getId();
-		specimenWrappers().remove(specimen);
-		List<FishingPhoto> photosWithoutSpecimen = photos().stream().map(photo -> photo.withoutSpecimen(specimenId)).collect(toList());
-		if (!photos().equals(photosWithoutSpecimen))
-		{
-			photos().setAll(photosWithoutSpecimen);
-		}
+        Specimen newSpecimen = Specimen.asNew(getWrapee().getId());
+        SpecimenWrapper newWrapper = new SpecimenWrapper(newSpecimen);
+        specimenWrappers().add(newWrapper);
+        return newWrapper;
 	}
 
 	private List<FishingPhoto> initialPhotos = emptyList();

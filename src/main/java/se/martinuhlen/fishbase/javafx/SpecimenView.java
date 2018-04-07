@@ -15,8 +15,6 @@ import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableView;
 import javafx.scene.layout.StackPane;
 import se.martinuhlen.fishbase.dao.FishBaseDao;
@@ -44,26 +42,15 @@ class SpecimenView extends AbstractTableView<SpecimenWrapper, Specimen>
 		this.photoService = photoService;
 		this.tripOpener = tripOpener;
 		this.slideshow = new SlideshowPane();
-		photoLoader = new PhotoLoader();
+		this.photoLoader = new PhotoLoader();
 	}
 
 	@Override
 	TableView<SpecimenWrapper> createTable(FilteredList<SpecimenWrapper> filteredList)
 	{
-		SpecimenTable specimenTable = new SpecimenTable(filteredList, dao.getSpecies());
+		SpecimenTable specimenTable = new SpecimenTable(filteredList, dao.getSpecies(), tripOpener);
 		specimenTable.getSelectionModel().selectedItemProperty().addListener(obs -> photoLoader.restart());
-		specimenTable.setContextMenu(createContextMenu());
 		return specimenTable;
-	}
-
-	private ContextMenu createContextMenu()
-	{
-		ContextMenu menu = new ContextMenu();
-		MenuItem openTrip = new MenuItem("Open trip");
-		menu.getItems().add(openTrip);
-		openTrip.setOnAction(e -> tripOpener.accept(getTable().getSelectionModel().getSelectedItem().getWrapee().getTripId()));
-		menu.setOnShowing(e -> openTrip.setDisable(getTable().getSelectionModel().isEmpty()));
-		return menu;
 	}
 
 	@Override
@@ -92,6 +79,24 @@ class SpecimenView extends AbstractTableView<SpecimenWrapper, Specimen>
 	{
 		return new SpecimenWrapper(specimen);
 	}
+
+	@Override
+	void deleteRows(List<Specimen> rowsToDelete)
+	{
+	    super.deleteRows(rowsToDelete);
+	    removeSpecimensFromPhotos(rowsToDelete);
+	}
+
+    private void removeSpecimensFromPhotos(List<Specimen> rowsToDelete)
+    {
+        rowsToDelete.forEach(specimen ->
+	    {
+	        photoService.getSpecimenPhotos(specimen.getTripId(), specimen.getId())
+	                .stream()
+	                .map(photo -> photo.withoutSpecimen(specimen.getId()))
+	                .forEach(photo -> photoService.savePhoto(photo));
+	    });
+    }
 
 	private class PhotoLoader extends Service<List<FishingPhoto>>
 	{

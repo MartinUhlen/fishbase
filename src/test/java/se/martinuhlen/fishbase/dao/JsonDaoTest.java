@@ -7,6 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static se.martinuhlen.fishbase.domain.TestData.bream;
 import static se.martinuhlen.fishbase.domain.TestData.bream5120;
 import static se.martinuhlen.fishbase.domain.TestData.newSpecie;
@@ -29,6 +31,7 @@ import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import se.martinuhlen.fishbase.domain.Specie;
 import se.martinuhlen.fishbase.domain.Specimen;
@@ -38,6 +41,7 @@ public class JsonDaoTest
 {
 	private File dataDir;
 	private JsonDao dao;
+	private Persistence persistence;
 
 	@BeforeEach
 	public void setUp() throws Exception
@@ -48,7 +52,7 @@ public class JsonDaoTest
 
 	private void createDao()
 	{
-		Persistence persistence = new LocalFilePersistence(dataDir);
+		persistence = Mockito.spy(new LocalFilePersistence(dataDir));
 		if (dao == null)
 		{
 			dao = new JsonDao(persistence,
@@ -138,6 +142,14 @@ public class JsonDaoTest
 		specimens.forEach(s -> assertSpecimenEquals(s));
 	}
 
+    @Test
+    public void test_save_no_specimens_are_not_persisted()
+    {
+        reset(persistence);
+        dao.saveSpecimens(emptyList());
+        verifyZeroInteractions(persistence);
+    }
+
 	@Test
 	public void test_is_specie_deletable()
 	{
@@ -170,7 +182,17 @@ public class JsonDaoTest
 		dao.deleteSpecimens(asList(specimen));
 
 		assertFalse(dao.getSpecimens().contains(specimen));
+		createDao();
+		assertFalse(dao.getSpecimens().contains(specimen));
 	}
+
+    @Test
+    public void test_delete_no_specimens_are_not_persisted()
+    {
+        reset(persistence);
+        dao.deleteSpecimens(emptyList());
+        verifyZeroInteractions(persistence);
+    }
 
 	@Test
 	public void save_existing_trip()

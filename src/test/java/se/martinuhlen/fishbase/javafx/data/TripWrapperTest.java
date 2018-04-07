@@ -147,7 +147,7 @@ public class TripWrapperTest extends WrapperTestCase<Trip, TripWrapper>
 		wrapper.specimens().setValue(asList(specimen0, specimen1, specimen2));
 		wrapper.photos().setAll(photo("0"), photo("1").withSpecimen(specimen1.getId()), photo("2").withSpecimen(specimen2.getId()));
 
-		wrapper.removeSpecimen(wrapper.specimenWrappers().get(1));
+		wrapper.specimenWrappers().remove(1);
 
 		assertEquals(asList(specimen0, specimen2), wrapper.specimens().getValue());
 		assertEquals(asList(photo("0"), photo("1"), photo("2").withSpecimen(specimen2.getId())), wrapper.photos());
@@ -162,7 +162,7 @@ public class TripWrapperTest extends WrapperTestCase<Trip, TripWrapper>
 		wrapper.specimens().setValue(asList(specimen0, specimen1, specimen2));
 		wrapper.photos().setAll(photo("0"), photo("1"));
 
-		wrapper.removeSpecimen(wrapper.specimenWrappers().get(1));
+		wrapper.specimenWrappers().remove(1);
 
 		assertEquals(asList(specimen0, specimen2), wrapper.specimens().getValue());
 		assertEquals(asList(photo("0"), photo("1")), wrapper.photos());

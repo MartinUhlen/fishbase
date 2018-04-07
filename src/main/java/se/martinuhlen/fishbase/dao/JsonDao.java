@@ -116,7 +116,7 @@ class JsonDao implements FishBaseDao
 	}
 
 	@Override
-	public void saveSpecies(Iterable<? extends Specie> species)
+	public void saveSpecies(Collection<? extends Specie> species)
 	{
 		species.forEach(s -> saveSpecie(s, false));
 		writeSpecies();
@@ -159,7 +159,7 @@ class JsonDao implements FishBaseDao
 	}
 
 	@Override
-	public void deleteSpecies(Iterable<? extends Specie> species)
+	public void deleteSpecies(Collection<? extends Specie> species)
 	{
 		species.forEach(s ->
 		{
@@ -191,10 +191,13 @@ class JsonDao implements FishBaseDao
 	}
 
 	@Override
-	public void saveSpecimens(Iterable<? extends Specimen> specimens)
+	public void saveSpecimens(Collection<? extends Specimen> specimens)
 	{
-		specimens.forEach(s -> saveSpecimen(s, false));
-		writeSpecimens();
+	    if (!specimens.isEmpty())
+	    {
+    		specimens.forEach(s -> saveSpecimen(s, false));
+    		writeSpecimens();
+	    }
 	}
 
 	@Override
@@ -214,9 +217,13 @@ class JsonDao implements FishBaseDao
 	}
 
 	@Override
-	public void deleteSpecimens(Iterable<? extends Specimen> specimens)
+	public void deleteSpecimens(Collection<? extends Specimen> specimens)
 	{
-		specimens.forEach(s -> this.specimens.remove(s.getId()));
+	    if (!specimens.isEmpty())
+	    {
+	        specimens.forEach(s -> this.specimens.remove(s.getId()));
+	        writeSpecimens();
+	    }
 	}
 
 	@Override

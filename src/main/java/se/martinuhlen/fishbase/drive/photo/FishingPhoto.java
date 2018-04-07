@@ -9,6 +9,7 @@ import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
 
 import java.io.InputStream;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -136,6 +137,20 @@ public class FishingPhoto implements Photo
 			return photo;
 		}
 	}
+
+    public FishingPhoto withoutSpecimens(Collection<String> specimenIds)
+    {
+        if (!specimenIds.stream().anyMatch(id -> specimenIds.contains(id)))
+        {
+            return this;
+        }
+        else
+        {
+            FishingPhoto photo = new FishingPhoto(this);
+            photo.specimenIds.removeAll(specimenIds);
+            return photo;
+        }
+    }
 
 	@Override
 	public int hashCode()

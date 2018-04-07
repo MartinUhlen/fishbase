@@ -1,7 +1,6 @@
 package se.martinuhlen.fishbase.javafx;
 
 import static java.time.LocalDate.now;
-import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.joining;
 import static javafx.application.Platform.runLater;
 import static javafx.scene.control.Alert.AlertType.CONFIRMATION;
@@ -10,7 +9,6 @@ import static javafx.scene.control.ButtonBar.ButtonData.OK_DONE;
 import static javafx.scene.control.ButtonType.CANCEL;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static se.martinuhlen.fishbase.domain.Trip.EMPTY_TRIP;
-import static se.martinuhlen.fishbase.javafx.utils.Images.getImageView16;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -25,9 +23,7 @@ import javafx.concurrent.Task;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
-import javafx.scene.control.MenuItem;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
@@ -35,13 +31,11 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import se.martinuhlen.fishbase.dao.FishBaseDao;
-import se.martinuhlen.fishbase.domain.Specimen;
 import se.martinuhlen.fishbase.domain.Trip;
 import se.martinuhlen.fishbase.drive.photo.FishingPhoto;
 import se.martinuhlen.fishbase.drive.photo.PhotoService;
 import se.martinuhlen.fishbase.javafx.action.Action;
 import se.martinuhlen.fishbase.javafx.action.RunnableAction;
-import se.martinuhlen.fishbase.javafx.data.SpecimenWrapper;
 import se.martinuhlen.fishbase.javafx.data.TripWrapper;
 import se.martinuhlen.fishbase.javafx.photo.PhotoPane;
 
@@ -61,7 +55,6 @@ class TripView implements View
 	private final TripList list;
 	private final Node tripPane;
 	private TextField descriptionField;
-	private SpecimenTable specimenTable;
 
 	TripView(FishBaseDao dao, PhotoService photoService)
 	{
@@ -92,7 +85,7 @@ class TripView implements View
 		{
 			if (discardChanges())
 			{
-				setTrip(trip);
+				setTrip(dao.getTrip(trip.getId()));
 			}
 			else
 			{
@@ -163,56 +156,7 @@ class TripView implements View
 
 	private SpecimenTable createSpecimenTable()
 	{
-		specimenTable = new SpecimenTable(wrapper.specimenWrappers(), dao.getSpecies());
-
-		MenuItem add = new MenuItem("Add", getImageView16("add.png"));
-		add.setOnAction(e -> editSpecimen(true, createNewSpecimen(), s -> wrapper.addSpecimen(s)));
-
-		MenuItem copy = new MenuItem("Copy", getImageView16("copy.png"));
-		copy.setOnAction(e -> editSpecimen(true, getSelectedSpecimen().copyAsNew(), s -> wrapper.addSpecimen(s)));
-
-		MenuItem edit = new MenuItem("Edit", getImageView16("edit.png"));
-		edit.setOnAction(e -> editSpecimen(false, getSelectedSpecimen().copy(), s -> getSelectedSpecimenWrapper().setWrapee(s)));
-
-		MenuItem remove = new MenuItem("Remove", getImageView16("delete.png"));
-		remove.setOnAction(e -> wrapper.removeSpecimen(getSelectedSpecimenWrapper()));
-
-		ContextMenu menu = new ContextMenu(add, copy, edit, remove);
-		menu.setOnShowing(e -> asList(copy, edit, remove).forEach(item -> item.setDisable(specimenTable.getSelectionModel().isEmpty())));
-		specimenTable.setContextMenu(menu);
-		return specimenTable;
-	}
-
-	private Specimen getSelectedSpecimen()
-	{
-		return getSelectedSpecimenWrapper().getWrapee();
-	}
-
-	private SpecimenWrapper getSelectedSpecimenWrapper()
-	{
-		return specimenTable.getSelectionModel().getSelectedItem();
-	}
-
-	private void editSpecimen(boolean add, Specimen initialSpecimen, Consumer<Specimen> handler)
-	{
-		new SpecimenDialog(add, dao.getSpecies(), initialSpecimen)
-			.showAndWait()
-			.ifPresent(specimen ->
-			{
-				handler.accept(specimen);
-				specimenTable.requestFocus();
-				specimenTable.getItems().stream().filter(s -> s.getWrapee().equalsId(specimen)).findAny().ifPresent(sw ->
-				{
-					specimenTable.getSelectionModel().select(sw);
-				});
-			});
-	}
-
-	private Specimen createNewSpecimen()
-	{
-		Trip trip = wrapper.getWrapee();
-		return Specimen.asNew(trip.getId())
-						.setInstant(trip.getStartDate().atStartOfDay());
+		return new SpecimenTable(wrapper.specimenWrappers(), dao.getSpecies(), () -> wrapper.getWrapee());
 	}
 
 	private PhotoPane createPhotoPane()
