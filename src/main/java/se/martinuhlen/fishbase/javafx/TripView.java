@@ -1,6 +1,5 @@
 package se.martinuhlen.fishbase.javafx;
 
-import static java.time.LocalDate.now;
 import static java.util.stream.Collectors.joining;
 import static javafx.application.Platform.runLater;
 import static javafx.scene.control.Alert.AlertType.CONFIRMATION;
@@ -85,7 +84,7 @@ class TripView implements View
 		{
 			if (discardChanges())
 			{
-				setTrip(dao.getTrip(trip.getId()));
+				setTrip(trip.isNew() ? trip : dao.getTrip(trip.getId()));
 			}
 			else
 			{
@@ -197,9 +196,7 @@ class TripView implements View
 
 	private void add()
 	{
-		selectTrip(Trip.asNew()
-				.setStartDate(now())
-				.setEndDate(now()));
+		selectTrip(Trip.asNew());
 		descriptionField.requestFocus();
 	}
 
@@ -223,10 +220,10 @@ class TripView implements View
 		List<Trip> trips = dao.getTrips();
 		list.setTrips(trips);
 		Trip refreshedTrip = trips.stream()
-			.filter(t -> t.getId() == trip.getId())
+			.filter(t -> t.equalsId(trip))
 			.findAny()
-			.orElse(EMPTY_TRIP);
-		setTrip(trip);
+			.orElse(trip.isNew() ? Trip.asNew() : EMPTY_TRIP);
+		setTrip(refreshedTrip);
 		list.selectTrip(refreshedTrip.getId());
 	}
 

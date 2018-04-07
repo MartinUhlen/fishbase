@@ -29,7 +29,10 @@ public class Trip extends Domain<Trip>
 
 	public static Trip asNew()
 	{
-		return new Trip(UUID.randomUUID().toString(), false);
+		Trip trip = new Trip(UUID.randomUUID().toString(), false);
+		trip.setStartDate(LocalDate.now());
+		trip.setEndDate(LocalDate.now());
+		return trip;
 	}
 
 	private Trip(String id, boolean persisted)

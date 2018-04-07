@@ -117,7 +117,8 @@ public class TripWrapper extends Wrapper<Trip>
 		});
 		property.addListener(obs -> sync(syncing, () ->
 		{
-			specimenWrappers.setAll(property.getValue().stream().map(s -> new SpecimenWrapper(s)).collect(toList()));
+			List<SpecimenWrapper> wrappers = property.getValue().stream().map(s -> new SpecimenWrapper(s)).collect(toList());
+            specimenWrappers.setAll(wrappers);
 		}));
 	}
 
