@@ -1,0 +1,286 @@
+package se.martinuhlen.fishbase.drive.photo;
+
+import static java.util.Collections.emptyList;
+import static java.util.Objects.requireNonNullElseGet;
+import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.trimToEmpty;
+import static se.martinuhlen.fishbase.utils.Checked.get;
+import static se.martinuhlen.fishbase.utils.Checked.run;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+
+import com.google.api.client.util.DateTime;
+import com.google.api.services.drive.Drive;
+import com.google.api.services.drive.model.File;
+import com.google.api.services.drive.model.File.ImageMediaMetadata;
+import com.google.api.services.drive.model.FileList;
+
+import se.martinuhlen.fishbase.utils.Logger;
+
+class PhotoServiceImpl implements PhotoService
+{
+	public static void main(String[] args) throws Exception
+	{
+//		PhotoServiceImpl service = new PhotoServiceImpl(DriveFactory.create());
+
+		//service.getFishingPhotos().forEach(System.out::println);
+
+		//service.searchPhotos("2018-03-12").forEach(System.out::println);
+
+//		System.out.println("Searching photo");
+//		Photo photo = service.searchPhotos("2018-03-12")
+//						.stream()
+//						.filter(p -> p.getId().equals("1dwWjG4bvRBOL6fes-m7kNo0g63AXd_B0ug"))
+//						.findAny().get();
+//		System.out.println();
+//
+//		System.out.println("Saving photo with tripId");
+//		Thread.sleep(1000);
+//		String tripId = "e71e74d7-7503-4c1d-addb-e3ce8b087e89";
+//		photo.setTripId(tripId);
+//		service.savePhotos(asList(photo));
+//		System.out.println();
+//
+//		System.out.println("Getting trip photos");
+//		Thread.sleep(1000);
+//		service.getTripPhotos(tripId).forEach(System.out::println);
+//		System.out.println();
+//
+//		System.out.println("Getting fishing photos");
+//		Thread.sleep(1000);
+//		service.getFishingPhotos().forEach(System.out::println);
+//		System.out.println();
+//
+//		System.out.println("Saving photo *without* tripId");
+//		Thread.sleep(1000);
+//		photo.setTripId(null);
+//		service.savePhotos(asList(photo));
+//		System.out.println();
+//
+//		System.out.println("Getting trip photos (expect none)");
+//		Thread.sleep(1000);
+//		service.getTripPhotos(tripId).forEach(System.err::println);
+//		System.out.println();
+//
+//		System.out.println("Getting all photos (expect none)");
+//		Thread.sleep(1000);
+//		service.getFishingPhotos().forEach(System.err::println);
+//		System.out.println();
+	}
+
+	private static final Logger LOGGER = Logger.getLogger(PhotoService.class);
+	private static final DateTimeFormatter EXIF_TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss");
+
+	private static final String FISHING_KEY = "fishing";
+	private static final String TRIP_KEY = "trip";
+	private static final String SPECIMENS_KEY = "specimens";
+
+	private static final String PHOTO_FIELDS = "nextPageToken, files(id, name, spaces, mimeType, thumbnailLink, webContentLink, createdTime, modifiedTime, imageMediaMetadata(time), appProperties)";
+	private static final String BASE_PHOTO_QUERY =
+			"trashed = false "
+		+	"and "
+		+ 	"("
+				+ "mimeType contains 'image'"
+				+ " or "
+				+ "mimeType contains 'video'"
+		+	")";
+
+	private final Drive drive;
+
+	PhotoServiceImpl(Drive drive)
+	{
+		this.drive = drive;
+	}
+
+	@Override
+	public List<FishingPhoto> getFishingPhotos()
+	{
+		return getFishingPhotos(FISHING_KEY, "true");
+	}
+
+	@Override
+	public List<FishingPhoto> getTripPhotos(String tripId)
+	{
+		return getFishingPhotos(TRIP_KEY, tripId);
+	}
+
+	@Override
+	public List<FishingPhoto> getSpecimenPhotos(String tripId, String specimenId)
+	{
+		return getTripPhotos(tripId)
+			.stream()
+			.filter(photo -> photo.containsSpecimen(specimenId))
+			.collect(toList());
+	}
+
+	private List<FishingPhoto> getFishingPhotos(String key, String value)
+	{
+		String query = String.format("appProperties has {key='%s' and value='%s'}", key, value);
+		return listPhotos(query, this::toFishingPhoto);
+	}
+
+	@Override
+	public List<Photo> searchPhotos(String searchString)
+	{
+		String search = trimToEmpty(searchString);
+		if (search.length() < 4) // Require at least YYYY
+		{
+			return emptyList();
+		}
+		else
+		{
+			String searchQuery =
+					  "("
+							+     "name contains '" + search + "'"
+							+ " or name contains '" + search.replace("-", "") + "'"
+							+ " or name contains '" + "IMG_" + search + "'" // "IMG_" is common prefix for photos from iPhone and various digital cameras.
+							+ " or name contains '" + "IMG_" + search.replace("-", "") + "'"
+					+ ")";
+
+			return listPhotos(searchQuery, this::toPhoto);
+		}
+	}
+
+	private <P extends Photo> List<P> listPhotos(String subQuery, Function<File, P> mapper)
+	{
+		return get(() -> listPhotosImpl(subQuery, mapper));
+	}
+
+	private <P extends Photo> List<P> listPhotosImpl(String subQuery, Function<File, P> mapper) throws IOException
+	{
+		String query = BASE_PHOTO_QUERY + " and " + subQuery;
+		log("Querying photos: " + query);
+
+		List<File> photoFiles = new ArrayList<>();
+		String pageToken = null;
+		do
+		{
+			FileList result = drive.files().list()
+				.setPageSize(1000)
+				.setFields(PHOTO_FIELDS)
+				.setQ(query)
+				.setPageToken(pageToken)
+				//.setSpaces("photos")
+				.execute();
+
+			log("Found " + result.getFiles().size() + " photos");
+
+			photoFiles.addAll(result.getFiles());
+
+			pageToken = result.getNextPageToken();
+		}
+		while (pageToken != null);
+
+		return photoFiles
+				.stream()
+				.peek(f -> System.out.println(f.getName() + ", appProperties: " + f.getAppProperties()))
+				.map(p -> mapper.apply(p))
+				.collect(toList());
+	}
+
+	private FishingPhoto toFishingPhoto(File f)
+	{
+		return new FishingPhoto(
+				toPhoto(f),
+				f.getAppProperties().get(TRIP_KEY),
+				f.getAppProperties().getOrDefault(SPECIMENS_KEY, ""));
+	}
+
+	/**
+	 * Creates a {@link Photo} from given {@link File}.
+	 * <p>
+	 * {@link File#getWebContentLink()} has the following problems:
+	 * <ul>
+	 *   <li>Requires auth (possible to solve)
+	 *   <li>Some portrait photos are landscaped
+	 *   <li>Is really slooooooow (needs to be confirmed, might be due to piped streams)
+	 * </ul>
+	 * So instead we use thumbnailLink and increase size with the {@code + "0"} trick.
+	 */
+	private Photo toPhoto(File f)
+	{
+		String contentUrl = f.getThumbnailLink() + "0";
+		return new PhotoImpl(
+			f.getId(),
+			f.getName(),
+			timeOf(f),
+			f.getMimeType().startsWith("video"),
+			f.getThumbnailLink(),
+			contentUrl,
+			() -> streamPhoto(f.getId()));
+	}
+
+	private InputStream streamPhoto(String id)
+	{
+		return get(() -> drive.files().get(id).executeMediaAsInputStream());
+	}
+
+	private LocalDateTime timeOf(File f)
+	{
+		return requireNonNullElseGet(
+				timeOf(f.getImageMediaMetadata()),
+				() -> toLocalDateTime(f, f.getCreatedTime()));
+	}
+
+	private LocalDateTime timeOf(ImageMediaMetadata meta)
+	{
+		return meta == null || meta.getTime() == null
+				? null
+				: LocalDateTime.parse(meta.getTime(), EXIF_TIME_FORMAT);
+	}
+
+	/**
+	 * Converts UTC date "2016-06-13T16:51:25.000Z" to local date "2016-06-13T18:51:25".
+	 * <p>
+	 * {@link DateTime#getTimeZoneShift()} seems always to be 0...
+	 */
+	private LocalDateTime toLocalDateTime(File file, DateTime time)
+	{
+		//return LocalDateTime.ofEpochSecond(time.getValue() / 1_000, 0, ZoneOffset.ofHours(time.getTimeZoneShift() / 60));
+		return Instant.ofEpochSecond(time.getValue() / 1_000)
+				.atZone(ZoneId.systemDefault())
+				.toLocalDateTime();
+	}
+
+	@Override
+	public void savePhoto(FishingPhoto photo)
+	{
+		run(() -> savePhotoImpl(photo, false));
+	}
+
+	@Override
+	public void removePhoto(FishingPhoto photo)
+	{
+		run(() -> savePhotoImpl(photo, true));
+	}
+
+	private void savePhotoImpl(FishingPhoto photo, boolean remove) throws IOException
+	{
+		// According to docs, an entry with null value will be removed.
+		// But it doesn't work, so we use "false" and "null" instead.
+		Map<String, String> appProperties = new HashMap<>();
+		appProperties.put(FISHING_KEY, remove ? "false" : "true");
+		appProperties.put(TRIP_KEY, remove ? "null" : photo.getTripId());
+		appProperties.put(SPECIMENS_KEY, remove ? "null" : photo.getSpecimenIds());
+
+		log("Updating photo " + photo.getName() + "(" + photo.getId() + ") with " + appProperties);
+
+		File update = new File().setAppProperties(appProperties);
+		drive.files().update(photo.getId(), update).execute();
+	}
+
+	private void log(String message)
+	{
+		LOGGER.log(message);
+	}
+}
