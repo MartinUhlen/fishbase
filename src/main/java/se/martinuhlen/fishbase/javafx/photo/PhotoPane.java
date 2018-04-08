@@ -17,6 +17,7 @@ import javafx.collections.ObservableList;
 import javafx.collections.ObservableSet;
 import javafx.collections.SetChangeListener;
 import javafx.collections.SetChangeListener.Change;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
@@ -31,6 +32,8 @@ import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
+import javafx.stage.Screen;
 import se.martinuhlen.fishbase.domain.Specimen;
 import se.martinuhlen.fishbase.drive.photo.FishingPhoto;
 import se.martinuhlen.fishbase.drive.photo.Photo;
@@ -74,8 +77,8 @@ public class PhotoPane extends BorderPane
 		removeButton.disableProperty().bind(thumbnailPane.hasSelectedPhotos().not());
 		removeButton.onActionProperty().set(e -> thumbnailPane.removeSelectedPhotos());
 
-		thumbnailToggle = new ToggleButton("¤");
-		slideShowToggle = new ToggleButton("#");
+		thumbnailToggle = new ToggleButton("", getImageView16("photos.png"));
+		slideShowToggle = new ToggleButton("", getImageView16("photo.png"));
 		ToggleGroup toggleGroup = new ToggleGroup();
 		thumbnailToggle.setToggleGroup(toggleGroup);
 		slideShowToggle.setToggleGroup(toggleGroup);
@@ -137,8 +140,7 @@ public class PhotoPane extends BorderPane
 		DialogPane dialogPane = new DialogPane();
 		dialogPane.getButtonTypes().setAll(CANCEL, OK);
 		dialogPane.setContent(pane);
-		dialogPane.setPrefHeight(800);
-		dialogPane.setPrefWidth(1200);
+		dialogPane.setPrefWidth(Region.USE_COMPUTED_SIZE);
 		SetChangeListener<Photo> listener = (Change<? extends Photo> change) ->
 		{
 			Button button = (Button) dialogPane.lookupButton(OK);
@@ -149,10 +151,16 @@ public class PhotoPane extends BorderPane
 		};
 		pane.getSelectedPhotos().addListener(listener);
 		listener.onChanged(null);
+
 		Dialog<ButtonType> dialog = new Dialog<>();
 		dialog.setTitle("Add photos");
 		dialog.setDialogPane(dialogPane);
 		dialog.setResizable(true);
+        Rectangle2D screenSize = Screen.getPrimary().getBounds();
+        dialog.setWidth(screenSize.getWidth() * 0.90);
+        dialog.setHeight(screenSize.getHeight() * 0.90);
+        dialogPane.setPrefWidth(dialog.getWidth());
+        dialogPane.setPrefHeight(dialog.getHeight());
 		dialog.showAndWait()
 			.filter(b -> b == OK)
 			.ifPresent(b ->
