@@ -2,6 +2,7 @@ package se.martinuhlen.fishbase.javafx;
 
 import static javafx.application.Platform.runLater;
 import static javafx.collections.FXCollections.observableArrayList;
+import static javafx.geometry.Pos.CENTER;
 import static javafx.scene.control.ButtonType.CANCEL;
 import static javafx.scene.control.ButtonType.OK;
 import static se.martinuhlen.fishbase.javafx.Converters.lengthConverter;
@@ -42,8 +43,6 @@ class SpecimenDialog extends Dialog<Specimen>
 		getDialogPane().setContent(createForm());
 		setResultConverter(b -> b == OK ? wrapper.getWrapee() : null);
 		setTitle(add ? "Add new specimen" : "Edit specimen");
-		//setResizable(true);
-		//setWidth(200);
 		setOnShowing(e -> onShowing());
 	}
 
@@ -64,7 +63,7 @@ class SpecimenDialog extends Dialog<Specimen>
 	private Node createForm()
 	{
 		GridPane grid = new GridPane();
-		grid.setAlignment(Pos.CENTER);
+		grid.setAlignment(CENTER);
 		grid.setHgap(10);
 		grid.setVgap(0);
 		grid.setPadding(new Insets(20, 20, 20, 20));
@@ -144,11 +143,7 @@ class SpecimenDialog extends Dialog<Specimen>
 		textArea.setPrefColumnCount(2);
 		grid.add(textArea, 0, 19, 2, 2);
 
-//		grid.getColumnConstraints().add(new ColumnConstraints(100));
-//		grid.getColumnConstraints().add(new ColumnConstraints(100));
-
 		return grid;
-
 	}
 
 	private Node suffix(TextField field, String suffix)

@@ -6,6 +6,7 @@ import static javafx.scene.input.KeyCode.DOWN;
 import static javafx.scene.input.KeyCode.ESCAPE;
 import static javafx.scene.input.KeyCode.UP;
 import static javafx.scene.layout.Priority.ALWAYS;
+import static javafx.scene.text.FontWeight.BOLD;
 
 import java.util.Collection;
 import java.util.function.Consumer;
@@ -23,7 +24,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import se.martinuhlen.fishbase.domain.Specimen;
 import se.martinuhlen.fishbase.domain.Trip;
@@ -95,7 +95,7 @@ class TripList extends VBox
 
 	private static class TripCell extends ListCell<Trip>
 	{
-		private static final Font BOLD_FONT = Font.font(Font.getDefault().getFamily(), FontWeight.BOLD, Font.getDefault().getSize() - 2);
+		private static final Font BOLD_FONT = Font.font(Font.getDefault().getFamily(), BOLD, Font.getDefault().getSize() - 2);
 
 		@Override
 		protected void updateItem(Trip trip, boolean empty)
@@ -104,15 +104,6 @@ class TripList extends VBox
 			setGraphic(null);
 			if (!empty)
 			{
-//				String text = trip.getStartDate()
-//							+ "\n" + trip.getDescription()
-//							+ "\n" + trip.getSpecimens()
-//										.stream()
-//										.sorted(comparing(Specimen::getRatio).reversed())
-//										.map(Specimen::getLabel)
-//										.collect(joining(", "));
-//				setText(text);
-
 				VBox box = new VBox(new Text(trip.getStartDate() + "\n" + trip.getDescription()));
 				if (!trip.getSpecimens().isEmpty())
 				{

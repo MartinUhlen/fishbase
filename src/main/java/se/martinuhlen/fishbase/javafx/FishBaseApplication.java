@@ -3,14 +3,17 @@ package se.martinuhlen.fishbase.javafx;
 import static javafx.beans.binding.Bindings.createStringBinding;
 import static javafx.geometry.Side.BOTTOM;
 import static javafx.scene.control.Alert.AlertType.CONFIRMATION;
+import static javafx.scene.control.Alert.AlertType.INFORMATION;
 import static javafx.scene.control.ButtonBar.ButtonData.OK_DONE;
 import static javafx.scene.control.ButtonType.CANCEL;
 import static javafx.scene.control.TabPane.TabClosingPolicy.ALL_TABS;
 import static se.martinuhlen.fishbase.javafx.View.EMPTY_VIEW;
 import static se.martinuhlen.fishbase.javafx.utils.ImageSize.SIZE_256;
 import static se.martinuhlen.fishbase.javafx.utils.Images.getImageView;
+import static se.martinuhlen.fishbase.javafx.utils.Images.getImageView16;
 import static se.martinuhlen.fishbase.javafx.utils.Images.getImages;
 
+import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -25,6 +28,7 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.Tooltip;
@@ -143,7 +147,9 @@ public class FishBaseApplication extends Application
                 createOpenItem("Trips", TripView.class),
                 createOpenItem("Specimens", SpecimenView.class),
                 createOpenItem("Species", SpecieView.class),
-                createOpenItem("Photos", PhotoView.class));
+                createOpenItem("Photos", PhotoView.class),
+                new SeparatorMenuItem(),
+                createAboutItem());
 	    menu.setAutoHide(true);
 
 	    Button button = createButton("Menu", "menu.png", "CTRL+SPACE");
@@ -178,6 +184,21 @@ public class FishBaseApplication extends Application
         button.setTooltip(new Tooltip(text + " (" + keyCombination.getDisplayText() + ")"));
         scene.getAccelerators().put(keyCombination, () -> button.fire());
         return button;
+    }
+
+    private MenuItem createAboutItem()
+    {
+        MenuItem about = new MenuItem("About", getImageView16("fish.png"));
+        about.setOnAction(e ->
+        {
+            Alert alert = new Alert(INFORMATION);
+            alert.setTitle("About");
+            alert.setHeaderText("FishBase 0.3");
+            // TODO Add build date
+            alert.setContentText("Martin Uhlén 2006-" + LocalDate.now().getYear());
+            alert.showAndWait();
+        });
+        return about;
     }
 
 	private ImageView image(String name)
