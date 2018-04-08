@@ -96,7 +96,7 @@ class SpecimenTable extends TableView<SpecimenWrapper>
         items.add(edit);
 
         MenuItem remove = new MenuItem("Remove", getImageView16("delete.png"));
-        remove.setOnAction(e -> removeSelected());    // FIXME Add confirmation, call from SpecimenView#delete
+        remove.setOnAction(e -> removeSelected());
         items.add(remove);
 
         ContextMenu menu = new ContextMenu();
