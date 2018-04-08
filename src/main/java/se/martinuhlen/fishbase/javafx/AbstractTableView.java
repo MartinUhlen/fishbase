@@ -207,20 +207,34 @@ abstract class AbstractTableView<W extends Wrapper<D>, D extends Domain<D>> impl
 	{
 		W wrapper = table.getSelectionModel().getSelectedItem();
 		D wrapee = wrapper.getWrapee();
-		if (isDeletable(wrapee))
+		if (isRemovable(wrapee))
 		{
-			ButtonType delete = new ButtonType("Delete", OK_DONE);
-			Alert alert = new Alert(CONFIRMATION);
-			alert.setTitle("Confirm deletion");
-			alert.setHeaderText("Are you sure you want to delete '" + wrapee.getLabel() + "'?");
-			alert.getButtonTypes().setAll(delete, CANCEL);
-			alert.showAndWait()
-				.filter(b -> b == delete)
-				.ifPresent(b -> list.remove(wrapper));
+		    removeSelected();
 		}
 	}
 
-	boolean isDeletable(D wrapee)
+    void removeSelected()
+    {
+        W wrapper = table.getSelectionModel().getSelectedItem();
+        D wrapee = wrapper.getWrapee();
+
+        ButtonType delete = new ButtonType("Remove", OK_DONE);
+        Alert alert = new Alert(CONFIRMATION);
+        alert.setTitle("Confirm removal");
+        alert.setHeaderText("Are you sure you want to remove '" + wrapee.getLabel() + "'?");
+        alert.getButtonTypes().setAll(delete, CANCEL);
+        alert.showAndWait()
+        	.filter(b -> b == delete)
+        	.ifPresent(b -> list.remove(wrapper));
+    }
+
+    /**
+     * Checks if if given wrapee object can be removed from the table and then on save be deleted.
+     * 
+     * @param wrapee to check
+     * @return {@code true} if OK to remove
+     */
+	boolean isRemovable(D wrapee)
 	{
 		return true;
 	}

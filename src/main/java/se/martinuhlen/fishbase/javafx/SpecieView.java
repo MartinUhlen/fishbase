@@ -64,7 +64,7 @@ class SpecieView extends AbstractTableView<SpecieWrapper, Specie>
 	}
 
 	@Override
-	boolean isDeletable(Specie specie)
+	boolean isRemovable(Specie specie)
 	{
 		if (dao.getSpecimens().stream().anyMatch(s -> s.getSpecie().equals(specie)))
 		{

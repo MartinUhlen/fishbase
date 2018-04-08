@@ -81,6 +81,12 @@ class SpecimenView extends AbstractTableView<SpecimenWrapper, Specimen>
 	}
 
 	@Override
+	void removeSelected()
+	{
+	    ((SpecimenTable) getTable()).removeSelected();
+	}
+	
+	@Override
 	void deleteRows(List<Specimen> rowsToDelete)
 	{
 	    super.deleteRows(rowsToDelete);

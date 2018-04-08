@@ -1,6 +1,9 @@
 package se.martinuhlen.fishbase.javafx;
 
 import static java.util.Arrays.asList;
+import static javafx.scene.control.Alert.AlertType.CONFIRMATION;
+import static javafx.scene.control.ButtonBar.ButtonData.OK_DONE;
+import static javafx.scene.control.ButtonType.CANCEL;
 import static javafx.scene.control.cell.TextFieldTableCell.forTableColumn;
 import static se.martinuhlen.fishbase.javafx.Converters.dateConverter;
 import static se.martinuhlen.fishbase.javafx.Converters.lengthConverter;
@@ -20,6 +23,8 @@ import java.util.function.Supplier;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
@@ -91,13 +96,25 @@ class SpecimenTable extends TableView<SpecimenWrapper>
         items.add(edit);
 
         MenuItem remove = new MenuItem("Remove", getImageView16("delete.png"));
-        remove.setOnAction(e -> specimens.remove(getSelectedSpecimenWrapper()));    // FIXME Add confirmation, call from SpecimenView#delete
+        remove.setOnAction(e -> removeSelected());    // FIXME Add confirmation, call from SpecimenView#delete
         items.add(remove);
 
         ContextMenu menu = new ContextMenu();
         menu.getItems().setAll(items);
         menu.setOnShowing(e -> asList(openTrip, copy, edit, remove).forEach(item -> item.setDisable(getSelectionModel().isEmpty())));
         return menu;
+    }
+
+    void removeSelected()
+    {
+        ButtonType delete = new ButtonType("Remove", OK_DONE);
+        Alert alert = new Alert(CONFIRMATION);
+        alert.setTitle("Confirm removal");
+        alert.setHeaderText("Are you sure you want to remove '" + getSelectedSpecimen().getLabel() + "'?");
+        alert.getButtonTypes().setAll(delete, CANCEL);
+        alert.showAndWait()
+            .filter(b -> b == delete)
+            .ifPresent(b -> specimens.remove(getSelectedSpecimenWrapper()));
     }
 
     private Specimen getSelectedSpecimen()
