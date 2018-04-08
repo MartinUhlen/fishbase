@@ -7,6 +7,8 @@ import static javafx.scene.control.ButtonBar.ButtonData.OK_DONE;
 import static javafx.scene.control.ButtonType.CANCEL;
 import static javafx.scene.control.TabPane.TabClosingPolicy.ALL_TABS;
 import static se.martinuhlen.fishbase.javafx.View.EMPTY_VIEW;
+import static se.martinuhlen.fishbase.javafx.utils.ImageSize.SIZE_256;
+import static se.martinuhlen.fishbase.javafx.utils.Images.getImageView;
 import static se.martinuhlen.fishbase.javafx.utils.Images.getImages;
 
 import java.util.LinkedHashMap;
@@ -30,6 +32,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import se.martinuhlen.fishbase.dao.FishBaseDao;
 import se.martinuhlen.fishbase.drive.DriveFactory;
@@ -106,9 +109,10 @@ public class FishBaseApplication extends Application
 		saveAction.enabledProperty().addListener((obs, old, enabled) ->	refreshButton.setGraphic(image(enabled ? "undo.png" : "refresh.png")));
 		HBox toolbar = new HBox(startButton, addButton, saveButton, refreshButton, deleteButton);
 
+		StackPane centerPane = new StackPane(getImageView("fish.png", SIZE_256), tabPane);
 		BorderPane borderPane = new BorderPane();
 		borderPane.setTop(toolbar);
-		borderPane.setCenter(tabPane);
+		borderPane.setCenter(centerPane);
 
 		scene.setRoot(borderPane);
 		stage.setScene(scene);
