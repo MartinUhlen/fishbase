@@ -20,9 +20,6 @@ public interface FishBaseDao
 	        JsonDao dao = futureDao.get();
 	        return method.invoke(dao, args);
 	    });
-
-//	    // FIXME Create JsonDao in background, spin a dynamic proxy and return it immediately
-//		return new JsonDao(persistence);
 	}
 
 	List<Specie> getSpecies();
