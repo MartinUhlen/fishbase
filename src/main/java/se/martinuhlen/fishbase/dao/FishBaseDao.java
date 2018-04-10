@@ -1,7 +1,10 @@
 package se.martinuhlen.fishbase.dao;
 
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import se.martinuhlen.fishbase.domain.Specie;
 import se.martinuhlen.fishbase.domain.Specimen;
@@ -11,7 +14,15 @@ public interface FishBaseDao
 {
 	public static FishBaseDao create(Persistence persistence)
 	{
-		return new JsonDao(persistence);
+	    CompletableFuture<JsonDao> futureDao = CompletableFuture.supplyAsync(() -> new JsonDao(persistence));
+	    return (FishBaseDao) Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class<?>[] {FishBaseDao.class}, (Object proxy, Method method, Object[] args) ->
+	    {
+	        JsonDao dao = futureDao.get();
+	        return method.invoke(dao, args);
+	    });
+
+//	    // FIXME Create JsonDao in background, spin a dynamic proxy and return it immediately
+//		return new JsonDao(persistence);
 	}
 
 	List<Specie> getSpecies();

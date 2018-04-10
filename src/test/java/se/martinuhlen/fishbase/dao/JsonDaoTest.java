@@ -40,7 +40,7 @@ import se.martinuhlen.fishbase.domain.Trip;
 public class JsonDaoTest
 {
 	private File dataDir;
-	private JsonDao dao;
+	private FishBaseDao dao;
 	private Persistence persistence;
 
 	@BeforeEach
@@ -59,11 +59,11 @@ public class JsonDaoTest
 					asList(bream(), tench(), perch()),
 					asList(bream5120(), perch1000(), tench3540()),
 					asList(trip1(), trip2()));
-			dao.writeAll();
+			((JsonDao) dao).writeAll();
 		}
 		else
 		{
-			dao = new JsonDao(persistence);
+		    dao = FishBaseDao.create(persistence);
 		}
 	}
 

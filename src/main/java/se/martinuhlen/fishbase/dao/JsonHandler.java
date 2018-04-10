@@ -8,7 +8,6 @@ import static java.util.Objects.requireNonNullElse;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.io.Reader;
 import java.io.Writer;
 import java.lang.reflect.Type;
 import java.util.Collection;
@@ -32,7 +31,7 @@ abstract class JsonHandler<D extends Domain<D>> implements JsonSerializer<D>, Js
 
 	JsonHandler(Class<D> type, Persistence persistence)
 	{
-		this.persistence = persistence;;
+		this.persistence = persistence;
 		this.fileName = type.getSimpleName() + ".json";
 		this.listOfD = TypeToken.getParameterized(List.class, type).getType();
 		this.gson = new GsonBuilder()
@@ -41,16 +40,49 @@ abstract class JsonHandler<D extends Domain<D>> implements JsonSerializer<D>, Js
 				.create();
 	}
 
-	List<D> read()
+	/**
+	 * Gets a new reader.
+	 * 
+	 * @return new reader instance
+	 */
+	Reader reader()
 	{
-		try (Reader reader = new InputStreamReader(persistence.input(fileName), UTF_8))
-		{
-			return requireNonNullElse(gson.fromJson(reader, listOfD), emptyList());
-		}
-		catch (IOException e)
-		{
-			throw new RuntimeException(e);
-		}
+	    try
+        {
+            return new Reader(new InputStreamReader(persistence.input(fileName), UTF_8));
+        }
+        catch (IOException e)
+        {
+            throw new RuntimeException(e);
+        }
+	}
+
+	/**
+	 * Reads data from persistence.
+	 * <p>
+	 * The read operation is divided into two steps; 
+	 * First a reader is constructed so that data from persistence can start to buffer immediately and then when desired, the data can be read.
+	 */
+	class Reader
+	{
+	    private final java.io.Reader reader;
+
+        Reader(java.io.Reader reader)
+        {
+            this.reader = reader;
+        }
+
+	    List<D> read()
+	    {
+	        try (reader)
+	        {
+	            return requireNonNullElse(gson.fromJson(reader, listOfD), emptyList());
+	        }
+	        catch (IOException e)
+	        {
+	            throw new RuntimeException(e);
+	        }
+	    }
 	}
 
 	void write(Collection<D> objects)

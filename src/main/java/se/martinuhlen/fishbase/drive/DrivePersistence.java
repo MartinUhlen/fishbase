@@ -29,7 +29,7 @@ public class DrivePersistence implements Persistence
 	@Override
 	public InputStream input(String name) throws IOException
 	{
-		PipedInputStream input = new PipedInputStream();
+		PipedInputStream input = new PipedInputStream(1_000_000);
 		PipedOutputStream output = new PipedOutputStream(input);
 		execute(name, () ->	service.download(name, output));
 		return input;
@@ -38,7 +38,7 @@ public class DrivePersistence implements Persistence
 	@Override
 	public OutputStream output(String name) throws IOException
 	{
-		PipedInputStream input = new PipedInputStream();
+		PipedInputStream input = new PipedInputStream(1_000_000);
 		PipedOutputStream output = new PipedOutputStream(input);
 		execute(name, () -> service.upload(name, input));
 		return output;

@@ -3,20 +3,16 @@ package se.martinuhlen.fishbase.dao;
 import static java.lang.String.CASE_INSENSITIVE_ORDER;
 import static java.util.Collections.emptySet;
 import static java.util.Comparator.comparing;
-import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
-import static se.martinuhlen.fishbase.utils.Checked.run;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -45,7 +41,10 @@ class JsonDao implements FishBaseDao
 		tripHandler = new TripJsonHandler(persistence);
 		if (read)
 		{
-			readAll(() -> specieHandler.read(), () -> specimenHandler.read(), () -> tripHandler.read());
+		    JsonHandler<Specie>.Reader specieReader = specieHandler.reader();
+		    JsonHandler<Specimen>.Reader specimenReader = specimenHandler.reader();
+		    JsonHandler<Trip>.Reader tripReader = tripHandler.reader();
+			readAll(() -> specieReader.read(), () -> specimenReader.read(), () -> tripReader.read());
 		}
 	}
 
@@ -63,12 +62,9 @@ class JsonDao implements FishBaseDao
 
 	private void readAll(Supplier<Collection<Specie>> specieSupplier, Supplier<Collection<Specimen>> specimenSupplier, Supplier<Collection<Trip>> tripSupplier)
 	{
-		ExecutorService executor = Executors.newCachedThreadPool();
-		executor.execute(() -> species = new Table<>(Specie.class, specieSupplier.get()));
-		executor.execute(() -> specimens = new SpecimenTable(specimenSupplier.get()));
-		executor.execute(() -> trips = new TripTable(tripSupplier.get()));
-		executor.shutdown();
-		run(() -> executor.awaitTermination(1, MINUTES));
+        species = new Table<>(Specie.class, specieSupplier.get());
+        specimens = new SpecimenTable(specimenSupplier.get());
+        trips = new TripTable(tripSupplier.get());
 	}
 
 	@VisibleForTesting
@@ -377,7 +373,7 @@ class JsonDao implements FishBaseDao
 		@Override
 		Trip get(String id)
 		{
-			groupSpecimens();  // Really inefficient for one get, but only called from test
+			groupSpecimens();  // Really inefficient for one get...
 			return super.get(id);
 		}
 
