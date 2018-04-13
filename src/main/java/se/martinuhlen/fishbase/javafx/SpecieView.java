@@ -66,7 +66,7 @@ class SpecieView extends AbstractTableView<SpecieWrapper, Specie>
 	@Override
 	boolean isRemovable(Specie specie)
 	{
-		if (dao.getSpecimens().stream().anyMatch(s -> s.getSpecie().equals(specie)))
+		if (!dao.isSpecieDeletable(specie))
 		{
 			Alert alert = new Alert(ERROR);
 			alert.setTitle("Cannot delete");

@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static se.martinuhlen.fishbase.domain.TestData.bream;
 import static se.martinuhlen.fishbase.domain.TestData.tench;
@@ -16,13 +18,21 @@ public class SpecieTest
 	public void properties()
 	{
 		Specie specie = Specie.asNew()
-				.setName("Chub")
-				.setRegWeight(2500)
-				.setFreshWater(true);
+				.withName("Chub")
+				.withRegWeight(2500)
+				.withFreshWater(true);
 
 		assertEquals("Chub", specie.getName());
 		assertEquals(2500, specie.getRegWeight());
 		assertTrue(specie.isFreshWater());
+
+		assertSame(specie, specie.withName(specie.getName()));
+		assertSame(specie, specie.withRegWeight(specie.getRegWeight()));
+		assertSame(specie, specie.withFreshWater(specie.isFreshWater()));
+
+		assertEquals("Test", specie.withName("Test").getName());
+		assertEquals(1400, specie.withRegWeight(1400).getRegWeight());
+		assertEquals(false, specie.withFreshWater(false).copy().isFreshWater());
 	}
 
 	@Test
@@ -37,16 +47,15 @@ public class SpecieTest
 		assertNotEquals(Specie.asNew(), Specie.asNew());
 		assertNotEquals(Specie.asPersisted("a"), Specie.asPersisted("b"));
 
-		assertNotEquals(bream(), bream().setName("Test"));
-		assertNotEquals(bream(), bream().setRegWeight(5000));
-		assertNotEquals(bream(), bream().setFreshWater(false));
+		assertNotEquals(bream(), bream().withName("Test"));
+		assertNotEquals(bream(), bream().withRegWeight(5000));
+		assertNotEquals(bream(), bream().withFreshWater(false));
 	}
 
 	@Test
 	public void asPersisted()
 	{
-		Specie s = Specie.asPersisted("x");
-		assertEquals("x", s.getId());
+		Specie s = TestData.perch();
 		assertTrue(s.isPersisted());
 		assertFalse(s.isNew());
 
@@ -66,5 +75,13 @@ public class SpecieTest
 		s.markPersisted();
 		assertTrue(s.isPersisted());
 		assertFalse(s.isNew());
+	}
+
+	@Test
+	public void invariants()
+	{
+	    Specie s = Specie.asNew();
+	    assertThrows(NullPointerException.class, () -> s.withName(null));
+	    assertThrows(IllegalArgumentException.class, () -> s.withRegWeight(-500));
 	}
 }

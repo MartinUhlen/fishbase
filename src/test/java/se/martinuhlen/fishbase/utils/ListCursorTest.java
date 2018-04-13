@@ -145,10 +145,11 @@ public class ListCursorTest
 		assertTrue(cursor.hasNext());
 
 		assertThrows(NoSuchElementException.class, () -> cursor.current());
-		assertThrows(NoSuchElementException.class, () -> cursor.currentIndex());
 		assertThrows(NoSuchElementException.class, () -> cursor.previous());
 
+		assertEquals(-1, cursor.currentIndex());
 		assertEquals("0", cursor.next());
+		assertEquals("0", cursor.current());
 		assertEquals(0, cursor.currentIndex());
 	}
 

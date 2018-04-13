@@ -20,12 +20,12 @@ public class SpecieWrapper extends Wrapper<Specie>
 
 	public Property<String> nameProperty()
 	{
-		return getProperty("name", Specie::getName, Specie::setName);
+		return getProperty("name", Specie::getName, Specie::withName);
 	}
 
 	public Property<Integer> regWeightProperty()
 	{
-		return getProperty("regWeight", Specie::getRegWeight, Specie::setRegWeight);
+		return getProperty("regWeight", Specie::getRegWeight, Specie::withRegWeight);
 	}
 
 	public BooleanProperty freshWaterProperty()
@@ -33,7 +33,7 @@ public class SpecieWrapper extends Wrapper<Specie>
 		if (freshWaterProperty == null)
 		{
 			freshWaterProperty = new SimpleBooleanProperty(this, "freshWater");
-			freshWaterProperty.bindBidirectional(getProperty("freshWater", Specie::isFreshWater, Specie::setFreshWater));
+			freshWaterProperty.bindBidirectional(getProperty("freshWater", Specie::isFreshWater, Specie::withFreshWater));
 		}
 		return freshWaterProperty;
 	}

@@ -1,5 +1,6 @@
 package se.martinuhlen.fishbase.domain;
 
+import static java.time.LocalDateTime.MIN;
 import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static se.martinuhlen.fishbase.domain.Specie.EMPTY_SPECIE;
@@ -10,85 +11,93 @@ import java.util.stream.Stream;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 
+/**
+ * Represents a caught specimen of a certain {@link Specie}.
+ *
+ * @author Martin
+ */
 public final class Specimen extends Domain<Specimen>
 {
-	public static Specimen asPersisted(String id, String tripId)
+	public static TripBuilder asPersisted(String id)
 	{
-		return new Specimen(id, tripId, true);
+	    return new Builder(id, true);
 	}
 
 	public static Specimen asNew(String tripId)
 	{
-		return new Specimen(UUID.randomUUID().toString(), tripId, false);
+	    return new Builder(UUID.randomUUID().toString(), false)
+	            .tripId(tripId)
+	            .build();
 	}
 
-	private Specimen(String id, String tripId, boolean persisted)
-	{
-		super(id, persisted);
-		this.tripId = requireNonNull(tripId, "tripId can't be null");
-	}
+    private Specimen(String id, boolean persisted, String tripId, Specie specie, int weight, float length, String location, LocalDateTime instant, String method, String bait, String weather, String text)
+    {
+        super(id, persisted);
+        this.tripId = requireNonNull(tripId, "tripId can't be null");
+        this.specie = requireNonNull(specie, "specie can't be null");
+        this.weight = requireNonNegative(weight, "weight must be >= 0");
+        this.length = requireNonNegative(length, "length must be >= 0.0");
+        this.location = requireNonNull(location, "location can't be null");
+        this.instant = requireNonNull(instant, "instant can't be null");
+        this.method = requireNonNull(method, "method can't be null");
+        this.bait = requireNonNull(bait, "bait can't be null");
+        this.weather = requireNonNull(weather, "weather can't be null");
+        this.text = requireNonNull(text, "text can't be null");
+    }
 
 	private Specimen(Specimen s)
 	{
-		super(s.getId(), s.isPersisted());
-		this.tripId = s.tripId;
-		copyProperties(s);
-	}
-
-	private void copyProperties(Specimen s)
-	{
-		this.specie = new Specie(s.specie);
-		this.weight = s.weight;
-		this.length = s.length;
-		this.location = s.location;
-		this.instant = s.instant;
-		this.method = s.method;
-		this.bait = s.bait;
-		this.weather = s.weather;
-		this.text = s.text;
+		this(s.getId(), s.isPersisted(), s.tripId, s.specie, s.weight, s.length, s.location, s.instant, s.method, s.bait, s.weather, s.text);
 	}
 
 	//@formatter:off
 	private final String tripId;
 	public String getTripId(){return tripId;}
 
-	private Specie specie = EMPTY_SPECIE;
+	private final Specie specie;
 	public Specie getSpecie(){return specie;}
-	public Specimen setSpecie(Specie specie){this.specie = requireNonNull(specie); return this;}
+	public Specimen withSpecie(Specie specie){return with(this.specie, specie, tripId, specie, weight, length, location, instant, method, bait, weather, text);}
 
-	private int weight;
+	private final int weight;
 	public int getWeight(){return weight;}
-	public Specimen setWeight(int weight){this.weight = weight;	return this;}
+	public Specimen withWeight(int weight){return with(this.weight, weight, tripId, specie, weight, length, location, instant, method, bait, weather, text);}
 
-	private float length;
+	private final float length;
 	public float getLength(){return length;}
-	public Specimen setLength(float length){this.length = length; return this;}
+	public Specimen withLength(float length){return with(this.length, length, tripId, specie, weight, length, location, instant, method, bait, weather, text);}
 
-	private String location = "";
+	private final String location;
 	public String getLocation(){return location;}
-	public Specimen setLocation(String location){this.location = requireNonNull(location); return this;}
+	public Specimen withLocation(String location){return with(this.location, location, tripId, specie, weight, length, location, instant, method, bait, weather, text);}
 
-	private LocalDateTime instant = LocalDateTime.MIN;
+	private final LocalDateTime instant;
 	public LocalDateTime getInstant(){return instant;}
-	public Specimen setInstant(LocalDateTime instant){this.instant = requireNonNull(instant); return this;}
+	public Specimen withInstant(LocalDateTime instant){return with(this.instant, instant, tripId, specie, weight, length, location, instant, method, bait, weather, text);}
 
-	private String method = "";
+	private final String method;
 	public String getMethod(){return method;}
-	public Specimen setMethod(String method){this.method = requireNonNull(method); return this;}
+	public Specimen withMethod(String method){return with(this.method, method, tripId, specie, weight, length, location, instant, method, bait, weather, text);}
 
-	private String bait = "";
+	private final String bait;
 	public String getBait(){return bait;}
-	public Specimen setBait(String bait){this.bait = requireNonNull(bait); return this;}
+	public Specimen withBait(String bait){return with(this.bait, bait, tripId, specie, weight, length, location, instant, method, bait, weather, text);}
 
-	private String weather = "";
+	private final String weather;
 	public String getWeather(){return weather;}
-	public Specimen setWeather(String weather){this.weather = requireNonNull(weather); return this;}
+	public Specimen withWeather(String weather){return with(this.weather, weather, tripId, specie, weight, length, location, instant, method, bait, weather, text);}
 
-	private String text = "";
+	private final String text;
 	public String getText(){return text;}
-	public Specimen setText(String text){this.text = requireNonNull(text); return this;}
+	public Specimen withText(String text){return with(this.text, text, tripId, specie, weight, length, location, instant, method, bait, weather, text);}
 	//@formatter:on
 
+	private <T> Specimen with(T currentValue, T newValue, String tripId, Specie specie, int weight, float length, String location, LocalDateTime instant, String method, String bait, String weather, String text)
+	{
+	    return currentValue.equals(newValue)
+	            ? this
+	            : new Specimen(getId(), isPersisted(), tripId, specie, weight, length, location, instant, method, bait, weather, text);
+	}
+	
 	public double getRatio()
 	{
 		return (double) weight / (double) specie.getRegWeight();
@@ -120,7 +129,7 @@ public final class Specimen extends Domain<Specimen>
 	{
 		return new EqualsBuilder()
 				.append(this.tripId, that.tripId)
-				.append(this.specie.getId(), that.specie.getId())
+				.append(this.specie, that.specie)
 				.append(this.weight, that.weight)
 				.append(this.length, that.length)
 				.append(this.location, that.location)
@@ -140,8 +149,154 @@ public final class Specimen extends Domain<Specimen>
 
 	public Specimen copyAsNew()
 	{
-		Specimen copy = Specimen.asNew(tripId);
-		copy.copyProperties(this);
-		return copy;
+	    return new Specimen(UUID.randomUUID().toString(), false, tripId, specie, weight, length, location, instant, method, bait, weather, text);
 	}
+
+	private static class Builder implements TripBuilder, SpecieBuilder, WeightBuilder, LengthBuilder, LocationBuilder, InstantBuilder, MethodBuilder, BaitBuilder, WeatherBuilder, TextBuilder
+	{
+        private final String id;
+        private final boolean persisted;
+
+        private String tripId;
+        private Specie specie = EMPTY_SPECIE;
+        private int weight;
+        private float length;
+        private String location = "";
+        private LocalDateTime instant = MIN;
+        private String method = "";
+        private String bait = "";
+        private String weather = "";
+        private String text = "";
+
+        Builder(String id, boolean persisted)
+        {
+            this.id = id;
+            this.persisted = persisted;
+        }
+
+        @Override
+        public Builder tripId(String tripId)
+        {
+            this.tripId = tripId;
+            return this;
+        }
+
+        @Override
+        public WeightBuilder specie(Specie specie)
+        {
+            this.specie = specie;
+            return this;
+        }
+
+        @Override
+        public LengthBuilder weight(int weight)
+        {
+            this.weight = weight;
+            return this;
+        }
+
+        @Override
+        public LocationBuilder length(float length)
+        {
+            this.length = length;
+            return this;
+        }
+
+        @Override
+        public InstantBuilder location(String location)
+        {
+            this.location = location;
+            return this;
+        }
+
+        @Override
+        public MethodBuilder instant(LocalDateTime instant)
+        {
+            this.instant = instant;
+            return this;
+        }
+
+        @Override
+        public BaitBuilder method(String method)
+        {
+            this.method = method;
+            return this;
+        }
+
+        @Override
+        public WeatherBuilder bait(String bait)
+        {
+            this.bait = bait;
+            return this;
+        }
+
+        @Override
+        public TextBuilder weather(String weather)
+        {
+            this.weather = weather;
+            return this;
+        }
+
+        @Override
+        public Specimen text(String text)
+        {
+            this.text = text;
+            return build();
+        }
+
+        Specimen build()
+        {
+            return new Specimen(id, persisted, tripId, specie, weight, length, location, instant, method, bait, weather, text);
+        }
+	}
+
+	public interface TripBuilder
+	{
+	    SpecieBuilder tripId(String tripId);
+	}
+
+    public interface SpecieBuilder
+    {
+        WeightBuilder specie(Specie specie);
+    }
+
+    public interface WeightBuilder
+    {
+        LengthBuilder weight(int weight);
+    }
+
+    public interface LengthBuilder
+    {
+        LocationBuilder length(float length);
+    }
+
+    public interface LocationBuilder
+    {
+        InstantBuilder location(String location);
+    }
+
+    public interface InstantBuilder
+    {
+        MethodBuilder instant(LocalDateTime instant);
+    }
+
+    public interface MethodBuilder
+    {
+        BaitBuilder method(String method);
+    }
+
+    public interface BaitBuilder
+    {
+        WeatherBuilder bait(String bait);
+    }
+
+    public interface WeatherBuilder
+    {
+        TextBuilder weather(String weather);
+    }
+
+    public interface TextBuilder
+    {
+        Specimen text(String text);
+    }
 }

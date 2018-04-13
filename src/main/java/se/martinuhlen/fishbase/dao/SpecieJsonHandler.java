@@ -33,8 +33,8 @@ class SpecieJsonHandler extends JsonHandler<Specie>
 	{
 		JsonObject obj = json.getAsJsonObject();
 		return Specie.asPersisted(obj.get("id").getAsString())
-				.setName(obj.get("name").getAsString())
-				.setRegWeight(obj.get("regWeight").getAsInt())
-				.setFreshWater(obj.get("freshWater").getAsBoolean());
+				.name(obj.get("name").getAsString())
+				.regWeight(obj.get("regWeight").getAsInt())
+				.freshWater(obj.get("freshWater").getAsBoolean());
 	}
 }

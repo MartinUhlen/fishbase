@@ -1,7 +1,8 @@
 package se.martinuhlen.fishbase.domain;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static java.util.Collections.emptyList;
+import static java.time.LocalDate.now;
+import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Comparator.comparing;
 import static java.util.Objects.requireNonNull;
@@ -18,67 +19,85 @@ import java.util.stream.Stream;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 
-public class Trip extends Domain<Trip>
+/**
+ * Represents a fishing trip.
+ *
+ * @author Martin
+ */
+public final class Trip extends Domain<Trip>
 {
-	public static final Trip EMPTY_TRIP = new ImmutableTrip("", false);
+	public static final Trip EMPTY_TRIP = new Builder("", false).build();
 
-	public static Trip asPersisted(String id)
+	public static DescriptionBuilder asPersisted(String id)
 	{
-		return new Trip(id, true);
+	    return new Builder(id, true);
 	}
 
 	public static Trip asNew()
 	{
-		Trip trip = new Trip(UUID.randomUUID().toString(), false);
-		trip.setStartDate(LocalDate.now());
-		trip.setEndDate(LocalDate.now());
-		return trip;
+		return new Builder(UUID.randomUUID().toString(), false)
+		        .startDate(now())
+		        .endDate(now())
+		        .build();
 	}
 
-	private Trip(String id, boolean persisted)
+    private Trip(String id, boolean persisted, String description, LocalDate startDate, LocalDate endDate, String text, List<Specimen> specimens)
+    {
+        super(id, persisted);
+        this.description = requireNonNull(description, "description can't be null");
+        this.startDate = requireNonNull(startDate, "startDate can't be null");
+        this.endDate = requireNonNull(endDate, "endDate can't be null");
+        this.text = requireNonNull(text, "text can't be null");
+        this.specimens = specimens;
+    }
+
+	private Trip(String id, boolean persisted, String description, LocalDate startDate, LocalDate endDate, String text, Collection<Specimen> specimens)
 	{
-		super(id, persisted);
+	    this(id, persisted, description, startDate, endDate, text, applySpecimens(id, specimens));
 	}
 
-	private Trip(Trip trip)
-	{
-		super(trip.getId(), trip.isPersisted());
-		this.description = trip.description;
-		this.startDate = trip.startDate;
-		this.endDate = trip.endDate;
-		this.text = trip.text;
-		this.specimens = applySpecimens(trip.specimens);
-	}
+    private static List<Specimen> applySpecimens(String id, Collection<Specimen> specimens)
+    {
+        return unmodifiableList(requireNonNull(specimens, "specimens can't be null")
+                .stream()
+                .peek(s -> checkArgument(s.getTripId().equals(id), "Specimen#tripId must be equal to Trip#id"))
+                .sorted(comparing(Specimen::getInstant))
+                .collect(toList()));
+    }
 
 	//@formatter:off
-	private String description = "";
+	private final String description;
 	public String getDescription(){return description;}
-	public Trip setDescription(String description){this.description = requireNonNull(description); return this;}
+	public Trip withDescription(String description){return with(this.description, description, description, startDate, endDate, text, specimens);}
 
-	private LocalDate startDate = LocalDate.MIN;
+	private final LocalDate startDate;
 	public LocalDate getStartDate(){return startDate;}
-	public Trip setStartDate(LocalDate startDate){this.startDate = requireNonNull(startDate); return this;}
+	public Trip withStartDate(LocalDate startDate){return with(this.startDate, startDate, description, startDate, endDate, text, specimens);}
 
-	private LocalDate endDate = LocalDate.MAX;
+	private final LocalDate endDate;
 	public LocalDate getEndDate(){return endDate;}
-	public Trip setEndDate(LocalDate endDate){this.endDate = requireNonNull(endDate); return this;}
+	public Trip withEndDate(LocalDate endDate){return with(this.endDate, endDate, description, startDate, endDate, text, specimens);}
 
-	private String text = "";
+	private final String text;
 	public String getText(){return text;}
-	public Trip setText(String text){this.text = requireNonNull(text); return this;}
+	public Trip withText(String text){return with(this.text, text, description, startDate, endDate, text, specimens);}
 
-	private List<Specimen> specimens = emptyList();
+	private final List<Specimen> specimens;
 	public List<Specimen> getSpecimens(){return specimens;}
-	public Trip setSpecimens(Collection<Specimen> specimens){this.specimens = applySpecimens(specimens); return this;}
+	public Trip withSpecimens(Collection<Specimen> specimens)
+	{
+	    requireNonNull(specimens, "specimens can't be null");
+	    return ((this.specimens.isEmpty() && specimens.isEmpty()) || this.specimens.equals(specimens))
+	            ? this
+	            : new Trip(getId(), isPersisted(), description, startDate, endDate, text, specimens);
+	}
 	//@formatter:on
 
-	private List<Specimen> applySpecimens(Collection<Specimen> specimens)
+	private <T> Trip with(T currentValue, T newValue, String description, LocalDate startDate, LocalDate endDate, String text, List<Specimen> specimens)
 	{
-		return unmodifiableList(requireNonNull(specimens).stream()
-				.peek(s -> checkArgument(s.getTripId().equals(getId()), "tripId must be equal"))
-				.map(Specimen::copy)
-				.sorted(comparing(Specimen::getInstant))
-				.collect(toList()));
+	    return currentValue.equals(newValue)
+	            ? this
+	            : new Trip(getId(), isPersisted(), description, startDate, endDate, text, specimens);
 	}
 
 	@Override
@@ -151,49 +170,93 @@ public class Trip extends Domain<Trip>
 	@Override
 	public Trip copy()
 	{
-		return new Trip(this);
+		return new Trip(getId(), isPersisted(), description, startDate, endDate, text, specimens);
 	}
 
-	private static final class ImmutableTrip extends Trip
-	{
-		private ImmutableTrip(String id, boolean persisted)
-		{
-			super(id, persisted);
-		}
+    public boolean hasSpecimens()
+    {
+        return !specimens.isEmpty();
+    }
 
-		@Override
-		public Trip setDescription(String description)
-		{
-			return fail();
-		}
+    private static class Builder implements DescriptionBuilder, StartDateBuilder, EndDateBuilder, TextBuilder, SpecimenBuilder
+    {
+        private final String id;
+        private final boolean persisted;
+        private String description = "";
+        private LocalDate startDate = LocalDate.MIN;
+        private LocalDate endDate = LocalDate.MAX;
+        private String text = "";
+        private Collection<Specimen> specimens = emptySet();
 
-		@Override
-		public Trip setStartDate(LocalDate startDate)
-		{
-			return fail();
-		}
+        Builder(String id, boolean persisted)
+        {
+            this.id = id;
+            this.persisted = persisted;
+        }
 
-		@Override
-		public Trip setEndDate(LocalDate endDate)
-		{
-			return fail();
-		}
+        @Override
+        public Builder description(String description)
+        {
+            this.description = description;
+            return this;
+        }
 
-		@Override
-		public Trip setSpecimens(Collection<Specimen> specimens)
-		{
-			return fail();
-		}
+        @Override
+        public Builder startDate(LocalDate startDate)
+        {
+            this.startDate = startDate;
+            return this;
+        }
 
-		private Trip fail()
-		{
-			throw new IllegalArgumentException(getClass().getSimpleName() + " can't be modified");
-		}
+        @Override
+        public Builder endDate(LocalDate endDate)
+        {
+            this.endDate = endDate;
+            return this;
+        }
 
-		@Override
-		public Trip copy()
-		{
-			return this;
-		}
-	}
+        @Override
+        public Builder text(String text)
+        {
+            this.text = text;
+            return this;
+        }
+
+        @Override
+        public Trip specimens(Collection<Specimen> specimens)
+        {
+            this.specimens = specimens;
+            return build();
+        }
+
+        private Trip build()
+        {
+            return new Trip(id, persisted, description, startDate, endDate, text, specimens);
+        }
+    }
+
+    public interface DescriptionBuilder
+    {
+        StartDateBuilder description(String description);
+    }
+
+    public interface StartDateBuilder
+    {
+        EndDateBuilder startDate(LocalDate startDate);
+    }
+
+    public interface EndDateBuilder
+    {
+        TextBuilder endDate(LocalDate endDate);
+    }
+
+    public interface TextBuilder
+    {
+        SpecimenBuilder text(String text);
+    }
+
+    public interface SpecimenBuilder
+    {
+        Trip specimens(Collection<Specimen> specimens);
+    }
 }

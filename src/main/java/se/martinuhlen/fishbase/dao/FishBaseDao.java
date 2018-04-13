@@ -1,7 +1,9 @@
 package se.martinuhlen.fishbase.dao;
 
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
+import static java.lang.Thread.currentThread;
+import static java.lang.reflect.Proxy.newProxyInstance;
+import static java.util.concurrent.CompletableFuture.supplyAsync;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -14,8 +16,8 @@ public interface FishBaseDao
 {
 	public static FishBaseDao create(Persistence persistence)
 	{
-	    CompletableFuture<JsonDao> futureDao = CompletableFuture.supplyAsync(() -> new JsonDao(persistence));
-	    return (FishBaseDao) Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class<?>[] {FishBaseDao.class}, (Object proxy, Method method, Object[] args) ->
+	    CompletableFuture<JsonDao> futureDao = supplyAsync(() -> new JsonDao(persistence));
+	    return (FishBaseDao) newProxyInstance(currentThread().getContextClassLoader(), new Class<?>[] {FishBaseDao.class}, (proxy, method, args) ->
 	    {
 	        JsonDao dao = futureDao.get();
 	        return method.invoke(dao, args);
@@ -24,25 +26,17 @@ public interface FishBaseDao
 
 	List<Specie> getSpecies();
 
-	Specie getSpecie(String id);
-
-	void saveSpecie(Specie specie);
-
-	void saveSpecies(Collection<? extends Specie> species);
+	void saveSpecies(Collection<Specie> species);
 
 	boolean isSpecieDeletable(Specie specie);
 
-	void deleteSpecies(Collection<? extends Specie> species);
+	void deleteSpecies(Collection<Specie> species);
 
 	List<Specimen> getSpecimens();
 
-	Specimen getSpecimen(String id);
+	void saveSpecimens(Collection<Specimen> specimens);
 
-	void saveSpecimen(Specimen specimen);
-
-	void saveSpecimens(Collection<? extends Specimen> specimens);
-
-	void deleteSpecimens(Collection<? extends Specimen> specimens);
+	void deleteSpecimens(Collection<Specimen> specimens);
 
 	List<Trip> getTrips();
 

@@ -146,7 +146,7 @@ class SpecimenTable extends TableView<SpecimenWrapper>
     {
         Trip trip = tripSupplier.get();
         return Specimen.asNew(trip.getId())
-                        .setInstant(trip.getStartDate().atStartOfDay());
+                        .withInstant(trip.getStartDate().atStartOfDay());
     }
 
     private void setSpecimens(ObservableList<SpecimenWrapper> tableSpecimens)

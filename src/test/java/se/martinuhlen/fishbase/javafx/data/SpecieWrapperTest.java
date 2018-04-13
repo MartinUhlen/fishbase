@@ -1,10 +1,13 @@
 package se.martinuhlen.fishbase.javafx.data;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static se.martinuhlen.fishbase.domain.TestData.bream;
 import static se.martinuhlen.fishbase.domain.TestData.newSpecie;
+import static se.martinuhlen.fishbase.domain.TestData.tench;
 
 import org.junit.jupiter.api.Test;
 
@@ -49,6 +52,26 @@ public class SpecieWrapperTest extends WrapperTestCase<Specie, SpecieWrapper>
 	}
 
 	@Test
+	public void hasChanges()
+	{
+	    wrapper.setWrapee(tench());
+	    assertFalse(wrapper.hasChanges());
+
+	    wrapper.nameProperty().setValue("Sutare");
+	    assertTrue(wrapper.hasChanges());
+
+        wrapper.nameProperty().setValue("Tench");
+        assertFalse(wrapper.hasChanges());
+
+        wrapper.regWeightProperty().setValue(3500);
+        assertTrue(wrapper.hasChanges());
+
+        wrapper.setWrapee(bream());
+        assertFalse(wrapper.hasChanges());
+	}
+
+    @Test
+    @SuppressWarnings("unchecked")
 	public void removeAllListeners()
 	{
 		Property<String> property = wrapper.nameProperty();

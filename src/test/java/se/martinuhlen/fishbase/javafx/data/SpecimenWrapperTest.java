@@ -1,6 +1,10 @@
 package se.martinuhlen.fishbase.javafx.data;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static se.martinuhlen.fishbase.domain.TestData.bream;
 import static se.martinuhlen.fishbase.domain.TestData.bream5120;
 import static se.martinuhlen.fishbase.domain.TestData.perch;
@@ -12,6 +16,8 @@ import java.time.LocalTime;
 
 import org.junit.jupiter.api.Test;
 
+import javafx.beans.InvalidationListener;
+import javafx.beans.property.ReadOnlyProperty;
 import se.martinuhlen.fishbase.domain.Specimen;
 
 /**
@@ -47,13 +53,21 @@ public class SpecimenWrapperTest extends WrapperTestCase<Specimen, SpecimenWrapp
 	@Test
 	public void ratioProperty()
 	{
-		wrapper.specieProperty().setValue(perch().setRegWeight(1000));
-
+		wrapper.specieProperty().setValue(perch().withRegWeight(1000));
 		wrapper.weightProperty().setValue(500);
-		assertEquals(0.5, wrapper.ratioProperty().getValue().doubleValue());
+		ReadOnlyProperty<Double> ratio = wrapper.ratioProperty();
+        assertEquals(0.5, ratio.getValue().doubleValue());
+
+		InvalidationListener listener = mock(InvalidationListener.class);
+		ratio.addListener(listener);
 
 		wrapper.weightProperty().setValue(1200);
-		assertEquals(1.2, wrapper.ratioProperty().getValue().doubleValue());
+		assertEquals(1.2, ratio.getValue().doubleValue());
+		verify(listener, times(1)).invalidated(any());
+
+		wrapper.specieProperty().setValue(perch().withRegWeight(1600));
+		assertEquals(0.75, ratio.getValue().doubleValue());
+		verify(listener, times(2)).invalidated(any());
 	}
 
 	@Test
@@ -67,7 +81,7 @@ public class SpecimenWrapperTest extends WrapperTestCase<Specimen, SpecimenWrapp
 	{
 		testProperty("date", wrapper::dateProperty, s -> s.getInstant().toLocalDate(), LocalDate.parse("2017-04-10"), LocalDate.parse("2017-08-24"), LocalDate.parse("2018-02-12"));
 
-		wrapper.setWrapee(wrapper.getWrapee().setInstant(LocalDateTime.parse("2017-02-09T19:53")));
+		wrapper.setWrapee(wrapper.getWrapee().withInstant(LocalDateTime.parse("2017-02-09T19:53")));
 		wrapper.dateProperty().setValue(LocalDate.parse("2018-06-07"));
 		assertEquals(LocalDateTime.parse("2018-06-07T19:53"), wrapper.getWrapee().getInstant());
 	}
@@ -77,7 +91,7 @@ public class SpecimenWrapperTest extends WrapperTestCase<Specimen, SpecimenWrapp
 	{
 		testProperty("time", wrapper::timeProperty, s -> s.getInstant().toLocalTime(), LocalTime.parse("20:04"), LocalTime.parse("13:37"), LocalTime.parse("21:45"));
 
-		wrapper.setWrapee(wrapper.getWrapee().setInstant(LocalDateTime.parse("2017-02-09T19:53")));
+		wrapper.setWrapee(wrapper.getWrapee().withInstant(LocalDateTime.parse("2017-02-09T19:53")));
 		wrapper.timeProperty().setValue(LocalTime.parse("20:30"));
 		assertEquals(LocalDateTime.parse("2017-02-09T20:30"), wrapper.getWrapee().getInstant());
 	}

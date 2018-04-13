@@ -116,7 +116,7 @@ abstract class AbstractTableView<W extends Wrapper<D>, D extends Domain<D>> impl
 
 	abstract TableView<W> createTable(FilteredList<W> filteredList);
 
-	void tableChange(Observable obs)
+	void tableChange(@SuppressWarnings("unused") Observable obs)
 	{
 		tableChange();
 	}

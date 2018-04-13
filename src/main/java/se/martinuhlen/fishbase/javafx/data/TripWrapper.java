@@ -9,6 +9,7 @@ import static se.martinuhlen.fishbase.domain.Trip.EMPTY_TRIP;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -50,7 +51,7 @@ public class TripWrapper extends Wrapper<Trip>
 	public void setWrapee(Trip wrapee)
 	{
 		super.setWrapee(wrapee);
-		setInitialPhotos(emptyList());
+		setInitialPhotos(Collections.emptyList());
 	}
 
 	public ObservableValue<String> id()
@@ -60,27 +61,27 @@ public class TripWrapper extends Wrapper<Trip>
 
 	public Property<String> description()
 	{
-		return getProperty("description", Trip::getDescription, Trip::setDescription);
+		return getProperty("description", Trip::getDescription, Trip::withDescription);
 	}
 
 	public Property<LocalDate> startDate()
 	{
-		return getProperty("startDate", Trip::getStartDate, Trip::setStartDate);
+		return getProperty("startDate", Trip::getStartDate, Trip::withStartDate);
 	}
 
 	public Property<LocalDate> endDate()
 	{
-		return getProperty("endDate", Trip::getEndDate, Trip::setEndDate);
+		return getProperty("endDate", Trip::getEndDate, Trip::withEndDate);
 	}
 
 	public Property<String> text()
 	{
-		return getProperty("text", Trip::getText, Trip::setText);
+		return getProperty("text", Trip::getText, Trip::withText);
 	}
 
 	public Property<List<Specimen>> specimens()
 	{
-		return getProperty("specimens", Trip::getSpecimens, Trip::setSpecimens);
+		return getProperty("specimens", Trip::getSpecimens, Trip::withSpecimens);
 	}
 
 	private final ObservableList<SpecimenWrapper> specimenWrappers = observableArrayList();

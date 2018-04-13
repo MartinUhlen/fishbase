@@ -43,7 +43,8 @@ public abstract class WrapperTestCase<D extends Domain<D>, W extends Wrapper<D>>
 
 	protected abstract W createWrapper();
 
-	@SafeVarargs
+    @SafeVarargs
+    @SuppressWarnings("unchecked")
 	protected final <P> void testProperty(String name, Supplier<Property<P>> propertyGetter, Function<D, P> valueGetter, P... values)
 	{
 		Property<P> property = propertyGetter.get();

@@ -1,5 +1,7 @@
 package se.martinuhlen.fishbase.dao;
 
+import static java.util.Collections.emptySet;
+
 import java.lang.reflect.Type;
 import java.time.LocalDate;
 
@@ -35,9 +37,10 @@ class TripJsonHandler extends JsonHandler<Trip>
 	{
 		JsonObject obj = json.getAsJsonObject();
 		return Trip.asPersisted(obj.get("id").getAsString())
-				.setDescription(obj.get("description").getAsString())
-				.setStartDate(LocalDate.parse(obj.get("startDate").getAsString()))
-				.setEndDate(LocalDate.parse(obj.get("endDate").getAsString()))
-				.setText(obj.get("text").getAsString());
+				.description(obj.get("description").getAsString())
+				.startDate(LocalDate.parse(obj.get("startDate").getAsString()))
+				.endDate(LocalDate.parse(obj.get("endDate").getAsString()))
+				.text(obj.get("text").getAsString())
+				.specimens(emptySet());
 	}
 }

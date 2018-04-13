@@ -1,5 +1,6 @@
 package se.martinuhlen.fishbase.javafx.data;
 
+import static java.util.Arrays.asList;
 import static java.util.Objects.requireNonNull;
 
 import java.util.HashMap;
@@ -7,7 +8,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -60,7 +61,7 @@ public abstract class Wrapper<D extends Domain<D>> implements Observable
 	{
 		requireNonNull(wrapee, "wrapee can't be null");
 		this.initialWrapee = wrapee.copy();
-		this.currentWrapee = wrapee.copy();
+		this.currentWrapee = wrapee;
 		isSettingWrapee = true;
 		properties.values().forEach(p -> p.notifyListeners());
 		isSettingWrapee = false;
@@ -90,14 +91,16 @@ public abstract class Wrapper<D extends Domain<D>> implements Observable
 		properties.values().forEach(p -> p.removeAllListeners());
 	}
 
-	<V> ReadOnlyProperty<V> getProperty(String name, Function<D, V> getter)
+	<V> ReadOnlyProperty<V> getProperty(String name, Function<D, V> getter, Observable... dependencies)
 	{
-		return getProperty(name, () -> new ReadableProperty<>(name, getter));
+		ReadableProperty<V> property = getProperty(name, () -> new ReadableProperty<>(name, getter));
+		asList(dependencies).forEach(dep -> dep.addListener(obs -> property.notifyListeners()));
+		return property;
 	}
 
-	<V> Property<V> getProperty(String name, Function<D, V> getter, BiConsumer<D, V> setter)
+	<V> Property<V> getProperty(String name, Function<D, V> getter, BiFunction<D, V, D> wither)
 	{
-		return getProperty(name, () -> new WritableProperty<>(name, getter, setter));
+		return getProperty(name, () -> new WritableProperty<>(name, getter, wither));
 	}
 
 	@SuppressWarnings("unchecked")
@@ -119,7 +122,7 @@ public abstract class Wrapper<D extends Domain<D>> implements Observable
 		}
 	}
 
-	private class ReadableProperty<V> implements ReadOnlyProperty<V> // FIXME Renamw to WritableProperty + add ReadableProperty
+	private class ReadableProperty<V> implements ReadOnlyProperty<V>
 	{
 		private final List<InvalidationListener> invalidationListeners = new LinkedList<>();
 		private final List<ChangeListener<? super V>> changeListeners = new LinkedList<>();
@@ -199,12 +202,12 @@ public abstract class Wrapper<D extends Domain<D>> implements Observable
 
 	private class WritableProperty<V> extends ReadableProperty<V> implements Property<V>
 	{
-		private final BiConsumer<D, V> setter;
+        private final BiFunction<D, V, D> wither;
 
-		WritableProperty(String name, Function<D, V> getter, BiConsumer<D, V> setter)
+		WritableProperty(String name, Function<D, V> getter, BiFunction<D, V, D> wither)
 		{
 			super(name, getter);
-			this.setter = setter;
+            this.wither = wither;
 		}
 
 		@Override
@@ -214,7 +217,7 @@ public abstract class Wrapper<D extends Domain<D>> implements Observable
 			if (!Objects.equals(oldValue, value))
 			{
 				logger.log("Changing '" + name + "' from '" + oldValue + "' to '" + value + "'");
-				setter.accept(currentWrapee, value);
+				currentWrapee = wither.apply(currentWrapee, value);
 				notifyListeners(oldValue, value);
 			}
 		}

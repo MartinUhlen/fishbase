@@ -41,15 +41,16 @@ class SpecimenJsonHandler extends JsonHandler<Specimen>
 	public Specimen deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException
 	{
 		JsonObject obj = json.getAsJsonObject();
-		return Specimen.asPersisted(obj.get("id").getAsString(), obj.get("tripId").getAsString())
-				.setSpecie(Specie.asPersisted(obj.get("specieId").getAsString()))
-				.setWeight(obj.get("weight").getAsInt())
-				.setLength(obj.get("length").getAsFloat())
-				.setLocation(obj.get("location").getAsString())
-				.setInstant(LocalDateTime.parse(obj.get("instant").getAsString()))
-				.setMethod(obj.get("method").getAsString())
-				.setBait(obj.get("bait").getAsString())
-				.setWeather(obj.get("weather").getAsString())
-				.setText(obj.get("text").getAsString());
+		return Specimen.asPersisted(obj.get("id").getAsString())
+		        .tripId(obj.get("tripId").getAsString())
+				.specie(Specie.asIdentity(obj.get("specieId").getAsString()))
+				.weight(obj.get("weight").getAsInt())
+				.length(obj.get("length").getAsFloat())
+				.location(obj.get("location").getAsString())
+				.instant(LocalDateTime.parse(obj.get("instant").getAsString()))
+				.method(obj.get("method").getAsString())
+				.bait(obj.get("bait").getAsString())
+				.weather(obj.get("weather").getAsString())
+				.text(obj.get("text").getAsString());
 	}
 }

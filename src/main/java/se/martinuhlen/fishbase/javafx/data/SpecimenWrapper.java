@@ -5,7 +5,6 @@ import java.time.LocalTime;
 
 import javafx.beans.InvalidationListener;
 import javafx.beans.property.Property;
-import javafx.beans.property.ReadOnlyDoubleWrapper;
 import javafx.beans.property.ReadOnlyProperty;
 import se.martinuhlen.fishbase.domain.Specie;
 import se.martinuhlen.fishbase.domain.Specimen;
@@ -24,70 +23,57 @@ public class SpecimenWrapper extends Wrapper<Specimen>
 
 	public Property<Specie> specieProperty()
 	{
-		return getProperty("specie", Specimen::getSpecie, Specimen::setSpecie);
+		return getProperty("specie", Specimen::getSpecie, Specimen::withSpecie);
 	}
 
 	public Property<Integer> weightProperty()
 	{
-		return getProperty("weight", Specimen::getWeight, Specimen::setWeight);
+		return getProperty("weight", Specimen::getWeight, Specimen::withWeight);
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public ReadOnlyProperty<Double> ratioProperty() // FIXME Use ReadableProperty?
+	public ReadOnlyProperty<Double> ratioProperty()
 	{
-		if (ratioProperty == null)
-		{
-			Property<Specie> specie = specieProperty();
-			Property<Integer> weight = weightProperty();
-			ReadOnlyDoubleWrapper property = new ReadOnlyDoubleWrapper(getWrapee().getRatio());
-			InvalidationListener listener = obs -> property.set(getWrapee().getRatio());
-			specie.addListener(listener);
-			weight.addListener(listener);
-			listener.invalidated(null);
-			ratioProperty = (ReadOnlyProperty) property.getReadOnlyProperty();
-		}
-		return ratioProperty;
-
+	    ReadOnlyProperty<Double> ratio = getProperty("ratio", Specimen::getRatio, specieProperty(), weightProperty());
+	    return ratio;
 	}
-	private ReadOnlyProperty<Double> ratioProperty;
 
 	public Property<Float> lengthProperty()
 	{
-		return getProperty("length", Specimen::getLength, Specimen::setLength);
+		return getProperty("length", Specimen::getLength, Specimen::withLength);
 	}
 
 	public Property<String> locationProperty()
 	{
-		return getProperty("location", Specimen::getLocation, Specimen::setLocation);
+		return getProperty("location", Specimen::getLocation, Specimen::withLocation);
 	}
 
 	public Property<LocalDate> dateProperty()
 	{
-		return getProperty("date", s -> s.getInstant().toLocalDate(), (s, d) -> s.setInstant(d.atTime(s.getInstant().toLocalTime())));
+		return getProperty("date", s -> s.getInstant().toLocalDate(), (s, d) -> s.withInstant(d.atTime(s.getInstant().toLocalTime())));
 	}
 
 	public Property<LocalTime> timeProperty()
 	{
-		return getProperty("time", s -> s.getInstant().toLocalTime(), (s, d) -> s.setInstant(d.atDate(s.getInstant().toLocalDate())));
+		return getProperty("time", s -> s.getInstant().toLocalTime(), (s, d) -> s.withInstant(d.atDate(s.getInstant().toLocalDate())));
 	}
 
 	public Property<String> methodProperty()
 	{
-		return getProperty("method", Specimen::getMethod, Specimen::setMethod);
+		return getProperty("method", Specimen::getMethod, Specimen::withMethod);
 	}
 
 	public Property<String> baitProperty()
 	{
-		return getProperty("bait", Specimen::getBait, Specimen::setBait);
+		return getProperty("bait", Specimen::getBait, Specimen::withBait);
 	}
 
 	public Property<String> weatherProperty()
 	{
-		return getProperty("weather", Specimen::getWeather, Specimen::setWeather);
+		return getProperty("weather", Specimen::getWeather, Specimen::withWeather);
 	}
 
 	public Property<String> textProperty()
 	{
-		return getProperty("text", Specimen::getText, Specimen::setText);
+		return getProperty("text", Specimen::getText, Specimen::withText);
 	}
 }

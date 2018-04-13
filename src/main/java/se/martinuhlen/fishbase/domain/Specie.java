@@ -1,5 +1,6 @@
 package se.martinuhlen.fishbase.domain;
 
+import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import java.util.UUID;
@@ -7,46 +8,58 @@ import java.util.stream.Stream;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 
-public class Specie extends Domain<Specie>
+/**
+ * Represents a fish specie.
+ *
+ * @author Martin
+ */
+public final class Specie extends Domain<Specie>
 {
-	public static final Specie EMPTY_SPECIE = new ImmutableSpecie("", false);
+	public static final Specie EMPTY_SPECIE = new Builder("", false).build();
 
-	public static Specie asPersisted(String id)
+	public static NameBuilder asPersisted(String id)
 	{
-		return new Specie(id, true);
+	    return new Builder(id, true);
 	}
+
+    public static Specie asIdentity(String id)
+    {
+        return new Builder(id, true).build();
+    }
 
 	public static Specie asNew()
 	{
-		return new Specie(UUID.randomUUID().toString(), false);
+		return new Builder(UUID.randomUUID().toString(), false).build();
 	}
 
-	private Specie(String id, boolean persisted)
-	{
-		super(id, persisted);
-	}
-
-	Specie(Specie s)
-	{
-		super(s.getId(), s.isPersisted());
-		this.name = s.name;
-		this.regWeight = s.regWeight;
-		this.freshWater = s.freshWater;
-	}
+    private Specie(String id, boolean persisted, String name, int regWeight, boolean freshWater)
+    {
+        super(id, persisted);
+        this.name = requireNonNull(name, "name can't be null");
+        this.regWeight = requireNonNegative(regWeight, "regWeight must be >= 0");
+        this.freshWater = freshWater;
+    }
 
 	//@formatter:off
-	private String name = "";
+	private final String name;
 	public String getName(){return name;}
-	public Specie setName(String name){this.name = name; return this;}
+	public Specie withName(String name){return with(this.name.equals(name), name, regWeight, freshWater);}
 
-	private int regWeight = 0;
+	private final int regWeight;
 	public int getRegWeight(){return regWeight;}
-	public Specie setRegWeight(int regWeight){this.regWeight = regWeight; return this;}
+	public Specie withRegWeight(int regWeight){return with(this.regWeight == regWeight, name, regWeight, freshWater);}
 
-	private boolean freshWater = true;
+	private final boolean freshWater;
 	public boolean isFreshWater(){return freshWater;}
-	public Specie setFreshWater(boolean freshWater){this.freshWater = freshWater; return this;}
+	public Specie withFreshWater(boolean freshWater){return with(this.freshWater == freshWater, name, regWeight, freshWater);}
 	//@formatter:off
+
+	private <T> Specie with(boolean equals, String name, int regWeight, boolean freshWater)
+	{
+	    return equals
+	            ? this
+	            : new Specie(getId(), isPersisted(), name, regWeight, freshWater);
+	}
 
 	@Override
 	public Stream<String> getValidationErrors()
@@ -77,43 +90,63 @@ public class Specie extends Domain<Specie>
 	@Override
 	public Specie copy()
 	{
-		return new Specie(this);
+		return new Specie(getId(), isPersisted(), name, regWeight, freshWater);
 	}
 
-	private static final class ImmutableSpecie extends Specie
+	private static class Builder implements NameBuilder, RegWeightBuilder, FreshWaterBuilder
 	{
-		private ImmutableSpecie(String id, boolean persisted)
-		{
-			super(id, persisted);
-		}
+	    private final String id;
+	    private final boolean persisted;
 
-		@Override
-		public Specie setName(String name)
-		{
-			return fail();
-		}
+        private String name = "";
+        private int regWeight;
+        private boolean freshWater = true;
 
-		@Override
-		public Specie setRegWeight(int regWeight)
-		{
-			return fail();
-		}
+	    Builder(String id, boolean persisted)
+        {
+            this.id = id;
+            this.persisted = persisted;
+        }
 
-		@Override
-		public Specie setFreshWater(boolean freshWater)
-		{
-			return fail();
-		}
+	    @Override
+	    public RegWeightBuilder name(String name)
+	    {
+	        this.name = name;
+	        return this;
+	    }
 
-		private Specie fail()
-		{
-			throw new IllegalArgumentException(getClass().getSimpleName() + " can't be modified");
-		}
+        @Override
+        public FreshWaterBuilder regWeight(int regWeight)
+        {
+            this.regWeight = regWeight;
+            return this;
+        }
 
-		@Override
-		public Specie copy()
-		{
-			return this;
-		}
+        @Override
+        public Specie freshWater(boolean freshWater)
+        {
+            this.freshWater = freshWater;
+            return build();
+        }
+
+        private Specie build()
+        {
+            return new Specie(id, persisted, name, regWeight, freshWater);
+        }
 	}
+
+	public interface NameBuilder
+	{
+	    RegWeightBuilder name(String name);
+	}
+
+    public interface RegWeightBuilder
+    {
+        FreshWaterBuilder regWeight(int regWeight);
+    }
+
+    public interface FreshWaterBuilder
+    {
+        Specie freshWater(boolean freshWater);
+    }
 }
