@@ -9,7 +9,6 @@ import static se.martinuhlen.fishbase.domain.Trip.EMPTY_TRIP;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -51,7 +50,7 @@ public class TripWrapper extends Wrapper<Trip>
 	public void setWrapee(Trip wrapee)
 	{
 		super.setWrapee(wrapee);
-		setInitialPhotos(Collections.emptyList());
+		setInitialPhotos(emptyList());
 	}
 
 	public ObservableValue<String> id()

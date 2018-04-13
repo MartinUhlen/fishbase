@@ -222,7 +222,7 @@ class TripView implements View
 		Trip refreshedTrip = trips.stream()
 			.filter(t -> t.equalsId(trip))
 			.findAny()
-			.orElse(trip.isNew() ? Trip.asNew() : EMPTY_TRIP);
+			.orElse(wrapper.isEmpty() ? EMPTY_TRIP : trip.isNew() ? Trip.asNew() : EMPTY_TRIP);
 		setTrip(refreshedTrip);
 		list.selectTrip(refreshedTrip.getId());
 	}
