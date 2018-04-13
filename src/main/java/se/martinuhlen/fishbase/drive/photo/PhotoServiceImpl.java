@@ -14,7 +14,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -29,55 +28,6 @@ import se.martinuhlen.fishbase.utils.Logger;
 
 class PhotoServiceImpl implements PhotoService
 {
-	public static void main(String[] args) throws Exception
-	{
-//		PhotoServiceImpl service = new PhotoServiceImpl(DriveFactory.create());
-
-		//service.getFishingPhotos().forEach(System.out::println);
-
-		//service.searchPhotos("2018-03-12").forEach(System.out::println);
-
-//		System.out.println("Searching photo");
-//		Photo photo = service.searchPhotos("2018-03-12")
-//						.stream()
-//						.filter(p -> p.getId().equals("1dwWjG4bvRBOL6fes-m7kNo0g63AXd_B0ug"))
-//						.findAny().get();
-//		System.out.println();
-//
-//		System.out.println("Saving photo with tripId");
-//		Thread.sleep(1000);
-//		String tripId = "e71e74d7-7503-4c1d-addb-e3ce8b087e89";
-//		photo.setTripId(tripId);
-//		service.savePhotos(asList(photo));
-//		System.out.println();
-//
-//		System.out.println("Getting trip photos");
-//		Thread.sleep(1000);
-//		service.getTripPhotos(tripId).forEach(System.out::println);
-//		System.out.println();
-//
-//		System.out.println("Getting fishing photos");
-//		Thread.sleep(1000);
-//		service.getFishingPhotos().forEach(System.out::println);
-//		System.out.println();
-//
-//		System.out.println("Saving photo *without* tripId");
-//		Thread.sleep(1000);
-//		photo.setTripId(null);
-//		service.savePhotos(asList(photo));
-//		System.out.println();
-//
-//		System.out.println("Getting trip photos (expect none)");
-//		Thread.sleep(1000);
-//		service.getTripPhotos(tripId).forEach(System.err::println);
-//		System.out.println();
-//
-//		System.out.println("Getting all photos (expect none)");
-//		Thread.sleep(1000);
-//		service.getFishingPhotos().forEach(System.err::println);
-//		System.out.println();
-	}
-
 	private static final Logger LOGGER = Logger.getLogger(PhotoService.class);
 	private static final DateTimeFormatter EXIF_TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss");
 
@@ -176,14 +126,12 @@ class PhotoServiceImpl implements PhotoService
 			log("Found " + result.getFiles().size() + " photos");
 
 			photoFiles.addAll(result.getFiles());
-
 			pageToken = result.getNextPageToken();
 		}
 		while (pageToken != null);
 
 		return photoFiles
 				.stream()
-				.peek(f -> System.out.println(f.getName() + ", appProperties: " + f.getAppProperties()))
 				.map(p -> mapper.apply(p))
 				.collect(toList());
 	}
@@ -205,11 +153,11 @@ class PhotoServiceImpl implements PhotoService
 	 *   <li>Some portrait photos are landscaped
 	 *   <li>Is really slooooooow (needs to be confirmed, might be due to piped streams)
 	 * </ul>
-	 * So instead we use thumbnailLink and increase size with the {@code + "0"} trick.
+	 * So instead we use thumbnailLink and increase size with the {@code + "0"} hack.
 	 */
 	private Photo toPhoto(File f)
 	{
-		String contentUrl = f.getThumbnailLink() + "0";
+		String contentUrl = f.getThumbnailLink() + "0"; // HACK!
 		return new PhotoImpl(
 			f.getId(),
 			f.getName(),
@@ -229,7 +177,7 @@ class PhotoServiceImpl implements PhotoService
 	{
 		return requireNonNullElseGet(
 				timeOf(f.getImageMediaMetadata()),
-				() -> toLocalDateTime(f, f.getCreatedTime()));
+				() -> toLocalDateTime(f.getCreatedTime()));
 	}
 
 	private LocalDateTime timeOf(ImageMediaMetadata meta)
@@ -244,9 +192,8 @@ class PhotoServiceImpl implements PhotoService
 	 * <p>
 	 * {@link DateTime#getTimeZoneShift()} seems always to be 0...
 	 */
-	private LocalDateTime toLocalDateTime(File file, DateTime time)
+	private LocalDateTime toLocalDateTime(DateTime time)
 	{
-		//return LocalDateTime.ofEpochSecond(time.getValue() / 1_000, 0, ZoneOffset.ofHours(time.getTimeZoneShift() / 60));
 		return Instant.ofEpochSecond(time.getValue() / 1_000)
 				.atZone(ZoneId.systemDefault())
 				.toLocalDateTime();
@@ -268,10 +215,10 @@ class PhotoServiceImpl implements PhotoService
 	{
 		// According to docs, an entry with null value will be removed.
 		// But it doesn't work, so we use "false" and "null" instead.
-		Map<String, String> appProperties = new HashMap<>();
-		appProperties.put(FISHING_KEY, remove ? "false" : "true");
-		appProperties.put(TRIP_KEY, remove ? "null" : photo.getTripId());
-		appProperties.put(SPECIMENS_KEY, remove ? "null" : photo.getSpecimenIds());
+	    Map<String, String> appProperties = Map.of(
+                FISHING_KEY, remove ? "false" : "true",
+                TRIP_KEY, remove ? "null" : photo.getTripId(),
+                SPECIMENS_KEY, remove ? "null" : photo.getSpecimenIds());
 
 		log("Updating photo " + photo.getName() + "(" + photo.getId() + ") with " + appProperties);
 
