@@ -293,14 +293,43 @@ public class ThumbnailPane extends BorderPane
 		return slider;
 	}
 
-	void addPhotos(Collection<? extends Photo> photos)
+	/**
+	 * Gets the comparator in which photos of this pane is sorted.
+	 * 
+	 * @return photo comparator
+	 */
+	public Comparator<Photo> getPhotoComparator()
 	{
+	    return photoComparator;
+	}
+
+	/**
+	 * Adds new photos to this pane.
+	 * 
+	 * @param photos to add
+	 */
+	void addPhotos(Collection<? extends Photo> photos) // FIXME [Martin] Merge with #appendPhotos
+	{
+	    requireNonNull(photos, "photos cannot be null");
 		Set<Photo> newPhotos = new HashSet<>();
 		newPhotos.addAll(this.photos);
 		newPhotos.addAll(photos);
 		setPhotos(newPhotos);
 	}
 
+	/**
+	 * Appends new photos after the photos that are currently in this pane.
+	 * <p>
+	 * It's assumed that Appended photos are pre-sorted with {@link #getPhotoComparator()}.
+	 * 
+	 * @param photos to append
+	 */
+	public void appendPhotos(Collection<? extends Photo> photos)   // FIXME [Martin] Merge with #addPhotos
+	{
+        this.photos.addAll(photos);
+        addThumbnails(photoPane.getChildren().size(), photos);	    
+	}
+	
 	void setPhotosSelected(Collection<? extends Photo> photos)
 	{
 		setPhotos(photos);

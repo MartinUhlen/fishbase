@@ -1,10 +1,15 @@
 package se.martinuhlen.fishbase.javafx;
 
+import static java.lang.Math.min;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static javafx.scene.layout.Region.USE_PREF_SIZE;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.concurrent.Service;
@@ -12,6 +17,7 @@ import javafx.concurrent.Task;
 import javafx.scene.Node;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.layout.StackPane;
+import javafx.util.Duration;
 import se.martinuhlen.fishbase.drive.photo.FishingPhoto;
 import se.martinuhlen.fishbase.drive.photo.PhotoService;
 import se.martinuhlen.fishbase.javafx.action.Action;
@@ -66,9 +72,13 @@ public class PhotoView implements View
 
 	private class PhotoLoader extends Service<List<FishingPhoto>>
 	{
+	    private final Timeline batchTimeline = new Timeline(new KeyFrame(Duration.millis(100), e -> addNextBatchOfPhotos()));
+	    private List<FishingPhoto> loadedPhotos = emptyList();
+
         @Override
         protected Task<List<FishingPhoto>> createTask()
         {
+            loadedPhotos = emptyList();
             thumbnailPane.setPhotos(emptySet());
             progressIndicator.setVisible(true);
             return new Task<>()
@@ -76,7 +86,9 @@ public class PhotoView implements View
                 @Override
                 protected List<FishingPhoto> call() throws Exception
                 {
-                    return service.getFishingPhotos();
+                    List<FishingPhoto> photos = service.getFishingPhotos();
+                    photos.sort(thumbnailPane.getPhotoComparator());
+                    return photos;
                 }
             };
         }
@@ -85,7 +97,20 @@ public class PhotoView implements View
         protected void succeeded()
         {
             progressIndicator.setVisible(false);
-            thumbnailPane.setPhotos(getValue());
+            loadedPhotos = getValue();
+            addNextBatchOfPhotos();
+        }
+
+        private void addNextBatchOfPhotos()
+        {
+            if (!loadedPhotos.isEmpty())
+            {
+                List<FishingPhoto> subList = loadedPhotos.subList(0, min(100, loadedPhotos.size()));
+                List<FishingPhoto> photos = new ArrayList<>(subList);
+                thumbnailPane.appendPhotos(photos);
+                subList.clear();
+                batchTimeline.playFromStart();
+            }
         }
 	}
 }
