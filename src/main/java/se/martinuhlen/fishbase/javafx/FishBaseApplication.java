@@ -18,6 +18,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import javafx.application.Application;
@@ -81,11 +82,13 @@ public class FishBaseApplication extends Application
 	private DrivePersistence drivePersistence;
 	private FishBaseDao dao;
 
+	private final Consumer<String> tripOpener = tripId -> openTab(TripView.class).selectTrip(tripId);
+	
 	private final Map<Class<? extends View>, Supplier<? extends View>> viewSuppliers = Map.of(
 			TripView.class, () -> new TripView(dao, photoService),
-			SpecimenView.class, () -> new SpecimenView(dao, photoService, tripId -> openTab(TripView.class).selectTrip(tripId)),
+			SpecimenView.class, () -> new SpecimenView(dao, photoService, tripOpener),
 			SpecieView.class, () -> new SpecieView(dao),
-			PhotoView.class, () -> new PhotoView(photoService));
+			PhotoView.class, () -> new PhotoView(photoService, dao, tripOpener));
 
 	public FishBaseApplication()
 	{

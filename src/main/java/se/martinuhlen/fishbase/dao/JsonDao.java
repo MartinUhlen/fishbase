@@ -8,6 +8,7 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
+import static se.martinuhlen.fishbase.domain.Trip.EMPTY_TRIP;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -255,8 +256,8 @@ class JsonDao implements FishBaseDao
 
 	private boolean isSpecimensChanged(Trip trip)
 	{
-		return trip.isNew()
-			|| !trips.get(trip.getId()).getSpecimens().equals(trip.getSpecimens());
+		return (trip.isNew() && trip.hasSpecimens())
+			|| !trips.getOrDefault(trip.getId(), EMPTY_TRIP).getSpecimens().equals(trip.getSpecimens());
 	}
 
 	@Override

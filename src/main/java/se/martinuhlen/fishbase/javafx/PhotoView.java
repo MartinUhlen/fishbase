@@ -3,10 +3,13 @@ package se.martinuhlen.fishbase.javafx;
 import static java.lang.Math.min;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
+import static java.util.stream.Collectors.joining;
 import static javafx.scene.layout.Region.USE_PREF_SIZE;
+import static se.martinuhlen.fishbase.javafx.utils.Images.getImageView16;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -15,34 +18,71 @@ import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.scene.Node;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.layout.StackPane;
 import javafx.util.Duration;
+import se.martinuhlen.fishbase.dao.FishBaseDao;
+import se.martinuhlen.fishbase.domain.Trip;
 import se.martinuhlen.fishbase.drive.photo.FishingPhoto;
 import se.martinuhlen.fishbase.drive.photo.PhotoService;
 import se.martinuhlen.fishbase.javafx.action.Action;
 import se.martinuhlen.fishbase.javafx.action.RunnableAction;
+import se.martinuhlen.fishbase.javafx.photo.HasPhoto;
 import se.martinuhlen.fishbase.javafx.photo.ThumbnailPane;
 
-public class PhotoView implements View
+class PhotoView implements View
 {
 	private final ReadOnlyStringProperty titleProperty = new ReadOnlyStringWrapper("Photos").getReadOnlyProperty();
 	private final RunnableAction refreshAction = new RunnableAction(true, () -> refresh());
 
 	private final PhotoService service;
+	private final FishBaseDao dao;
+	private final Consumer<String> tripOpener;
 	private final StackPane stackPane;
 	private final ThumbnailPane thumbnailPane;
 	private final ProgressIndicator progressIndicator;
 	private final PhotoLoader photoLoader;
 
-	public PhotoView(PhotoService service)
+	PhotoView(PhotoService service, FishBaseDao dao, Consumer<String> tripOpener)
 	{
 		this.service = service;
-		this.thumbnailPane = ThumbnailPane.forTimeline();
+        this.dao = dao;
+        this.tripOpener = tripOpener;
+		this.thumbnailPane = createThumbnailPane();
 		this.progressIndicator = new ProgressIndicator();
 		this.stackPane = new StackPane(thumbnailPane, progressIndicator);
 		this.photoLoader = new PhotoLoader();
 	}
+
+    private ThumbnailPane createThumbnailPane()
+    {
+        ThumbnailPane pane = ThumbnailPane.forTimeline();
+        pane.setTooltipFunction(photo ->
+        {
+            FishingPhoto p = (FishingPhoto) photo;
+            Trip trip = dao.getTrip(p.getTripId());
+            return trip.getDescription()
+                +  trip.getSpecimens()
+                        .stream()
+                        .filter(s -> p.containsSpecimen(s.getId()))
+                        .map(s -> s.getLabel() + " " + s.getMethod() + "/" + s.getBait() + " " + s.getLocation())
+                        .collect(joining("\n", "\n", ""));
+        });
+
+        MenuItem openTrip = new MenuItem("Open trip", getImageView16("window_next.png"));
+        openTrip.setOnAction(e -> tripOpener.accept(openTrip.getUserData().toString()));
+        ContextMenu contextMenu = new ContextMenu(openTrip);
+        pane.setPhotoContextMenuHandler(e ->
+        {
+            HasPhoto owner = (HasPhoto) e.getSource();
+            FishingPhoto photo = (FishingPhoto) owner.getPhoto();
+            openTrip.setUserData(photo.getTripId());
+            contextMenu.show((Node) e.getSource(), e.getScreenX(), e.getScreenY());
+        });
+        return pane;
+    }
 
 	@Override
 	public Node getContent()

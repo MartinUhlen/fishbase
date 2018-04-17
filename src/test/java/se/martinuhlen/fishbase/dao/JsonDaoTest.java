@@ -9,6 +9,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static se.martinuhlen.fishbase.domain.TestData.bream;
 import static se.martinuhlen.fishbase.domain.TestData.bream5120;
@@ -23,6 +26,7 @@ import static se.martinuhlen.fishbase.domain.TestData.trip1;
 import static se.martinuhlen.fishbase.domain.TestData.trip2;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -208,6 +212,17 @@ public class JsonDaoTest
 		assertTrue(newTrip.isPersisted());
 		assertTripsEquals(asList(newTrip, trip2(), trip1()));
 	}
+
+    @Test
+    public void save_new_trip_without_specimens_does_not_persist_specimens() throws IOException
+    {
+        reset(persistence);
+
+        dao.saveTrip(newTrip());
+
+        verify(persistence, times(1)).output("Trip.json");
+        verifyNoMoreInteractions(persistence);
+    }
 
 	@Test
 	public void test_save_new_trip_with_specimen()

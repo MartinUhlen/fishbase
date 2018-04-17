@@ -160,6 +160,7 @@ public class ThumbnailPane extends BorderPane
 	private Stage slideshowStage;
 
 	private EventHandler<? super ContextMenuEvent> contextMenuHandler;
+	private Function<Photo, String> tooltipFunction;
 
 	private ThumbnailPane(boolean thumbnailsAreSelectable, boolean ascendingOrder, boolean showDateSlider)
 	{
@@ -419,6 +420,16 @@ public class ThumbnailPane extends BorderPane
 				s -> selectAll(photo.getTime().toLocalDate(), s));
 		thumbnail.onMouseClickedProperty().set(this::onThumbnailClicked);
 		thumbnail.setOnContextMenuRequested(contextMenuHandler);
+		if (tooltipFunction != null)
+		{
+    		thumbnail.imageView.setOnMouseEntered(e ->
+            {
+                String tooltipText = tooltipFunction.apply(thumbnail.photo);
+                Tooltip.install(thumbnail.imageView, new Tooltip(tooltipText));
+                thumbnail.imageView.setOnMouseEntered(null);
+            });
+		}
+
 		return thumbnail;
 	}
 
@@ -510,9 +521,26 @@ public class ThumbnailPane extends BorderPane
 		slideshowStage.requestFocus();
 	}
 
-	void setPhotoContextMenuHandler(EventHandler<? super ContextMenuEvent> contextMenuHandler)
+	/**
+	 * Sets handler for context menu on photo thumbnails.
+	 * <p>
+	 * The event source passed to the handler implements {@link HasPhoto}.
+	 * 
+	 * @param contextMenuHandler handler for context menu, or {@code null}
+	 */
+	public void setPhotoContextMenuHandler(EventHandler<? super ContextMenuEvent> contextMenuHandler)
 	{
 		this.contextMenuHandler = contextMenuHandler;
+	}
+
+	/**
+	 * Sets a function that produces photo tooltips, {@code null} is returned when thumbnail should have no no tooltip.
+	 * 
+	 * @param tooltipFunction photo tooltip function or {@code null} for no tooltips
+	 */
+	public void setTooltipFunction(Function<Photo, String> tooltipFunction)
+	{
+	    this.tooltipFunction = tooltipFunction;
 	}
 
 	private static class Thumbnail extends BorderPane implements HasPhoto

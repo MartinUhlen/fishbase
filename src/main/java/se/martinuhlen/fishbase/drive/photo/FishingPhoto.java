@@ -94,7 +94,7 @@ public class FishingPhoto implements Photo
 		return photo.getContentStream();
 	}
 
-	String getTripId()
+	public String getTripId()
 	{
 		return tripId;
 	}
