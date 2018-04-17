@@ -95,6 +95,8 @@ class PhotoServiceImpl implements PhotoService
 							+ " or name contains '" + search.replace("-", "") + "'"
 							+ " or name contains '" + "IMG_" + search + "'" // "IMG_" is common prefix for photos from iPhone and various digital cameras.
 							+ " or name contains '" + "IMG_" + search.replace("-", "") + "'"
+                            + " or name contains '" + "IMG-" + search + "'"
+                            + " or name contains '" + "IMG-" + search.replace("-", "") + "'"
 					+ ")";
 
 			return listPhotos(searchQuery, this::toPhoto);

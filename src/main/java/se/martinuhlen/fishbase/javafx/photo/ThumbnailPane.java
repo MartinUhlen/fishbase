@@ -1,6 +1,5 @@
 package se.martinuhlen.fishbase.javafx.photo;
 
-import static com.google.common.base.Preconditions.checkState;
 import static java.time.Month.JANUARY;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singleton;
@@ -8,8 +7,8 @@ import static java.util.Comparator.comparing;
 import static java.util.Comparator.naturalOrder;
 import static java.util.Comparator.reverseOrder;
 import static java.util.Objects.requireNonNull;
-import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
+import static javafx.application.Platform.runLater;
 import static javafx.collections.FXCollections.observableSet;
 import static javafx.collections.FXCollections.unmodifiableObservableSet;
 import static javafx.concurrent.Worker.State.RUNNING;
@@ -32,12 +31,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.LongSummaryStatistics;
+import java.util.NavigableSet;
 import java.util.Optional;
-import java.util.Set;
-import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
@@ -124,7 +122,11 @@ public class ThumbnailPane extends BorderPane
 		};
 		service.setOnScheduled(e -> pane.setPhotos(emptySet()));
 		service.stateProperty().addListener(obs -> progress.setVisible(service.getState() == RUNNING));
-		service.setOnSucceeded(e -> pane.setPhotosSelected(service.getValue()));
+		service.setOnSucceeded(e ->
+		{
+		    pane.setPhotos(service.getValue());
+		    pane.selectAll(true);
+		});
 
 		Label infoLabel = new Label("");
 		infoLabel.setAlignment(Pos.CENTER_LEFT);
@@ -308,32 +310,29 @@ public class ThumbnailPane extends BorderPane
 	 * 
 	 * @param photos to add
 	 */
-	void addPhotos(Collection<? extends Photo> photos) // FIXME [Martin] Merge with #appendPhotos
+	public void addPhotos(Collection<? extends Photo> photos)
 	{
-	    requireNonNull(photos, "photos cannot be null");
-		Set<Photo> newPhotos = new HashSet<>();
-		newPhotos.addAll(this.photos);
-		newPhotos.addAll(photos);
-		setPhotos(newPhotos);
-	}
+        requireNonNull(photos, "photos cannot be null");
 
-	/**
-	 * Appends new photos after the photos that are currently in this pane.
-	 * <p>
-	 * It's assumed that Appended photos are pre-sorted with {@link #getPhotoComparator()}.
-	 * 
-	 * @param photos to append
-	 */
-	public void appendPhotos(Collection<? extends Photo> photos)   // FIXME [Martin] Merge with #addPhotos
-	{
+        NavigableSet<Photo> sortedPhotos = new TreeSet<>(photoComparator);
+        sortedPhotos.addAll(photos);
+        sortedPhotos.removeAll(this.photos);
         this.photos.addAll(photos);
-        addThumbnails(photoPane.getChildren().size(), photos);	    
-	}
-	
-	void setPhotosSelected(Collection<? extends Photo> photos)
-	{
-		setPhotos(photos);
-		selectAll(true);
+
+        while (!sortedPhotos.isEmpty())
+        {
+            Optional<Thumbnail> insertionThumbnail = streamThumbnails().filter(t -> photoComparator.compare(t.photo, sortedPhotos.first()) > 0).findFirst();
+            List<Photo> photosToAdd = new ArrayList<>(photos.size());
+            Iterator<Photo> iterator = sortedPhotos.iterator();
+            while(iterator.hasNext() && (!insertionThumbnail.isPresent() || photoComparator.compare(insertionThumbnail.get().photo, sortedPhotos.first()) > 0))
+            {
+                photosToAdd.add(iterator.next());
+                iterator.remove();
+            }
+            int index = insertionThumbnail.map(t -> photoPane.getChildren().indexOf(t)).orElse(photoPane.getChildren().size());
+            addThumbnails(index, photosToAdd);
+        }
+        runLater(() -> imageLoader.loadVisibleThumbnails());
 	}
 
 	public void setPhotos(Collection<? extends Photo> photos)
@@ -395,31 +394,22 @@ public class ThumbnailPane extends BorderPane
 
 	void removePhotos(Collection<Photo> photosToRemove)
 	{
-		Set<Thumbnail> thumbnailsToRemove = streamThumbnails()
+		Collection<Thumbnail> thumbnailsToRemove = streamThumbnails()
 				.filter(t -> photosToRemove.contains(t.getPhoto()))
-				.collect(toCollection(LinkedHashSet::new));
-
-		SortedSet<Photo> photosToRemoveSorted = new TreeSet<>(photoComparator);
-		photosToRemoveSorted.addAll(photosToRemove);
-		LocalDate firstDay = photosToRemoveSorted.first().getTime().toLocalDate();
-		LocalDate lastDay = photosToRemoveSorted.last().getTime().toLocalDate();
-
-		List<Thumbnail> thumbnailsToReconfigure = streamThumbnails(firstDay, lastDay)
-				.filter(t -> !thumbnailsToRemove.contains(t))
 				.collect(toList());
 
 		photoPane.getChildren().removeAll(thumbnailsToRemove);
 		photos.removeAll(photosToRemove);
 		selectedPhotos.removeAll(photosToRemove);
-		setType(thumbnailsToReconfigure);
+		setThumbnailsType();
 	}
 
 	private void addThumbnails(int index, Collection<? extends Photo> photosToAdd)
 	{
 		List<Thumbnail> thumbnails = photosToAdd.stream().map(this::createThumbnail).collect(toList());
-		setType(thumbnails);
 		photoPane.getChildren().addAll(index, thumbnails);
 		imageLoader.loadVisibleThumbnails();
+		setThumbnailsType();
 	}
 
 	private Thumbnail createThumbnail(Photo photo)
@@ -432,20 +422,20 @@ public class ThumbnailPane extends BorderPane
 		return thumbnail;
 	}
 
-	private void setType(Collection<Thumbnail> thumbnails)
+	private void setThumbnailsType()
 	{
-		if (thumbnailsAreSelectable)
-		{
-			LocalDate previousDay = LocalDate.MIN;
-			LocalDate currentDay = previousDay;
-			for (Thumbnail t : thumbnails)
-			{
-				previousDay = currentDay;
-				currentDay = t.getPhoto().getTime().toLocalDate();
-				ThumbnailType type = currentDay.equals(previousDay) ? ThumbnailType.SELECTABLE : ThumbnailType.DAY_SELECTABLE;
-				t.setType(type);
-			}
-		}
+        if (thumbnailsAreSelectable)
+        {
+            LocalDate previousDay = LocalDate.MIN;
+            LocalDate currentDay = previousDay;
+            for (Thumbnail t : streamThumbnails().collect(toList()))
+            {
+                previousDay = currentDay;
+                currentDay = t.getPhoto().getTime().toLocalDate();
+                ThumbnailType type = currentDay.equals(previousDay) ? ThumbnailType.SELECTABLE : ThumbnailType.DAY_SELECTABLE;
+                t.setType(type);
+            }
+        }
 	}
 
 	private void selectAll(boolean selected)
@@ -480,18 +470,8 @@ public class ThumbnailPane extends BorderPane
 				.filter(t -> t.photo.getTime().toLocalDate().equals(date));
 	}
 
-	private Stream<Thumbnail> streamThumbnails(LocalDate date1, LocalDate date2)
-	{
-		LocalDate fromDate = date1.isBefore(date2) ? date1 : date2;
-		LocalDate toDate = date2.isAfter(date1) ? date2 : date1;
-		return streamThumbnails()
-				.filter(t -> t.photo.getTime().toLocalDate().compareTo(fromDate) >= 0)
-				.filter(t -> t.photo.getTime().toLocalDate().compareTo(toDate) <= 0);
-	}
-
 	private Stream<Thumbnail> streamThumbnails()
 	{
-		checkState(thumbnailsAreSelectable, "Thumbnails should be selectable");
 		return photoPane
 				.getChildren()
 				.stream()
@@ -610,8 +590,25 @@ public class ThumbnailPane extends BorderPane
 
 		void setType(ThumbnailType type)
 		{
+		    if (this.type == type)
+		    {
+		        return;
+		    }
 			this.type = type;
-			header.setText(type == ThumbnailType.DAY_SELECTABLE ? photo.getTime().toLocalDate().toString() : "");
+			if (type == ThumbnailType.DAY_SELECTABLE)
+			{
+			    header.setText(photo.getTime().toLocalDate().toString());
+			    header.setOnMouseClicked(e ->
+			    {
+			        dayCheckBox.fire();
+			        e.consume();
+			    });
+			}
+			else
+			{
+			    header.setText("");
+			    header.setOnMouseClicked(null);
+			}
 			if (type.isSelectable())
 			{
 				setOnMouseEntered(e -> mouseEntered());
@@ -622,6 +619,7 @@ public class ThumbnailPane extends BorderPane
 				setOnMouseEntered(null);
 				setOnMouseExited(null);
 			}
+			mouseExited();
 		}
 
 		protected void mouseEntered()

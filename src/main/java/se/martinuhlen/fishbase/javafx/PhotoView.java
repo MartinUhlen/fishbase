@@ -107,7 +107,7 @@ public class PhotoView implements View
             {
                 List<FishingPhoto> subList = loadedPhotos.subList(0, min(100, loadedPhotos.size()));
                 List<FishingPhoto> photos = new ArrayList<>(subList);
-                thumbnailPane.appendPhotos(photos);
+                thumbnailPane.addPhotos(photos);
                 subList.clear();
                 batchTimeline.playFromStart();
             }
