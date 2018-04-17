@@ -83,8 +83,6 @@ abstract class AbstractTableView<W extends Wrapper<D>, D extends Domain<D>> impl
 	{
 		if (content == null)
 		{
-			refreshAction.run();	// FIXME Must do this lazily, to avoid all views being loaded up front
-
 			BorderPane pane = new BorderPane();
 			pane.setTop(filterField);
 			pane.setCenter(getTableNode());
