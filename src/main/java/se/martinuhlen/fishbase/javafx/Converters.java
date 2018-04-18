@@ -9,6 +9,7 @@ import static se.martinuhlen.fishbase.javafx.utils.Constants.TIME_FORMAT;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.function.Function;
 
 import javafx.util.StringConverter;
 import javafx.util.converter.FloatStringConverter;
@@ -21,22 +22,30 @@ final class Converters
 	private Converters()
 	{}
 
+	static abstract class ReadOnlyStringConverter<T> extends StringConverter<T>
+	{
+        @Override
+        public T fromString(String string)
+        {
+            throw new IllegalStateException(getClass().getSimpleName() + "is read only");
+        }
+	}
+
+	static <T> ReadOnlyStringConverter<T> converter(Function<T, String> function)
+	{
+	    return new ReadOnlyStringConverter<>()
+        {
+	        @Override
+	        public String toString(T value)
+	        {
+	            return function.apply(value);
+	        }
+        };
+	}
+
 	static StringConverter<Specie> specieConverter()
 	{
-		return new StringConverter<>()
-		{
-			@Override
-			public String toString(Specie specie)
-			{
-				return specie == null ? "" : specie.getName();
-			}
-
-			@Override
-			public Specie fromString(String string)
-			{
-				throw new IllegalStateException("Specie cannot be converted to String");
-			}
-		};
+	    return converter(Specie::getName);
 	}
 
 	static StringConverter<Float> lengthConverter()

@@ -2,7 +2,9 @@ package se.martinuhlen.fishbase.javafx;
 
 import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparing;
+import static javafx.beans.binding.Bindings.createStringBinding;
 import static javafx.geometry.Pos.BOTTOM_RIGHT;
+import static se.martinuhlen.fishbase.javafx.Converters.converter;
 import static se.martinuhlen.fishbase.javafx.utils.ImageSize.SIZE_16;
 import static se.martinuhlen.fishbase.utils.EmptyCursor.emptyCursor;
 
@@ -10,12 +12,18 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
+import org.controlsfx.control.textfield.TextFields;
+
 import javafx.collections.transformation.FilteredList;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
+import javafx.scene.control.Label;
+import javafx.scene.control.Slider;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import se.martinuhlen.fishbase.dao.FishBaseDao;
 import se.martinuhlen.fishbase.domain.Specimen;
@@ -34,6 +42,8 @@ class SpecimenView extends AbstractTableView<SpecimenWrapper, Specimen>
 	private final SlideshowPane slideshow;
 	private final PhotoLoader photoLoader;
 	private final Consumer<String> tripOpener;
+	private final TextField filterField;
+	private final Slider ratioSlider;
 
 	SpecimenView(FishBaseDao dao, PhotoService photoService, Consumer<String> tripOpener)
 	{
@@ -43,18 +53,49 @@ class SpecimenView extends AbstractTableView<SpecimenWrapper, Specimen>
 		this.tripOpener = tripOpener;
 		this.slideshow = new SlideshowPane();
 		this.photoLoader = new PhotoLoader();
+        this.filterField = TextFields.createClearableTextField();
+        this.filterField.setPromptText("Filter...");
+        TextFields.bindAutoCompletion(filterField, "A", "AA", "ABCC", "AABBCC", "AAAA", "AAAABCC");
+		this.ratioSlider = new Slider(0, 1.0, 0.5);
 	}
 
 	@Override
-	TableView<SpecimenWrapper> createTable(FilteredList<SpecimenWrapper> filteredList)
+	Node createTopNode()
 	{
-		SpecimenTable specimenTable = new SpecimenTable(filteredList, dao.getSpecies(), tripOpener);
-		specimenTable.getSelectionModel().selectedItemProperty().addListener(obs -> photoLoader.restart());
-		return specimenTable;
+	    ratioSlider.setShowTickLabels(true);
+	    ratioSlider.setShowTickMarks(true);
+	    ratioSlider.setSnapToTicks(true);
+	    ratioSlider.setMajorTickUnit(0.25);
+	    ratioSlider.setMinorTickCount(4);
+	    ratioSlider.setLabelFormatter(converter(ratio -> Integer.toString((int) (ratio.doubleValue() * 100))));
+	    Label ratioLabel = new Label();
+	    ratioLabel.textProperty().bind(createStringBinding(() -> ratioSlider.getLabelFormatter().toString(ratioSlider.getValue()) + "%", ratioSlider.valueProperty()));
+	    filterField.setPrefWidth(200);
+	    ratioSlider.setPrefWidth(200);
+	    return new HBox(filterField, new Label("   "), ratioSlider, ratioLabel);
 	}
 
 	@Override
-	Node getTableNode()
+	TableView<SpecimenWrapper> createTable()
+	{
+	    FilteredList<SpecimenWrapper> filteredList = list.filtered(createFilterPredicate());
+        SpecimenTable specimenTable = new SpecimenTable(filteredList, dao.getSpecies(), tripOpener);
+        specimenTable.getSelectionModel().selectedItemProperty().addListener(obs -> photoLoader.restart());
+        filterField.textProperty().addListener(obs -> filteredList.setPredicate(createFilterPredicate()));
+        ratioSlider.valueProperty().addListener(obs -> filteredList.setPredicate(createFilterPredicate()));
+        return specimenTable;
+	}
+
+    private Predicate<SpecimenWrapper> createFilterPredicate()
+    {
+        SpecimenTextPredicate predicate = new SpecimenTextPredicate(filterField.getText());
+        Predicate<SpecimenWrapper> textPredicate = w -> predicate.test(w.getWrapee());
+        Predicate<SpecimenWrapper> ratioPredicate = w -> w.ratioProperty().getValue() >= ratioSlider.getValue();
+        return textPredicate.and(ratioPredicate);
+    }
+
+	@Override
+	Node createTableNode()
 	{
 		StackPane stackPane = new StackPane(getTable(), slideshow);
 		slideshow.setVisible(false);
@@ -65,13 +106,6 @@ class SpecimenView extends AbstractTableView<SpecimenWrapper, Specimen>
 		StackPane.setAlignment(slideshow, BOTTOM_RIGHT);
 		StackPane.setMargin(slideshow, new Insets(0, 16, 16, 0));
 		return stackPane;
-	}
-
-	@Override
-	Predicate<? super SpecimenWrapper> createFilterPredicate(String text)
-	{
-		SpecimenTextPredicate predicate = new SpecimenTextPredicate(text);
-		return w -> predicate.test(w.getWrapee());
 	}
 
 	@Override

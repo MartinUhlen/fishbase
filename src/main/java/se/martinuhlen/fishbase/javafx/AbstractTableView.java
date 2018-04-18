@@ -14,22 +14,17 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-
-import org.controlsfx.control.textfield.TextFields;
 
 import javafx.beans.Observable;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.ObservableList;
-import javafx.collections.transformation.FilteredList;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.TableView;
-import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
 import se.martinuhlen.fishbase.domain.Domain;
 import se.martinuhlen.fishbase.javafx.action.Action;
@@ -45,9 +40,7 @@ abstract class AbstractTableView<W extends Wrapper<D>, D extends Domain<D>> impl
 	private final Consumer<Collection<D>> saver;
 	private final Consumer<Collection<D>> deleter;
 
-	private final TextField filterField;
 	private TableView<W> table;
-
 	final ObservableList<W> list;
 	private List<D> unchangedList = emptyList();
 
@@ -63,11 +56,6 @@ abstract class AbstractTableView<W extends Wrapper<D>, D extends Domain<D>> impl
 		this.loader = loader;
 		this.saver = saver;
 		this.deleter = deleter;
-
-		this.filterField = TextFields.createClearableTextField();
-		this.filterField.setPromptText("Filter...");
-		TextFields.bindAutoCompletion(filterField, "A", "AA", "ABCC", "AABBCC", "AAAA", "AAAABCC");
-
 		this.list = observableArrayList();
 		list.addListener(this::tableChange);
 	}
@@ -84,15 +72,19 @@ abstract class AbstractTableView<W extends Wrapper<D>, D extends Domain<D>> impl
 		if (content == null)
 		{
 			BorderPane pane = new BorderPane();
-			pane.setTop(filterField);
-			pane.setCenter(getTableNode());
-			filterField.setMaxWidth(300);
+			pane.setTop(createTopNode());
+			pane.setCenter(createTableNode());
 			content = pane;
 		}
 		return content;
 	}
 
-	Node getTableNode()
+    Node createTopNode()
+    {
+        return null;
+    }
+
+	Node createTableNode()
 	{
 		return getTable();
 	}
@@ -101,18 +93,14 @@ abstract class AbstractTableView<W extends Wrapper<D>, D extends Domain<D>> impl
 	{
 		if (table == null)
 		{
-			FilteredList<W> filteredList = new FilteredList<>(list);
-			filterField.textProperty().addListener((observable, oldValue, newValue) -> filteredList.setPredicate(createFilterPredicate(newValue)));
-			table = createTable(filteredList);
+			table = createTable();
 			table.setEditable(true);
 			table.getSelectionModel().selectedItemProperty().addListener((obs, oldValue, newValue) -> deleteAction.setEnabled(newValue != null));
 		}
 		return table;
 	}
 
-	abstract Predicate<? super W> createFilterPredicate(String text);
-
-	abstract TableView<W> createTable(FilteredList<W> filteredList);
+    abstract TableView<W> createTable();
 
 	void tableChange(@SuppressWarnings("unused") Observable obs)
 	{

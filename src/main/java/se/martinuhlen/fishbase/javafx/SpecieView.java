@@ -5,9 +5,6 @@ import static javafx.scene.control.Alert.AlertType.ERROR;
 import static javafx.scene.control.cell.TextFieldTableCell.forTableColumn;
 import static se.martinuhlen.fishbase.javafx.utils.Constants.RIGHT_ALIGNMENT;
 
-import java.util.function.Predicate;
-
-import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.scene.control.Alert;
 import javafx.scene.control.TableColumn;
@@ -16,7 +13,6 @@ import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.util.converter.IntegerStringConverter;
 import se.martinuhlen.fishbase.dao.FishBaseDao;
 import se.martinuhlen.fishbase.domain.Specie;
-import se.martinuhlen.fishbase.filter.SpecieTextPredicate;
 import se.martinuhlen.fishbase.javafx.action.Action;
 import se.martinuhlen.fishbase.javafx.action.RunnableAction;
 import se.martinuhlen.fishbase.javafx.data.SpecieWrapper;
@@ -33,9 +29,9 @@ class SpecieView extends AbstractTableView<SpecieWrapper, Specie>
 	}
 
 	@Override
-	TableView<SpecieWrapper> createTable(FilteredList<SpecieWrapper> filteredList)
+	TableView<SpecieWrapper> createTable()
 	{
-		SortedList<SpecieWrapper> sortedList = new SortedList<>(filteredList);
+		SortedList<SpecieWrapper> sortedList = new SortedList<>(list);
 		TableView<SpecieWrapper> table = new TableView<>(sortedList);
 		sortedList.comparatorProperty().bind(table.comparatorProperty());
 		table.setEditable(true);
@@ -55,7 +51,6 @@ class SpecieView extends AbstractTableView<SpecieWrapper, Specie>
 
 		table.getColumns().setAll(asList(nameColumn, regWeightColumn, freshWaterColumn));
 
-		//nameColumn.prefWidthProperty().bind(table.widthProperty().multiply(0.5));
 		nameColumn.prefWidthProperty().set(150);
 		regWeightColumn.prefWidthProperty().set(100);
 		freshWaterColumn.prefWidthProperty().set(100);
@@ -78,13 +73,6 @@ class SpecieView extends AbstractTableView<SpecieWrapper, Specie>
 		{
 			return true;
 		}
-	}
-
-	@Override
-	Predicate<? super SpecieWrapper> createFilterPredicate(String text)
-	{
-		SpecieTextPredicate predicate = new SpecieTextPredicate(text);
-		return w -> predicate.test(w.getWrapee());
 	}
 
 	@Override
