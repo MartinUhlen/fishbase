@@ -157,7 +157,9 @@ class SpecimenView extends AbstractTableView<SpecimenWrapper, Specimen>
 					else
 					{
 						Specimen specimen = selectedItem.getWrapee();
-						return photoService.getSpecimenPhotos(specimen.getTripId(), specimen.getId());
+						List<FishingPhoto> photos = photoService.getSpecimenPhotos(specimen.getTripId(), specimen.getId());
+						photos.sort(comparing(FishingPhoto::isStarred).reversed().thenComparing(Photo::getTime));
+						return photos;
 					}
 				}
 			};
@@ -166,8 +168,7 @@ class SpecimenView extends AbstractTableView<SpecimenWrapper, Specimen>
 		@Override
 		protected void succeeded()
 		{
-			List<FishingPhoto> photos = getValue();
-			photos.sort(comparing(Photo::getTime));
+			List<FishingPhoto> photos = getValue();			
 			slideshow.setPhotos(Cursor.of(photos, 0));
 			slideshow.setVisible(!photos.isEmpty());
 		}

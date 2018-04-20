@@ -34,6 +34,7 @@ class PhotoServiceImpl implements PhotoService
 	private static final String FISHING_KEY = "fishing";
 	private static final String TRIP_KEY = "trip";
 	private static final String SPECIMENS_KEY = "specimens";
+	private static final String STARRED_KEY = "starred";
 
 	private static final String PHOTO_FIELDS = "nextPageToken, files(id, name, spaces, mimeType, thumbnailLink, webContentLink, createdTime, modifiedTime, imageMediaMetadata(time), appProperties)";
 	private static final String BASE_PHOTO_QUERY =
@@ -143,7 +144,8 @@ class PhotoServiceImpl implements PhotoService
 		return new FishingPhoto(
 				toPhoto(f),
 				f.getAppProperties().get(TRIP_KEY),
-				f.getAppProperties().getOrDefault(SPECIMENS_KEY, ""));
+				f.getAppProperties().getOrDefault(SPECIMENS_KEY, ""),
+				Boolean.valueOf(f.getAppProperties().get(STARRED_KEY)));
 	}
 
 	/**
@@ -220,7 +222,8 @@ class PhotoServiceImpl implements PhotoService
 	    Map<String, String> appProperties = Map.of(
                 FISHING_KEY, remove ? "false" : "true",
                 TRIP_KEY, remove ? "null" : photo.getTripId(),
-                SPECIMENS_KEY, remove ? "null" : photo.getSpecimenIds());
+                SPECIMENS_KEY, remove ? "null" : photo.getSpecimenIds(),
+                STARRED_KEY, remove ? "false" : Boolean.toString(photo.isStarred()));
 
 		log("Updating photo " + photo.getName() + "(" + photo.getId() + ") with " + appProperties);
 

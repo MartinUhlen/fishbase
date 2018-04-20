@@ -17,40 +17,40 @@ import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
-import com.google.common.annotations.VisibleForTesting;
-
 public class FishingPhoto implements Photo
 {
 	private final Photo photo;
 	private final String tripId;
 	private final Set<String> specimenIds;
+	private final boolean starred;
 
-	private FishingPhoto(Photo photo, String tripId, Set<String> specimenIds)
+	private FishingPhoto(Photo photo, String tripId, Set<String> specimenIds, boolean starred)
 	{
 		this.photo = requireNonNull(photo, "photo can't be null");
 		this.tripId = requireNonNull(tripId, "tripId can't be null");
 		this.specimenIds = new HashSet<>(specimenIds);
+		this.starred = starred;
 	}
 
-	FishingPhoto(Photo photo, String tripId, String specimenIds)
+	FishingPhoto(Photo photo, String tripId, String specimenIds, boolean starred)
 	{
 		this(photo, tripId, asList(requireNonNull(specimenIds, "specimenIds can't be null")
 				.split(","))
 				.stream()
 				.filter(StringUtils::isNotBlank)
-				.collect(toSet()));
-	}
-
-	@VisibleForTesting
-	public FishingPhoto(Photo photo, String tripId)
-	{
-		this(photo, tripId, emptySet());
+				.collect(toSet()),
+				starred);
 	}
 
 	public FishingPhoto(FishingPhoto source)
 	{
-		this(source.photo, source.tripId, source.specimenIds);
+		this(source.photo, source.tripId, source.specimenIds, source.starred);
 	}
+
+    public FishingPhoto(Photo photo, String tripId)
+    {
+        this(photo, tripId, emptySet(), false);
+    }
 
 	@Override
 	public String getId()
@@ -152,6 +152,34 @@ public class FishingPhoto implements Photo
         }
     }
 
+    /**
+     * Gets if this photo is "starred" as a special photo.
+     * 
+     * @return {@code true} if this photo is starred
+     */
+    public boolean isStarred()
+    {
+        return starred;
+    }
+
+    /**
+     * Gets a copy of this photo, as given {@link #isStarred() starred} value.
+     * 
+     * @param starred {@code true} to to get this photo as starred
+     * @return a new photo with given starred value
+     */
+    public FishingPhoto asStarred(boolean starred)
+    {
+        if (starred == this.starred)
+        {
+            return this;
+        }
+        else
+        {
+            return new FishingPhoto(photo, tripId, specimenIds, starred);            
+        }
+    }
+
 	@Override
 	public int hashCode()
 	{
@@ -166,7 +194,8 @@ public class FishingPhoto implements Photo
 			FishingPhoto that = (FishingPhoto) obj;
 			return this.getId().equals(that.getId())
 				&& this.getTripId().equals(that.getTripId())
-				&& this.specimenIds.equals(that.specimenIds);
+				&& this.specimenIds.equals(that.specimenIds)
+			    && this.starred == that.starred;
 		}
 		else
 		{

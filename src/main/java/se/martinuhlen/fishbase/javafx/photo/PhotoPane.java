@@ -177,8 +177,9 @@ public class PhotoPane extends BorderPane
 	{
 		ContextMenu contextMenu = new ContextMenu();
 		RemovePhotoMenuItem removeItem = new RemovePhotoMenuItem();
+		StarPhotoMenuItem starItem = new StarPhotoMenuItem();
 		Menu specimenMenu = new Menu("Specimens");
-		contextMenu.getItems().addAll(removeItem, specimenMenu);
+		contextMenu.getItems().addAll(removeItem, starItem, specimenMenu);
 		specimens.addListener((Observable obs) ->
 		{
 			specimenMenu.getItems().setAll(specimens.getValue()
@@ -193,6 +194,7 @@ public class PhotoPane extends BorderPane
 			specimenMenu.setVisible(!specimenMenu.getItems().isEmpty());
 			specimenMenu.getItems().stream().map(SpecimenMenuItem.class::cast).forEach(item -> item.setPhotoSource(hasPhoto));
 			removeItem.setPhotoSource(hasPhoto);
+			starItem.setPhotoSource(hasPhoto);
 			contextMenu.show((Node) e.getSource(), e.getScreenX(), e.getScreenY());
 		});
 	}
@@ -213,6 +215,44 @@ public class PhotoPane extends BorderPane
 			this.photoSource = photoSource;
 		}
 	}
+
+    private class StarPhotoMenuItem extends MenuItem implements PhotoMenuItem
+    {
+        private HasPhoto photoSource;
+
+        StarPhotoMenuItem()
+        {
+            super("Starred");
+            setOnAction(e -> toggle());
+        }
+
+        @Override
+        public void setPhotoSource(HasPhoto photoSource)
+        {
+            this.photoSource = photoSource;
+            updateIcon();
+        }
+
+        private FishingPhoto getPhoto()
+        {
+            requireNonNull(photoSource, "photoSource must be set");
+            return (FishingPhoto) requireNonNull(photoSource.getPhoto(), "photo cant be null");
+        }
+
+        private void toggle()
+        {
+            FishingPhoto oldPhoto = getPhoto();
+            FishingPhoto newPhoto = oldPhoto.asStarred(!oldPhoto.isStarred());
+            updatePhoto(oldPhoto, newPhoto);
+            updateIcon();
+        }
+
+        private void updateIcon()
+        {
+            boolean starred = getPhoto().isStarred();
+            setGraphic(getImageView16(starred ? "star_yellow.png" : "star_grey.png"));
+        }
+    }
 
 	private class SpecimenMenuItem extends CheckMenuItem implements PhotoMenuItem
 	{
@@ -236,7 +276,7 @@ public class PhotoPane extends BorderPane
 		private FishingPhoto getPhoto()
 		{
 			requireNonNull(photoSource, "photoSource must be set");
-			return (FishingPhoto) photoSource.getPhoto();
+			return (FishingPhoto) requireNonNull(photoSource.getPhoto(), "photo cant be null");
 		}
 
 		private void toggle()
@@ -246,13 +286,18 @@ public class PhotoPane extends BorderPane
 					? oldPhoto.withSpecimen(specimen.getId())
 					: oldPhoto.withoutSpecimen(specimen.getId());
 
-			syncing.set(true);
-			int index = fishingPhotos.indexOf(oldPhoto);
-			fishingPhotos.set(index, newPhoto);
-			thumbnailPane.updatePhoto(oldPhoto, newPhoto);
-			syncing.set(false);
+			updatePhoto(oldPhoto, newPhoto);
 		}
 	}
+
+    private void updatePhoto(FishingPhoto oldPhoto, FishingPhoto newPhoto)
+    {
+        syncing.set(true);
+        int index = fishingPhotos.indexOf(oldPhoto);
+        fishingPhotos.set(index, newPhoto);
+        thumbnailPane.updatePhoto(oldPhoto, newPhoto);
+        syncing.set(false);
+    }
 
 	private interface PhotoMenuItem
 	{
