@@ -190,7 +190,7 @@ public final class Trip extends Domain<Trip>
 
         Builder(String id, boolean persisted)
         {
-            this.id = id;
+            this.id = requireNonNull(id);
             this.persisted = persisted;
         }
 

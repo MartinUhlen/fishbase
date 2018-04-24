@@ -13,6 +13,10 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verifyZeroInteractions;
+import static se.martinuhlen.fishbase.domain.AutoCompleteField.BAIT;
+import static se.martinuhlen.fishbase.domain.AutoCompleteField.LOCATION;
+import static se.martinuhlen.fishbase.domain.AutoCompleteField.METHOD;
+import static se.martinuhlen.fishbase.domain.AutoCompleteField.WEATHER;
 import static se.martinuhlen.fishbase.domain.TestData.bream;
 import static se.martinuhlen.fishbase.domain.TestData.bream5120;
 import static se.martinuhlen.fishbase.domain.TestData.newSpecie;
@@ -24,6 +28,7 @@ import static se.martinuhlen.fishbase.domain.TestData.tench;
 import static se.martinuhlen.fishbase.domain.TestData.tench3540;
 import static se.martinuhlen.fishbase.domain.TestData.trip1;
 import static se.martinuhlen.fishbase.domain.TestData.trip2;
+import static se.martinuhlen.fishbase.domain.TestData.trip3;
 
 import java.io.File;
 import java.io.IOException;
@@ -63,7 +68,7 @@ public class JsonDaoTest
 		{
 		    JsonDao dao = new JsonDao(persistence,
 		            Set.of(bream(), tench(), perch()),
-		            Set.of(trip1(), trip2()));
+		            Set.of(trip1(), trip2(), trip3()));
 		    dao.writeAll();
 		    this.dao = dao;
 		}
@@ -74,25 +79,37 @@ public class JsonDaoTest
 	}
 
 	@Test
-	public void test_get_all_species()
+	public void getAllSpecies()
 	{
 		assertEquals(asList(bream(), perch(), tench()), dao.getSpecies());
 	}
 
 	@Test
-	public void test_get_all_specimens()
+	public void getAllSpecimens()
 	{
 		assertEquals(asList(bream5120(), perch1000(), tench3540()), dao.getSpecimens());
 	}
 
 	@Test
-	public void test_get_all_trips()
+	public void getAllTrips()
 	{
-		assertEquals(asList(trip2(), trip1()), dao.getTrips());
+		assertEquals(asList(trip3(), trip2(), trip1()), dao.getTrips());
 	}
 
 	@Test
-	public void test_save_new_specie()
+	public void getTrip()
+	{
+	    assertEquals(trip2(), dao.getTrip(trip2().getId()));
+	}
+
+    @Test
+    public void gettingUnknownTripFails()
+    {
+        assertThrows(IllegalArgumentException.class, () -> dao.getTrip("?"));
+    }
+
+	@Test
+	public void saveNewSpecie()
 	{
 		Specie newSpecie = newSpecie().withName("Qqq");
 
@@ -104,7 +121,7 @@ public class JsonDaoTest
 	}
 
 	@Test
-	public void test_save_existing_species()
+	public void saveExistingSpecies()
 	{
 		Specie bream = bream().withName("Braxen");
 		Specie tench = tench().withName("Sutare").withFreshWater(false);
@@ -118,7 +135,7 @@ public class JsonDaoTest
 	}
 
 	@Test
-	public void test_save_no_species_are_not_persisted()
+	public void saveNoSpeciesAreNotPersisted()
 	{
         reset(persistence);
         dao.saveSpecies(emptyList());
@@ -126,7 +143,7 @@ public class JsonDaoTest
 	}
 
 	@Test
-	public void test_save_several_specimens()
+	public void saveExistingSpecimens()
 	{
 		Specimen perch = perch1000().withText("A nice perch");
 		Specimen tench = tench3540().withText("A fat tench");
@@ -138,7 +155,7 @@ public class JsonDaoTest
 	}
 
     @Test
-    public void test_save_no_specimens_are_not_persisted()
+    public void saveNoSpecimensAreNotPersisted()
     {
         reset(persistence);
         dao.saveSpecimens(emptyList());
@@ -146,14 +163,14 @@ public class JsonDaoTest
     }
 
 	@Test
-	public void test_is_specie_deletable()
+	public void isSpecieDeletable()
 	{
 		assertFalse(dao.isSpecieDeletable(bream()));
 		assertTrue(dao.isSpecieDeletable(newSpecie()));
 	}
 
 	@Test
-	public void test_delete_specie()
+	public void deleteSpecie()
 	{
 		Specie specie = newSpecie();
 		dao.saveSpecies(asList(specie));
@@ -164,13 +181,13 @@ public class JsonDaoTest
 	}
 
 	@Test
-	public void test_delete_specie_when_disallowed()
+	public void deleteSpecieWhenDisallowedFails()
 	{
 		assertThrows(IllegalArgumentException.class, () -> dao.deleteSpecies(asList(tench())));
 	}
 
 	@Test
-	public void test_delete_specimen()
+	public void deleteSpecimen()
 	{
 		Specimen specimen = perch1000();
 
@@ -184,7 +201,7 @@ public class JsonDaoTest
 	}
 
     @Test
-    public void test_delete_no_specimens_are_not_persisted()
+    public void deleteNoSpecimensAreNotPersisted()
     {
         reset(persistence);
         dao.deleteSpecimens(emptyList());
@@ -192,29 +209,29 @@ public class JsonDaoTest
     }
 
 	@Test
-	public void save_existing_trip()
+	public void saveExistingTrip()
 	{
 		Trip trip1 = trip1().withDescription("A new description");
 
 		dao.saveTrip(trip1);
 
 		assertTripEquals(trip1);
-		assertTripsEquals(asList(trip2(), trip1));
+		assertTripsEquals(asList(trip3(), trip2(), trip1));
 	}
 
 	@Test
-	public void save_new_trip()
+	public void saveNewTrip()
 	{
 		Trip newTrip = newTrip();
 
 		dao.saveTrip(newTrip);
 
 		assertTrue(newTrip.isPersisted());
-		assertTripsEquals(asList(newTrip, trip2(), trip1()));
+		assertTripsEquals(asList(newTrip, trip3(), trip2(), trip1()));
 	}
 
     @Test
-    public void save_new_trip_without_specimens_does_not_persist_specimens() throws IOException
+    public void saveNewTripWithoutSpecimensDoesNotPersistSpecimens() throws IOException
     {
         reset(persistence);
 
@@ -225,7 +242,7 @@ public class JsonDaoTest
     }
 
 	@Test
-	public void test_save_new_trip_with_specimen()
+	public void saveNewTripWithSpecimen()
 	{
 		Trip newTrip = newTrip();
 		newTrip = newTrip.withSpecimens(asList(newSpecimen(newTrip.getId())));
@@ -236,12 +253,12 @@ public class JsonDaoTest
 		Specimen newSpecimen = newTrip.getSpecimens().get(0);
 		assertTrue(newSpecimen.isPersisted());
 		assertTripEquals(newTrip);
-		assertTripsEquals(asList(newTrip, trip2(), trip1()));
+		assertTripsEquals(asList(newTrip, trip3(), trip2(), trip1()));
 		assertSpecimenEquals(newSpecimen);
 	}
 
 	@Test
-	public void test_save_existing_trip_with_added_specimen()
+	public void saveExistingTripWithAddedSpecimen()
 	{
 		Trip trip = trip2();
 		Collection<Specimen> specimens = new ArrayList<>(trip.getSpecimens());
@@ -261,7 +278,7 @@ public class JsonDaoTest
 	}
 
 	@Test
-	public void test_save_existing_trip_with_removed_specimens()
+	public void saveExistingTripWithRemovedSpecimens()
 	{
 		List<Specimen> removedSpecimens = trip2().getSpecimens();
 		Trip trip = trip2().withSpecimens(emptySet());
@@ -274,7 +291,7 @@ public class JsonDaoTest
 	}
 
 	@Test
-	public void test_save_existing_trip_with_edited_specimen()
+	public void saveExistingTripWithEditedSpecimen()
 	{
 		Trip trip = trip2();
 		List<Specimen> editedSpecimens = trip.getSpecimens()
@@ -291,7 +308,7 @@ public class JsonDaoTest
 	}
 
     @Test
-    public void test_save_species_and_compare_specimens()
+    public void saveSpeciesAndCompareSpecimens()
     {
         Specie bream = bream().withName("Braxen");
         Specie perch = perch().withName("Abborre");
@@ -313,15 +330,25 @@ public class JsonDaoTest
     }
 
 	@Test
-	public void test_delete_trip()
+	public void deleteTripWithSpecimens()
 	{
 		dao.deleteTrip(trip2());
-		assertTripsEquals(asList(trip1()));
+		assertTripsEquals(asList(trip3(), trip1()));
 		assertSpecimensEquals(asList(bream5120()));
 	}
 
+    @Test
+    public void deleteTripWithoutSpecimens() throws Exception
+    {
+        reset(persistence);
+        dao.deleteTrip(trip3());
+        verify(persistence, times(1)).output("Trip.json");
+        verifyNoMoreInteractions(persistence);
+        assertTripsEquals(asList(trip2(), trip1()));
+    }
+
 	@Test
-	public void test_delete_unpersisted_trip_is_no_op()
+	public void deleteUnpersistedTripIsNoop()
 	{
 		List<Trip> trips = dao.getTrips();
 		List<Specimen> specimens = dao.getSpecimens();
@@ -330,6 +357,32 @@ public class JsonDaoTest
 
 		assertTripsEquals(trips);
 		assertSpecimensEquals(specimens);
+	}
+
+	@Test
+	public void autoCompletions()
+	{
+	    dao.saveSpecimens(Set.of(bream5120()
+	            .withLocation("AAA")
+	            .withMethod("BBB")
+	            .withBait("CCC")
+	            .withWeather("DDD")));
+
+	    assertTrue(dao.getAutoCompletions(LOCATION).contains("AAA"));
+	    assertTrue(dao.getAutoCompletions(METHOD).contains("BBB"));
+	    assertTrue(dao.getAutoCompletions(BAIT).contains("CCC"));
+	    assertTrue(dao.getAutoCompletions(WEATHER).contains("DDD"));
+
+        dao.saveSpecimens(Set.of(bream5120()
+                .withLocation("EEE")
+                .withMethod("FFF")
+                .withBait("GGG")
+                .withWeather("HHH")));
+
+        assertTrue(dao.getAutoCompletions(LOCATION).contains("EEE"));
+        assertTrue(dao.getAutoCompletions(METHOD).contains("FFF"));
+        assertTrue(dao.getAutoCompletions(BAIT).contains("GGG"));
+        assertTrue(dao.getAutoCompletions(WEATHER).contains("HHH"));
 	}
 
 	private Specie getSpecie(String id)

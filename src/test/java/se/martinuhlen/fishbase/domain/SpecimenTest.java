@@ -8,6 +8,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static se.martinuhlen.fishbase.domain.AutoCompleteField.BAIT;
+import static se.martinuhlen.fishbase.domain.AutoCompleteField.LOCATION;
+import static se.martinuhlen.fishbase.domain.AutoCompleteField.METHOD;
+import static se.martinuhlen.fishbase.domain.AutoCompleteField.WEATHER;
 import static se.martinuhlen.fishbase.domain.TestData.bream;
 import static se.martinuhlen.fishbase.domain.TestData.bream5120;
 import static se.martinuhlen.fishbase.domain.TestData.perch1000;
@@ -15,6 +19,7 @@ import static se.martinuhlen.fishbase.domain.TestData.tench;
 import static se.martinuhlen.fishbase.domain.TestData.tench3540;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
@@ -131,5 +136,23 @@ public class SpecimenTest
         assertThrows(NullPointerException.class, () -> s.withText(null));
         assertThrows(IllegalArgumentException.class, () -> s.withWeight(-500));
         assertThrows(IllegalArgumentException.class, () -> s.withLength(-1));
+    }
+
+    @Test
+    public void autoCompletions()
+    {
+        Specimen s = Specimen.asNew("tripId")
+                .withLocation("loc")
+                .withMethod("meth")
+                .withBait("ba")
+                .withWeather("Sunny");
+
+        Map<AutoCompleteField, String> expected = Map.of(
+                LOCATION, "loc",
+                METHOD, "meth",
+                BAIT, "ba",
+                WEATHER, "Sunny");
+
+        assertEquals(expected, s.getAutoCompletions());        
     }
 }

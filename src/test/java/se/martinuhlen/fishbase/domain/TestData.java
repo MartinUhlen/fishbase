@@ -2,6 +2,7 @@ package se.martinuhlen.fishbase.domain;
 
 import static java.time.LocalDateTime.parse;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptySet;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -97,17 +98,6 @@ public class TestData
 				.withBait("Mört")
 				.withWeather("Mulet")
 				.withText("");
-
-//		public static final Specimen NEW_SPECIMEN = Specimen.asNew(1)
-//				.withSpecie(PERCH)
-//				.withWeight(1460)
-//				.withLength(45)
-//				.withLocation("Kungsbackaån")
-//				.withInstant(LocalDateTime.now())
-//				.withMethod("Bottenmete")
-//				.withBait("Mört")
-//				.withWeather("Mulet")
-//				.withText("");
 	}
 
 	public static Trip trip1()
@@ -129,6 +119,16 @@ public class TestData
 				.text("Första besöket i Öxneredssjön gav regga och nytt PB på Sutare!")
 				.specimens(asList(perch1000(), tench3540()));
 	}
+
+    public static Trip trip3()
+    {
+        return Trip.asPersisted("#trip3")
+                .description("A trip without specimens")
+                .startDate(LocalDate.parse("2018-04-17"))
+                .endDate(LocalDate.parse("2018-04-17"))
+                .text("...")
+                .specimens(emptySet());
+    }
 
 	public static Trip newTrip()
 	{

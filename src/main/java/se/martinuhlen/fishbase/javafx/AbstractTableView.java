@@ -57,7 +57,7 @@ abstract class AbstractTableView<W extends Wrapper<D>, D extends Domain<D>> impl
 		this.saver = saver;
 		this.deleter = deleter;
 		this.list = observableArrayList();
-		list.addListener(this::tableChange);
+		list.addListener((Observable obs) -> tableChange());
 	}
 
 	@Override

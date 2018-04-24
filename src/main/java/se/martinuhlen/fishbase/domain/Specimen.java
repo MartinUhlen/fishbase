@@ -3,9 +3,14 @@ package se.martinuhlen.fishbase.domain;
 import static java.time.LocalDateTime.MIN;
 import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static se.martinuhlen.fishbase.domain.AutoCompleteField.BAIT;
+import static se.martinuhlen.fishbase.domain.AutoCompleteField.LOCATION;
+import static se.martinuhlen.fishbase.domain.AutoCompleteField.METHOD;
+import static se.martinuhlen.fishbase.domain.AutoCompleteField.WEATHER;
 import static se.martinuhlen.fishbase.domain.Specie.EMPTY_SPECIE;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -124,6 +129,15 @@ public final class Specimen extends Domain<Specimen>
 		return specie.getName() + " " + weight + "g";
 	}
 
+	public Map<AutoCompleteField, String> getAutoCompletions()
+	{
+	    return Map.of(
+	            LOCATION, location,
+	            METHOD, method,
+	            BAIT, bait,
+	            WEATHER, weather);
+	}
+	
 	@Override
 	protected boolean equalsData(Specimen that)
 	{

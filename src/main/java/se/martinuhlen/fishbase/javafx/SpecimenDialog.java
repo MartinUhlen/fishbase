@@ -5,6 +5,10 @@ import static javafx.collections.FXCollections.observableArrayList;
 import static javafx.geometry.Pos.CENTER;
 import static javafx.scene.control.ButtonType.CANCEL;
 import static javafx.scene.control.ButtonType.OK;
+import static se.martinuhlen.fishbase.domain.AutoCompleteField.BAIT;
+import static se.martinuhlen.fishbase.domain.AutoCompleteField.LOCATION;
+import static se.martinuhlen.fishbase.domain.AutoCompleteField.METHOD;
+import static se.martinuhlen.fishbase.domain.AutoCompleteField.WEATHER;
 import static se.martinuhlen.fishbase.javafx.Converters.lengthConverter;
 import static se.martinuhlen.fishbase.javafx.Converters.specieConverter;
 import static se.martinuhlen.fishbase.javafx.Converters.timeConverter;
@@ -12,7 +16,12 @@ import static se.martinuhlen.fishbase.javafx.utils.Constants.RIGHT_ALIGNMENT;
 
 import java.time.LocalTime;
 import java.util.Collection;
+import java.util.SortedSet;
+import java.util.function.Function;
 
+import org.controlsfx.control.textfield.TextFields;
+
+import javafx.beans.property.Property;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -26,6 +35,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.util.converter.IntegerStringConverter;
+import se.martinuhlen.fishbase.domain.AutoCompleteField;
 import se.martinuhlen.fishbase.domain.Specie;
 import se.martinuhlen.fishbase.domain.Specimen;
 import se.martinuhlen.fishbase.javafx.data.SpecimenWrapper;
@@ -34,10 +44,12 @@ class SpecimenDialog extends Dialog<Specimen>
 {
 	private final SpecimenWrapper wrapper;
 	private final ComboBox<Specie> specieCombo;
+    private final Function<AutoCompleteField, SortedSet<String>> autoCompleter;
 
-	SpecimenDialog(boolean add, Collection<Specie> species, Specimen specimen)
+	SpecimenDialog(boolean add, Collection<Specie> species, Function<AutoCompleteField, SortedSet<String>> autoCompleter, Specimen specimen)
 	{
-		this.wrapper = new SpecimenWrapper(specimen, obs -> enableOkButton());
+		this.autoCompleter = autoCompleter;
+        this.wrapper = new SpecimenWrapper(specimen, obs -> enableOkButton());
 		specieCombo = new ComboBox<>(observableArrayList(species));
 		getDialogPane().getButtonTypes().setAll(CANCEL, OK);
 		getDialogPane().setContent(createForm());
@@ -96,8 +108,7 @@ class SpecimenDialog extends Dialog<Specimen>
 
 		Label locationLabel = new Label("Location");
 		grid.add(locationLabel, 0, 6);
-		TextField locationField = new TextField();
-		locationField.textProperty().bindBidirectional(wrapper.locationProperty());
+		TextField locationField = textField(wrapper.locationProperty(), LOCATION);
 		grid.add(locationField, 0, 7, 2, 1);
 		grid.add(emptyRow(), 0, 8);
 
@@ -117,21 +128,18 @@ class SpecimenDialog extends Dialog<Specimen>
 
 		Label methodLabel = new Label("Method");
 		grid.add(methodLabel, 0, 12);
-		TextField methodField = new TextField();
-		methodField.textProperty().bindBidirectional(wrapper.methodProperty());
+		TextField methodField = textField(wrapper.methodProperty(), METHOD);
 		grid.add(methodField, 0, 13);
 
 		Label baitLabel = new Label("Bait");
 		grid.add(baitLabel, 1, 12);
-		TextField baitField = new TextField();
-		baitField.textProperty().bindBidirectional(wrapper.baitProperty());
+		TextField baitField = textField(wrapper.baitProperty(), BAIT);
 		grid.add(baitField, 1, 13);
 		grid.add(emptyRow(), 0, 14);
 
 		Label weatherLabel = new Label("Weather");
 		grid.add(weatherLabel, 0, 15);
-		TextField weatherField = new TextField();
-		weatherField.textProperty().bindBidirectional(wrapper.weatherProperty());
+		TextField weatherField = textField(wrapper.weatherProperty(), WEATHER);
 		grid.add(weatherField, 0, 16);
 		grid.add(emptyRow(), 0, 17);
 
@@ -146,7 +154,15 @@ class SpecimenDialog extends Dialog<Specimen>
 		return grid;
 	}
 
-	private Node suffix(TextField field, String suffix)
+	private TextField textField(Property<String> property, AutoCompleteField autoCompleteField)
+    {
+	    TextField field = new TextField();
+	    field.textProperty().bindBidirectional(property);
+	    TextFields.bindAutoCompletion(field, autoCompleter.apply(autoCompleteField));
+	    return field;
+    }
+
+    private Node suffix(TextField field, String suffix)
 	{
 		HBox box = new HBox(field, new Label(suffix));
 		box.setAlignment(Pos.BASELINE_LEFT);

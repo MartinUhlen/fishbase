@@ -79,7 +79,7 @@ class SpecimenView extends AbstractTableView<SpecimenWrapper, Specimen>
 	TableView<SpecimenWrapper> createTable()
 	{
 	    FilteredList<SpecimenWrapper> filteredList = list.filtered(createFilterPredicate());
-        SpecimenTable specimenTable = new SpecimenTable(filteredList, dao.getSpecies(), tripOpener);
+        SpecimenTable specimenTable = new SpecimenTable(filteredList, dao.getSpecies(), dao::getAutoCompletions, tripOpener);
         specimenTable.getSelectionModel().selectedItemProperty().addListener(obs -> photoLoader.restart());
         filterField.textProperty().addListener(obs -> filteredList.setPredicate(createFilterPredicate()));
         ratioSlider.valueProperty().addListener(obs -> filteredList.setPredicate(createFilterPredicate()));

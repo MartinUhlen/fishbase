@@ -17,7 +17,9 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.SortedSet;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import javafx.collections.ObservableList;
@@ -34,6 +36,7 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.control.cell.ComboBoxTableCell;
 import javafx.scene.control.cell.ProgressBarTableCell;
 import javafx.util.converter.IntegerStringConverter;
+import se.martinuhlen.fishbase.domain.AutoCompleteField;
 import se.martinuhlen.fishbase.domain.Specie;
 import se.martinuhlen.fishbase.domain.Specimen;
 import se.martinuhlen.fishbase.domain.Trip;
@@ -43,13 +46,15 @@ class SpecimenTable extends TableView<SpecimenWrapper>
 {
     private final ObservableList<SpecimenWrapper> specimens;
 	private final Collection<Specie> species;
+	private final Function<AutoCompleteField, SortedSet<String>> autoCompleter;
     private final Supplier<Trip> tripSupplier;
     private final Consumer<String> tripOpener;
 
-    private SpecimenTable(ObservableList<SpecimenWrapper> sourceSpecimens, ObservableList<SpecimenWrapper> tableSpecimens, Collection<Specie> species, Supplier<Trip> tripSupplier, Consumer<String> tripOpener)
+    private SpecimenTable(ObservableList<SpecimenWrapper> sourceSpecimens, ObservableList<SpecimenWrapper> tableSpecimens, Collection<Specie> species, Function<AutoCompleteField, SortedSet<String>> autoCompleter, Supplier<Trip> tripSupplier, Consumer<String> tripOpener)
     {
         this.specimens = sourceSpecimens;
         this.species = species;
+        this.autoCompleter = autoCompleter;
         this.tripSupplier = tripSupplier;
         this.tripOpener = tripOpener;
         setSpecimens(tableSpecimens);
@@ -58,15 +63,15 @@ class SpecimenTable extends TableView<SpecimenWrapper>
         setEditable(true);
     }
 
-    SpecimenTable(ObservableList<SpecimenWrapper> specimens, Collection<Specie> species, Supplier<Trip> tripSupplier)
+    SpecimenTable(ObservableList<SpecimenWrapper> specimens, Collection<Specie> species, Function<AutoCompleteField, SortedSet<String>> autoCompleter, Supplier<Trip> tripSupplier)
     {
-        this(specimens, specimens, species, tripSupplier, null);
+        this(specimens, specimens, species, autoCompleter, tripSupplier, null);
     }
 
 	@SuppressWarnings("unchecked")
-    SpecimenTable(FilteredList<SpecimenWrapper> filteredSpecimens, Collection<Specie> species, Consumer<String> tripOpener)
+    SpecimenTable(FilteredList<SpecimenWrapper> filteredSpecimens, Collection<Specie> species, Function<AutoCompleteField, SortedSet<String>> autoCompleter, Consumer<String> tripOpener)
 	{
-	    this((ObservableList<SpecimenWrapper>) filteredSpecimens.getSource(), filteredSpecimens, species, null, tripOpener);
+	    this((ObservableList<SpecimenWrapper>) filteredSpecimens.getSource(), filteredSpecimens, species, autoCompleter, null, tripOpener);
 	}
 
     private ContextMenu createContextMenu()
@@ -129,7 +134,7 @@ class SpecimenTable extends TableView<SpecimenWrapper>
 
     private void editSpecimen(boolean add, Specimen initialSpecimen, Consumer<Specimen> handler)
     {
-        new SpecimenDialog(add, species, initialSpecimen)
+        new SpecimenDialog(add, species, autoCompleter, initialSpecimen)
             .showAndWait()
             .ifPresent(specimen ->
             {

@@ -2,9 +2,13 @@ package se.martinuhlen.fishbase.dao;
 
 import static java.lang.String.CASE_INSENSITIVE_ORDER;
 import static java.util.Collections.emptySet;
+import static java.util.Collections.emptySortedSet;
 import static java.util.Comparator.comparing;
 import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.mapping;
+import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
@@ -12,13 +16,18 @@ import static se.martinuhlen.fishbase.domain.Trip.EMPTY_TRIP;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.stream.Stream;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import se.martinuhlen.fishbase.domain.AutoCompleteField;
 import se.martinuhlen.fishbase.domain.Specie;
 import se.martinuhlen.fishbase.domain.Specimen;
 import se.martinuhlen.fishbase.domain.Trip;
@@ -31,6 +40,7 @@ class JsonDao implements FishBaseDao
 
 	private final Map<String, Specie> species;
 	private final Map<String, Trip> trips;
+    private Map<AutoCompleteField, SortedSet<String>> autoCompleteMap;
 
 	JsonDao(Persistence persistence)
 	{
@@ -82,6 +92,7 @@ class JsonDao implements FishBaseDao
 
 	private void writeSpecimens()
 	{
+	    autoCompleteMap = null;
 		specimenHandler.write(streamSpecimens()
 				.sorted(comparing(Specimen::getInstant).thenComparing(Specimen::getId))
 				.collect(toList()));
@@ -273,5 +284,22 @@ class JsonDao implements FishBaseDao
 	            writeSpecimens();
 	        }
 	    }
+	}
+
+	@Override
+	public SortedSet<String> getAutoCompletions(AutoCompleteField field)
+	{
+	    if (autoCompleteMap == null)
+	    {
+    	    autoCompleteMap = streamSpecimens()
+    	            .map(Specimen::getAutoCompletions)
+    	            .flatMap(map -> map.entrySet().stream())
+    	            .collect(groupingBy(
+    	                    Entry::getKey,
+    	                    mapping(Entry::getValue, 
+    	                            collectingAndThen(
+    	                                    toCollection(TreeSet::new), Collections::unmodifiableSortedSet))));
+	    }
+	    return autoCompleteMap.getOrDefault(field, emptySortedSet());
 	}
 }

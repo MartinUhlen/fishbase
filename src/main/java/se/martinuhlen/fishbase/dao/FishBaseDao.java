@@ -6,8 +6,10 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.SortedSet;
 import java.util.concurrent.CompletableFuture;
 
+import se.martinuhlen.fishbase.domain.AutoCompleteField;
 import se.martinuhlen.fishbase.domain.Specie;
 import se.martinuhlen.fishbase.domain.Specimen;
 import se.martinuhlen.fishbase.domain.Trip;
@@ -45,4 +47,6 @@ public interface FishBaseDao
 	void saveTrip(Trip trip);
 
 	void deleteTrip(Trip wrapee);
+
+	SortedSet<String> getAutoCompletions(AutoCompleteField field);
 }
