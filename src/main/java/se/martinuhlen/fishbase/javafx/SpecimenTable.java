@@ -45,15 +45,15 @@ import se.martinuhlen.fishbase.javafx.data.SpecimenWrapper;
 class SpecimenTable extends TableView<SpecimenWrapper>
 {
     private final ObservableList<SpecimenWrapper> specimens;
-	private final Collection<Specie> species;
+	private final Supplier<Collection<Specie>> specieSupplier;
 	private final Function<AutoCompleteField, SortedSet<String>> autoCompleter;
     private final Supplier<Trip> tripSupplier;
     private final Consumer<String> tripOpener;
 
-    private SpecimenTable(ObservableList<SpecimenWrapper> sourceSpecimens, ObservableList<SpecimenWrapper> tableSpecimens, Collection<Specie> species, Function<AutoCompleteField, SortedSet<String>> autoCompleter, Supplier<Trip> tripSupplier, Consumer<String> tripOpener)
+    private SpecimenTable(ObservableList<SpecimenWrapper> sourceSpecimens, ObservableList<SpecimenWrapper> tableSpecimens, Supplier<Collection<Specie>> specieSupplier, Function<AutoCompleteField, SortedSet<String>> autoCompleter, Supplier<Trip> tripSupplier, Consumer<String> tripOpener)
     {
         this.specimens = sourceSpecimens;
-        this.species = species;
+        this.specieSupplier = specieSupplier;
         this.autoCompleter = autoCompleter;
         this.tripSupplier = tripSupplier;
         this.tripOpener = tripOpener;
@@ -63,13 +63,13 @@ class SpecimenTable extends TableView<SpecimenWrapper>
         setEditable(true);
     }
 
-    SpecimenTable(ObservableList<SpecimenWrapper> specimens, Collection<Specie> species, Function<AutoCompleteField, SortedSet<String>> autoCompleter, Supplier<Trip> tripSupplier)
+    SpecimenTable(ObservableList<SpecimenWrapper> specimens, Supplier<Collection<Specie>> species, Function<AutoCompleteField, SortedSet<String>> autoCompleter, Supplier<Trip> tripSupplier)
     {
         this(specimens, specimens, species, autoCompleter, tripSupplier, null);
     }
 
 	@SuppressWarnings("unchecked")
-    SpecimenTable(FilteredList<SpecimenWrapper> filteredSpecimens, Collection<Specie> species, Function<AutoCompleteField, SortedSet<String>> autoCompleter, Consumer<String> tripOpener)
+    SpecimenTable(FilteredList<SpecimenWrapper> filteredSpecimens, Supplier<Collection<Specie>> species, Function<AutoCompleteField, SortedSet<String>> autoCompleter, Consumer<String> tripOpener)
 	{
 	    this((ObservableList<SpecimenWrapper>) filteredSpecimens.getSource(), filteredSpecimens, species, autoCompleter, null, tripOpener);
 	}
@@ -134,7 +134,7 @@ class SpecimenTable extends TableView<SpecimenWrapper>
 
     private void editSpecimen(boolean add, Specimen initialSpecimen, Consumer<Specimen> handler)
     {
-        new SpecimenDialog(add, species, autoCompleter, initialSpecimen)
+        new SpecimenDialog(add, specieSupplier.get(), autoCompleter, initialSpecimen)
             .showAndWait()
             .ifPresent(specimen ->
             {
@@ -163,12 +163,13 @@ class SpecimenTable extends TableView<SpecimenWrapper>
 
 	private Collection<TableColumn<SpecimenWrapper, ?>> createColumns()
 	{
+	    Collection<Specie> species = specieSupplier.get();
 		TableColumn<SpecimenWrapper, Specie> specieColumn = new TableColumn<>("Specie");
 		specieColumn.setCellValueFactory(cdf -> cdf.getValue().specieProperty());
 		specieColumn.setCellFactory(c ->
         {
         	ComboBoxTableCell<SpecimenWrapper, Specie> cell = new ComboBoxTableCell<>();
-        	cell.getItems().setAll(species);
+            cell.getItems().setAll(species);
         	cell.setConverter(specieConverter());
         	return cell;
         });
@@ -213,12 +214,6 @@ class SpecimenTable extends TableView<SpecimenWrapper>
 		TableColumn<SpecimenWrapper, String> locationColumn = new TableColumn<>("Location");
 		locationColumn.setCellValueFactory(f -> f.getValue().locationProperty());
 		locationColumn.setCellFactory(forTableColumn());
-//		locationColumn.setCellFactory(c ->
-//		{
-//			TextFieldTableCell<SpecimenWrapper, String> cell = new TextFieldTableCell<>();
-//			//TextFields.bindAutoCompletion(cell.getTe, possibleSuggestions)
-//			return cell;
-//		});
 
 		TableColumn<SpecimenWrapper, LocalDate> dateColumn = new TableColumn<>("Date");
 		dateColumn.setCellValueFactory(cdf -> cdf.getValue().dateProperty());

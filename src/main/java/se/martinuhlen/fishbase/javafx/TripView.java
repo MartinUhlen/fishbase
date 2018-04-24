@@ -155,7 +155,7 @@ class TripView implements View
 
 	private SpecimenTable createSpecimenTable()
 	{
-		return new SpecimenTable(wrapper.specimenWrappers(), dao.getSpecies(), dao::getAutoCompletions, () -> wrapper.getWrapee());
+		return new SpecimenTable(wrapper.specimenWrappers(), dao::getSpecies, dao::getAutoCompletions, () -> wrapper.getWrapee());
 	}
 
 	private PhotoPane createPhotoPane()
