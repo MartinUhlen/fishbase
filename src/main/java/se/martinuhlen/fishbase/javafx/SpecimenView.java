@@ -4,6 +4,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparing;
 import static javafx.beans.binding.Bindings.createStringBinding;
 import static javafx.geometry.Pos.BOTTOM_RIGHT;
+import static org.controlsfx.control.textfield.TextFields.createClearableTextField;
 import static se.martinuhlen.fishbase.javafx.Converters.converter;
 import static se.martinuhlen.fishbase.javafx.utils.ImageSize.SIZE_16;
 import static se.martinuhlen.fishbase.utils.EmptyCursor.emptyCursor;
@@ -12,12 +13,11 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import org.controlsfx.control.textfield.TextFields;
-
 import javafx.collections.transformation.FilteredList;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
@@ -53,26 +53,31 @@ class SpecimenView extends AbstractTableView<SpecimenWrapper, Specimen>
 		this.tripOpener = tripOpener;
 		this.slideshow = new SlideshowPane();
 		this.photoLoader = new PhotoLoader();
-        this.filterField = TextFields.createClearableTextField();
-        this.filterField.setPromptText("Filter...");
-        TextFields.bindAutoCompletion(filterField, "A", "AA", "ABCC", "AABBCC", "AAAA", "AAAABCC");
+        this.filterField = createClearableTextField();
 		this.ratioSlider = new Slider(0, 1.0, 0.5);
 	}
 
 	@Override
 	Node createTopNode()
 	{
+	    filterField.setPrefWidth(200);
+	    ratioSlider.setPrefWidth(200);
 	    ratioSlider.setShowTickLabels(true);
 	    ratioSlider.setShowTickMarks(true);
 	    ratioSlider.setSnapToTicks(true);
 	    ratioSlider.setMajorTickUnit(0.25);
 	    ratioSlider.setMinorTickCount(4);
 	    ratioSlider.setLabelFormatter(converter(ratio -> Integer.toString((int) (ratio.doubleValue() * 100))));
+
 	    Label ratioLabel = new Label();
 	    ratioLabel.textProperty().bind(createStringBinding(() -> ratioSlider.getLabelFormatter().toString(ratioSlider.getValue()) + "%", ratioSlider.valueProperty()));
-	    filterField.setPrefWidth(200);
-	    ratioSlider.setPrefWidth(200);
-	    return new HBox(filterField, new Label("   "), ratioSlider, ratioLabel);
+
+	    Label countLabel = new Label();
+	    countLabel.textProperty().bind(createStringBinding(() -> getTable().getItems().size() + " specimens", getTable().getItems()));
+
+	    HBox box = new HBox(8, filterField, ratioSlider, ratioLabel, new Label("  "), countLabel);
+	    box.setAlignment(Pos.CENTER_LEFT);
+	    return box;
 	}
 
 	@Override
