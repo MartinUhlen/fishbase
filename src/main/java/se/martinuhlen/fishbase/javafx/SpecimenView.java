@@ -2,6 +2,9 @@ package se.martinuhlen.fishbase.javafx;
 
 import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparing;
+import static java.util.stream.Collectors.collectingAndThen;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.reducing;
 import static javafx.beans.binding.Bindings.createStringBinding;
 import static javafx.geometry.Pos.BOTTOM_RIGHT;
 import static org.controlsfx.control.textfield.TextFields.createClearableTextField;
@@ -10,22 +13,28 @@ import static se.martinuhlen.fishbase.javafx.utils.ImageSize.SIZE_16;
 import static se.martinuhlen.fishbase.utils.EmptyCursor.emptyCursor;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
+import javafx.beans.InvalidationListener;
 import javafx.collections.transformation.FilteredList;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import se.martinuhlen.fishbase.dao.FishBaseDao;
+import se.martinuhlen.fishbase.domain.Specie;
 import se.martinuhlen.fishbase.domain.Specimen;
 import se.martinuhlen.fishbase.drive.photo.FishingPhoto;
 import se.martinuhlen.fishbase.drive.photo.Photo;
@@ -44,6 +53,7 @@ class SpecimenView extends AbstractTableView<SpecimenWrapper, Specimen>
 	private final Consumer<String> tripOpener;
 	private final TextField filterField;
 	private final Slider ratioSlider;
+	private final CheckBox personalBestCheckBox;
 
 	SpecimenView(FishBaseDao dao, PhotoService photoService, Consumer<String> tripOpener)
 	{
@@ -55,6 +65,10 @@ class SpecimenView extends AbstractTableView<SpecimenWrapper, Specimen>
 		this.photoLoader = new PhotoLoader();
         this.filterField = createClearableTextField();
 		this.ratioSlider = new Slider(0, 1.0, 0.5);
+		this.personalBestCheckBox = new CheckBox("PB");
+		filterField.setTooltip(new Tooltip("Filter specimens by free text"));
+		ratioSlider.setTooltip(new Tooltip("Filter specimens by the ratio of their weight compared to the reg weight of it's specie"));
+		personalBestCheckBox.setTooltip(new Tooltip("Show only personal best of each specie"));
 	}
 
 	@Override
@@ -75,7 +89,7 @@ class SpecimenView extends AbstractTableView<SpecimenWrapper, Specimen>
 	    Label countLabel = new Label();
 	    countLabel.textProperty().bind(createStringBinding(() -> getTable().getItems().size() + " specimens", getTable().getItems()));
 
-	    HBox box = new HBox(8, filterField, ratioSlider, ratioLabel, new Label("  "), countLabel);
+	    HBox box = new HBox(8, filterField, ratioSlider, ratioLabel, personalBestCheckBox, new Label("  "), countLabel);
 	    box.setAlignment(Pos.CENTER_LEFT);
 	    return box;
 	}
@@ -86,17 +100,33 @@ class SpecimenView extends AbstractTableView<SpecimenWrapper, Specimen>
 	    FilteredList<SpecimenWrapper> filteredList = list.filtered(createFilterPredicate());
         SpecimenTable specimenTable = new SpecimenTable(filteredList, dao::getSpecies, dao::getAutoCompletions, tripOpener);
         specimenTable.getSelectionModel().selectedItemProperty().addListener(obs -> photoLoader.restart());
-        filterField.textProperty().addListener(obs -> filteredList.setPredicate(createFilterPredicate()));
-        ratioSlider.valueProperty().addListener(obs -> filteredList.setPredicate(createFilterPredicate()));
+        InvalidationListener listener = obs -> filteredList.setPredicate(createFilterPredicate());
+        filterField.textProperty().addListener(listener);
+        ratioSlider.valueProperty().addListener(listener);
+        personalBestCheckBox.selectedProperty().addListener(listener);
         return specimenTable;
 	}
 
     private Predicate<SpecimenWrapper> createFilterPredicate()
     {
-        SpecimenTextPredicate predicate = new SpecimenTextPredicate(filterField.getText());
-        Predicate<SpecimenWrapper> textPredicate = w -> predicate.test(w.getWrapee());
-        Predicate<SpecimenWrapper> ratioPredicate = w -> w.ratioProperty().getValue() >= ratioSlider.getValue();
-        return textPredicate.and(ratioPredicate);
+        Predicate<Specimen> textPredicate = new SpecimenTextPredicate(filterField.getText());
+        Predicate<Specimen> ratioPredicate = s -> s.getRatio() >= ratioSlider.getValue();
+        Predicate<Specimen> personalBestPredicate = w -> true;
+        if (personalBestCheckBox.isSelected())
+        {
+            Map<Specie, Specimen> personalBest = list
+                    .stream()
+                    .map(SpecimenWrapper::getWrapee)
+                    .collect(groupingBy(
+                            Specimen::getSpecie,
+                            collectingAndThen(
+                                    reducing((s1, s2) -> s1.getWeight() >= s2.getWeight() ? s1 : s2),
+                                    Optional::get)));
+
+            personalBestPredicate = s -> s.equals(personalBest.get(s.getSpecie()));
+        }
+        Predicate<Specimen> predicate = textPredicate.and(ratioPredicate).and(personalBestPredicate);
+        return w -> predicate.test(w.getWrapee());
     }
 
 	@Override
