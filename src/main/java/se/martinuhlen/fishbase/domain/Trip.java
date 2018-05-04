@@ -117,6 +117,10 @@ public final class Trip extends Domain<Trip>
 		{
 			errors.add("Start date must be <= end date");
 		}
+		if (startDate.isAfter(now()))
+		{
+		    errors.add("Date cannot be in the future.");
+		}
 		return errors.stream();
 	}
 
