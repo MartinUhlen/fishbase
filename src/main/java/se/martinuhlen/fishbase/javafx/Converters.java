@@ -3,6 +3,7 @@ package se.martinuhlen.fishbase.javafx;
 import static java.time.LocalTime.MIDNIGHT;
 import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.leftPad;
 import static org.apache.commons.lang3.StringUtils.removeEnd;
 import static se.martinuhlen.fishbase.javafx.utils.Constants.DATE_FORMAT;
 import static se.martinuhlen.fishbase.javafx.utils.Constants.TIME_FORMAT;
@@ -22,7 +23,7 @@ final class Converters
 	private Converters()
 	{}
 
-	static abstract class ReadOnlyStringConverter<T> extends StringConverter<T>
+	private static abstract class ReadOnlyStringConverter<T> extends StringConverter<T>
 	{
         @Override
         public T fromString(String string)
@@ -84,7 +85,7 @@ final class Converters
 			@Override
 			public LocalTime fromString(String value)
 			{
-				return isBlank(value) ? MIDNIGHT : super.fromString(value);
+				return isBlank(value) ? MIDNIGHT : super.fromString(leftPad(value.trim(), 5, "0"));
 			}
 		};
 	}
