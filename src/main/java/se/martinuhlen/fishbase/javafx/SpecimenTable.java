@@ -90,6 +90,13 @@ class SpecimenTable extends TableView<SpecimenWrapper>
         {
             add.setOnAction(e -> editSpecimen(true, createNewSpecimen(), s -> specimens.add(new SpecimenWrapper(s)))); // FIXME Must also add a listener (SpecimenView)?
             items.add(add);
+            setOnMouseClicked(e ->
+            {
+                if (e.getClickCount() >= 2)
+                {
+                    add.fire();
+                }
+            });
         }
 
         MenuItem copy = new MenuItem("Copy", getImageView16("copy.png"));
