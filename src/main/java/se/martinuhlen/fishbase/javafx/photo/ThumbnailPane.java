@@ -66,7 +66,6 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.ContextMenuEvent;
 import javafx.scene.input.KeyCodeCombination;
@@ -598,7 +597,7 @@ public class ThumbnailPane extends BorderPane
 			if (!imageLoaded)
 			{
 				System.out.println("Loading " + footer.getText());
-				new ImageLoader(imageView, photo.getThumbnailUrl()).start();
+				new ImageViewLoader(imageView, photo.getThumbnailUrl()).start();
 				imageLoaded = true;
 			}
 		}
@@ -743,47 +742,5 @@ public class ThumbnailPane extends BorderPane
 				.filter(node -> node.getBoundsInParent().getWidth() > 0)
 				.filter(node -> node.getBoundsInParent().intersects(scrollBounds))
 				.map(Thumbnail.class::cast);
-	}
-
-	/**
-	 * Loads {@link Image} in background and {@link ImageView#setImage(Image) sets} to {@link ImageView} when done.
-	 *
-	 * @author Martin
-	 */
-	private static class ImageLoader extends Service<Image>
-	{
-	    private final ImageView view;
-	    private final String url;
-
-	    /**
-	     * Creates a new loader instance.
-	     * 
-	     * @param view whose image to load
-	     * @param url of the image
-	     */
-	    ImageLoader(ImageView view, String url)
-	    {
-	        this.view = view;
-	        this.url = url;
-	    }
-
-	    @Override
-	    protected Task<Image> createTask()
-	    {
-	        return new Task<>()
-	        {
-	            @Override
-	            protected Image call() throws Exception
-	            {
-	                return new Image(url);
-	            }
-	        };
-	    }
-
-	    @Override
-	    protected void succeeded()
-	    {
-	        view.setImage(getValue());
-	    }
 	}
 }

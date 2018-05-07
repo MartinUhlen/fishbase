@@ -1,17 +1,19 @@
 package se.martinuhlen.fishbase.javafx.photo;
 
+import static java.lang.Math.min;
 import static java.util.Objects.requireNonNull;
+import static java.util.Optional.ofNullable;
 import static javafx.geometry.Pos.CENTER;
 import static se.martinuhlen.fishbase.javafx.utils.ImageSize.SIZE_16;
 import static se.martinuhlen.fishbase.javafx.utils.ImageSize.SIZE_32;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.util.function.Supplier;
 
 import org.apache.commons.io.IOUtils;
 
 import javafx.beans.InvalidationListener;
-import javafx.beans.Observable;
 import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
@@ -32,9 +34,11 @@ import se.martinuhlen.fishbase.utils.Cursor;
 
 public class SlideshowPane extends BorderPane
 {
-	private final ImageView imageView;
-	private Image previousImage;
-	private Image nextImage;
+	private static final Supplier<Image> NULL_SUPPLIER = () -> null;
+
+    private final ImageView imageView;
+	private Supplier<Image> previousImage;
+	private Supplier<Image> nextImage;
 
 	private final VideoPane videoPane;
 
@@ -111,16 +115,19 @@ public class SlideshowPane extends BorderPane
 	public void setPhotos(Cursor<Photo> photos)
 	{
 		this.photos = requireNonNull(photos);
+        previousImage = NULL_SUPPLIER;
+        nextImage = NULL_SUPPLIER;
+        imageView.setImage(null);
+        videoPane.disposeCurrentVideo();
+
 		if (photos.hasCurrent())
 		{
-			showPhoto(photos.current(), null);
+			showPhoto(photos.current(), NULL_SUPPLIER);
 			preloadPrevious();
 			preloadNext();
 		}
 		else
 		{
-			previousImage = null;
-			nextImage = null;
 			setCenter(null);
 			updateState(null);
 		}
@@ -128,8 +135,8 @@ public class SlideshowPane extends BorderPane
 
 	private void showFirstPhoto()
 	{
-		previousImage = null;
-		showPhoto(photos.first(), null);
+		previousImage = NULL_SUPPLIER;
+		showPhoto(photos.first(), NULL_SUPPLIER);
 		preloadNext();
 	}
 
@@ -147,37 +154,58 @@ public class SlideshowPane extends BorderPane
 		preloadNext();
 	}
 
-	private Image currentImage()
+	private Supplier<Image> currentImage()
 	{
-		return photos.current().isVideo() ? null : imageView.getImage();
+	    if (photos.current().isVideo())
+	    {
+	        return NULL_SUPPLIER;
+	    }
+	    else
+	    {
+	        return ofNullable(imageView.getImage())
+	                .map(img -> (Supplier<Image>) () -> img)
+	                .orElseGet(() -> new ImageLoader(photos.current().getContentUrl(), true));
+	    }
 	}
 
 	private void showLastPhoto()
 	{
-		nextImage = null;
-		showPhoto(photos.last(), null);
+		nextImage = NULL_SUPPLIER;
+		showPhoto(photos.last(), NULL_SUPPLIER);
 		preloadPrevious();
 	}
 
 	private void preloadPrevious()
 	{
-		previousImage = null;
+		previousImage = NULL_SUPPLIER;
 		if (photos.hasPrevious())
 		{
-			previousImage = toImage(photos.peekPrevious());
+			previousImage = preload(photos.peekPrevious());
 		}
 	}
 
 	private void preloadNext()
 	{
-		nextImage = null;
+		nextImage = NULL_SUPPLIER;
 		if (photos.hasNext())
 		{
-			nextImage = toImage(photos.peekNext());
+			nextImage = preload(photos.peekNext());
 		}
 	}
 
-	private void showPhoto(Photo photo, Image cachedImage)
+    private Supplier<Image> preload(Photo photo)
+    {
+        if (photo.isVideo())
+        {
+            return NULL_SUPPLIER;
+        }
+        else
+        {
+            return new ImageLoader(photo.getContentUrl(), true);
+        }
+    }
+
+	private void showPhoto(Photo photo, Supplier<Image> supplier)
 	{
 		if (photo.isVideo())
 		{
@@ -186,7 +214,7 @@ public class SlideshowPane extends BorderPane
 		else
 		{
 			videoPane.disposeCurrentVideo();
-			showImage(photo, cachedImage);
+			showImage(photo, supplier);
 		}
 		updateState(photo);
 	}
@@ -229,17 +257,13 @@ public class SlideshowPane extends BorderPane
 		}.start();
 	}
 
-	private void showImage(Photo photo, Image cachedImage)
+	private void showImage(Photo photo, Supplier<Image> supplier)
 	{
 		setCenter(imageView);
-		if (cachedImage == null)
-		{
-			imageView.setImage(toImage(photo));
-		}
-		else
-		{
-			imageView.setImage(cachedImage);
-		}
+		ofNullable(supplier.get())
+		        .ifPresentOrElse(
+		                img -> imageView.setImage(img),
+		                () -> new ImageViewLoader(imageView, photo.getContentUrl()).start());
 	}
 
 	private void updateState(Photo photo)
@@ -256,11 +280,6 @@ public class SlideshowPane extends BorderPane
 		return String.format("%s (%s/%s)",
 				photo.getName(),
 				(photos.currentIndex() + 1), photos.size());
-	}
-
-	private Image toImage(Photo photo)
-	{
-		return photo.isVideo() ? null : new Image(photo.getContentUrl(), true);
 	}
 
 	/**
@@ -300,14 +319,6 @@ public class SlideshowPane extends BorderPane
 			return;
 		}
 
-		if (image.getProgress() < 1.0 && !image.isError())
-		{
-			InvalidationListener listener = new ImageLoadListener(image);
-			image.progressProperty().addListener(listener);
-			image.errorProperty().addListener(listener);
-			return;
-		}
-
 		double imageWidth = image.getWidth();
 		double imageHeight = image.getHeight();
 		if (imageWidth <= 0 || imageHeight <= 0)
@@ -318,42 +329,12 @@ public class SlideshowPane extends BorderPane
 		double maxWidth = fitWidthValue.getValue().doubleValue();
 		double maxHeight = fitHeightValue.getValue().doubleValue();
 		double ratio = imageWidth / imageHeight;
-		double minLength = Math.min(maxWidth, maxHeight);
+		double minLength = min(maxWidth, maxHeight);
 		double width = minLength * ratio;
 		double height = minLength;
 		setPrefWidth(width);
 		setPrefHeight(height + bottomBox.getHeight());
 		imageView.setFitWidth(width);
 		imageView.setFitHeight(0);
-	}
-
-	private class ImageLoadListener implements InvalidationListener
-	{
-		private final Image image;
-
-		ImageLoadListener(Image image)
-		{
-			this.image = image;
-		}
-
-		@Override
-		public void invalidated(Observable obs)
-		{
-			if (image.getProgress() >= 1.0)
-			{
-				fitSize();
-				removeListener();
-			}
-			else if (image.isError())
-			{
-				removeListener();
-			}
-		}
-
-		private void removeListener()
-		{
-			image.progressProperty().removeListener(this);
-			image.errorProperty().removeListener(this);
-		}
 	}
 }
