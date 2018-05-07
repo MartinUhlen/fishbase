@@ -144,7 +144,7 @@ public class ThumbnailPane extends BorderPane
 
 	private final ScrollPane scroll;
 	private final FlowPane photoPane;
-	private final ImageLoader imageLoader;
+	private final ThumbnailLoader imageLoader;
 	private final boolean thumbnailsAreSelectable;
 	private final Comparator<LocalDateTime> photoTimeComparator;
 	private final Comparator<Photo> photoComparator;
@@ -178,7 +178,7 @@ public class ThumbnailPane extends BorderPane
 
 		photoPane.prefWidthProperty().bind(scroll.widthProperty().subtract(20));
 
-		imageLoader = new ImageLoader();
+		imageLoader = new ThumbnailLoader();
 		scroll.vvalueProperty().addListener(imageLoader);
 		photoPane.heightProperty().addListener(imageLoader);
 
@@ -598,7 +598,7 @@ public class ThumbnailPane extends BorderPane
 			if (!imageLoaded)
 			{
 				System.out.println("Loading " + footer.getText());
-				imageView.setImage(new Image(photo.getThumbnailUrl(), true));
+				new ImageLoader(imageView, photo.getThumbnailUrl()).start();
 				imageLoaded = true;
 			}
 		}
@@ -709,11 +709,11 @@ public class ThumbnailPane extends BorderPane
 		}
 	}
 
-	private class ImageLoader implements InvalidationListener
+	private class ThumbnailLoader implements InvalidationListener
 	{
 		private final Timeline timeline;
 
-		ImageLoader()
+		ThumbnailLoader()
 		{
 			timeline = new Timeline(new KeyFrame(Duration.millis(100), e -> loadVisibleThumbnails()));
 		}
@@ -743,5 +743,47 @@ public class ThumbnailPane extends BorderPane
 				.filter(node -> node.getBoundsInParent().getWidth() > 0)
 				.filter(node -> node.getBoundsInParent().intersects(scrollBounds))
 				.map(Thumbnail.class::cast);
+	}
+
+	/**
+	 * Loads {@link Image} in background and {@link ImageView#setImage(Image) sets} to {@link ImageView} when done.
+	 *
+	 * @author Martin
+	 */
+	private static class ImageLoader extends Service<Image>
+	{
+	    private final ImageView view;
+	    private final String url;
+
+	    /**
+	     * Creates a new loader instance.
+	     * 
+	     * @param view whose image to load
+	     * @param url of the image
+	     */
+	    ImageLoader(ImageView view, String url)
+	    {
+	        this.view = view;
+	        this.url = url;
+	    }
+
+	    @Override
+	    protected Task<Image> createTask()
+	    {
+	        return new Task<>()
+	        {
+	            @Override
+	            protected Image call() throws Exception
+	            {
+	                return new Image(url);
+	            }
+	        };
+	    }
+
+	    @Override
+	    protected void succeeded()
+	    {
+	        view.setImage(getValue());
+	    }
 	}
 }
