@@ -19,11 +19,15 @@ class ImageLoader extends Service<Image> implements Supplier<Image>
      * Creates a new loader instance.
      * 
      * @param url of the image to load
-     * @param start {@code true} to {@link #start()} this loader
+     * @param start {@code true} to {@link #start()} this loader immediately
      */
     ImageLoader(String url, boolean start)
     {
         this.url = url;
+        if (start)
+        {
+            start();
+        }
     }
 
     @Override
