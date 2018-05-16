@@ -101,6 +101,12 @@ public final class EmptyCursor<T> implements Cursor<T>
 		return 0;
 	}
 
+    @Override
+    public Cursor<T> copy()
+    {
+        return this;
+    }
+
 	private <X> X fail()
 	{
 		throw new NoSuchElementException("Cursor is empty");

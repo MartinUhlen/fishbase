@@ -49,4 +49,6 @@ public interface Cursor<T>
 	{
 		return size() == 0;
 	}
+
+	Cursor<T> copy();
 }

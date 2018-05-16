@@ -22,7 +22,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -55,32 +54,50 @@ public class SlideshowPane extends BorderPane
 	private ObservableValue<? extends Number> fitWidthValue;
 	private ObservableValue<? extends Number> fitHeightValue;
 
+	/**
+	 * Creates a new slideshow pane.
+	 * 
+	 * @param openStageOnClick {@code true} to open a new slideshow in a modal stage when this slideshow is clicked
+	 */
+	public SlideshowPane(boolean openStageOnClick)
+	{
+        imageView = new ImageView();
+        imageView.setPreserveRatio(true);
+        imageView.setSmooth(true);
+        setCenter(imageView);
+
+        videoPane = new VideoPane();
+
+        firstButton = button("Show first photo", () -> showFirstPhoto());
+        previousButton = button("Show previous photo", () -> showPreviousPhoto());
+        nextButton = button("Show next photo", () -> showNextPhoto());
+        lastButton = button("Show last photo", () -> showLastPhoto());
+        heightProperty().addListener(obs -> setButtonIcons());
+        HBox buttons = new HBox(firstButton, previousButton, nextButton, lastButton);
+        buttons.setAlignment(CENTER);
+
+        statusLabel = new Label();
+        statusLabel.setAlignment(CENTER);
+        statusLabel.prefWidthProperty().bind(widthProperty());
+
+        bottomBox = new VBox(statusLabel, buttons);
+        setBottom(bottomBox);
+
+        imageView.fitHeightProperty().bind(heightProperty().subtract(bottomBox.heightProperty()));
+        imageView.fitWidthProperty().bind(widthProperty());
+
+        if (openStageOnClick)
+        {
+            imageView.setOnMouseClicked(SlideshowStage.openOnClick(hasPhoto -> photos.copy()));
+        }
+	}
+
+	/**
+	 * Creates a new slideshow pane, passing {@code true} to {@link SlideshowPane#SlideshowPane(boolean)}.
+	 */
 	public SlideshowPane()
 	{
-		imageView = new ImageView();
-		imageView.setPreserveRatio(true);
-		imageView.setSmooth(true);
-		setCenter(imageView);
-
-		videoPane = new VideoPane();
-
-		firstButton = button("Show first photo", () -> showFirstPhoto());
-		previousButton = button("Show previous photo", () -> showPreviousPhoto());
-		nextButton = button("Show next photo", () -> showNextPhoto());
-		lastButton = button("Show last photo", () -> showLastPhoto());
-		heightProperty().addListener(obs -> setButtonIcons());
-		HBox buttons = new HBox(firstButton, previousButton, nextButton, lastButton);
-		buttons.setAlignment(CENTER);
-
-		statusLabel = new Label();
-		statusLabel.setAlignment(CENTER);
-		statusLabel.prefWidthProperty().bind(widthProperty());
-
-		bottomBox = new VBox(statusLabel, buttons);
-		setBottom(bottomBox);
-
-		imageView.fitHeightProperty().bind(heightProperty().subtract(bottomBox.heightProperty()));
-		imageView.fitWidthProperty().bind(widthProperty());
+	    this(true);
 	}
 
 	public void setButtonSize(ImageSize size)
@@ -337,4 +354,13 @@ public class SlideshowPane extends BorderPane
 		imageView.setFitWidth(width);
 		imageView.setFitHeight(0);
 	}
+
+	private class ImageView extends javafx.scene.image.ImageView implements HasPhoto
+	{
+        @Override
+        public Photo getPhoto()
+        {
+            return photos.hasCurrent() ? photos.current() : null;
+        }
+    }
 }

@@ -120,6 +120,12 @@ class ListCursor<T> implements Cursor<T>
 		return list.size();
 	}
 
+	@Override
+	public Cursor<T> copy()
+	{
+	    return new ListCursor<>(list, index);
+	}
+
 	private void checkElementAt(int i)
 	{
 		if (i < 0 || i >= list.size())

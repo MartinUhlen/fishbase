@@ -18,10 +18,6 @@ import static javafx.geometry.Orientation.VERTICAL;
 import static javafx.geometry.Pos.TOP_LEFT;
 import static javafx.scene.control.ScrollPane.ScrollBarPolicy.AS_NEEDED;
 import static javafx.scene.control.ScrollPane.ScrollBarPolicy.NEVER;
-import static javafx.scene.input.KeyCode.ESCAPE;
-import static javafx.scene.input.MouseButton.PRIMARY;
-import static javafx.stage.Modality.WINDOW_MODAL;
-import static javafx.stage.StageStyle.UTILITY;
 import static se.martinuhlen.fishbase.javafx.utils.Constants.DATE_TIME_FORMAT;
 
 import java.time.LocalDate;
@@ -56,9 +52,7 @@ import javafx.event.EventHandler;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Pos;
-import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
-import javafx.scene.Scene;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
@@ -68,14 +62,11 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.ContextMenuEvent;
-import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
-import javafx.stage.Screen;
-import javafx.stage.Stage;
 import javafx.util.Duration;
 import javafx.util.StringConverter;
 import se.martinuhlen.fishbase.drive.photo.Photo;
@@ -155,8 +146,7 @@ public class ThumbnailPane extends BorderPane
 	private final ObservableSet<Photo> unmodifiableSelectedPhotos = unmodifiableObservableSet(selectedPhotos);
 	private ReadOnlyBooleanProperty hasSelectedPhotos;
 
-	private SlideshowPane slideshow;
-	private Stage slideshowStage;
+	private final EventHandler<MouseEvent> slideshowHandler = SlideshowStage.openOnClick(this::createCursor);
 
 	private EventHandler<? super ContextMenuEvent> contextMenuHandler;
 	private Function<Photo, String> tooltipFunction;
@@ -417,7 +407,7 @@ public class ThumbnailPane extends BorderPane
 		Thumbnail thumbnail = new Thumbnail(photo,
 				s -> onPhotoSelected(photo, s),
 				s -> selectAll(photo.getTime().toLocalDate(), s));
-		thumbnail.onMouseClickedProperty().set(this::onThumbnailClicked);
+		thumbnail.onMouseClickedProperty().set(slideshowHandler);
 		thumbnail.setOnContextMenuRequested(contextMenuHandler);
 		if (tooltipFunction != null)
 		{
@@ -488,37 +478,12 @@ public class ThumbnailPane extends BorderPane
 				.map(Thumbnail.class::cast);
 	}
 
-	private void onThumbnailClicked(MouseEvent event)
-	{
-		if (event.getClickCount() == 1 && event.getButton() == PRIMARY)
-		{
-			showSlideshow(event);
-		}
-	}
-
-	private void showSlideshow(MouseEvent event)
-	{
-		if (slideshow == null)
-		{
-			slideshow = new SlideshowPane();
-			slideshowStage = new Stage(UTILITY);
-			slideshowStage.initModality(WINDOW_MODAL);
-			slideshowStage.initOwner(getScene().getWindow());
-			Scene scene = new Scene(slideshow);
-			scene.getAccelerators().put(new KeyCodeCombination(ESCAPE), () -> slideshowStage.hide());
-			slideshowStage.setScene(scene);
-			Rectangle2D screenSize = Screen.getPrimary().getBounds();
-			slideshowStage.setWidth(screenSize.getWidth() * 0.90);
-			slideshowStage.setHeight(screenSize.getHeight() * 0.90);
-		}
-		Thumbnail thumbnail = (Thumbnail) event.getSource();
-		List<Photo> photoList = new ArrayList<>(photos);
-		int index = photoList.indexOf(thumbnail.photo);
-		Cursor<Photo> cursor = Cursor.of(photoList, index);
-		slideshow.setPhotos(cursor);
-		slideshowStage.show();
-		slideshowStage.requestFocus();
-	}
+    private Cursor<Photo> createCursor(HasPhoto hasPhoto)
+    {
+        List<Photo> photoList = new ArrayList<>(photos);
+        int index = photoList.indexOf(hasPhoto.getPhoto());
+        return Cursor.of(photoList, index);
+    }
 
 	/**
 	 * Sets handler for context menu on photo thumbnails.
