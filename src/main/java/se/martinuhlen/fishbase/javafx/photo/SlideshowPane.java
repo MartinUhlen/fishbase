@@ -38,6 +38,7 @@ public class SlideshowPane extends BorderPane
     private final ImageView imageView;
 	private Supplier<Image> previousImage;
 	private Supplier<Image> nextImage;
+	private ImageViewLoader loader;
 
 	private final VideoPane videoPane;
 
@@ -280,8 +281,18 @@ public class SlideshowPane extends BorderPane
 		ofNullable(supplier.get())
 		        .ifPresentOrElse(
 		                img -> imageView.setImage(img),
-		                () -> new ImageViewLoader(imageView, photo.getContentUrl()).start());
+		                () -> loadImage(photo));
 	}
+
+    private void loadImage(Photo photo)
+    {
+        if (loader != null)
+        {
+            loader.cancel();
+        }
+        loader = new ImageViewLoader(imageView, photo.getContentUrl());
+        loader.start();
+    }
 
 	private void updateState(Photo photo)
 	{
