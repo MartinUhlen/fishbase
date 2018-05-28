@@ -2,6 +2,7 @@ package se.martinuhlen.fishbase.javafx;
 
 import static java.util.stream.Collectors.joining;
 import static javafx.application.Platform.runLater;
+import static javafx.geometry.Orientation.VERTICAL;
 import static javafx.scene.control.Alert.AlertType.CONFIRMATION;
 import static javafx.scene.control.Alert.AlertType.ERROR;
 import static javafx.scene.control.ButtonBar.ButtonData.OK_DONE;
@@ -13,6 +14,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.prefs.Preferences;
 
 import javafx.beans.property.Property;
 import javafx.beans.property.ReadOnlyStringProperty;
@@ -24,6 +26,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.SplitPane;
+import javafx.scene.control.SplitPane.Divider;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
@@ -131,19 +134,23 @@ class TripView implements View
 		overviewBox.getChildren().add(textArea);
 
 		PhotoPane photoPane = createPhotoPane();
-		HBox topBox = new HBox(20, overviewBox, photoPane);
-		overviewBox.prefWidthProperty().bind(topBox.widthProperty().multiply(0.5));
-		photoPane.prefWidthProperty().bind(topBox.widthProperty().multiply(0.5));
+		SplitPane hSplit = new SplitPane(overviewBox, photoPane);
+		bindPersistedDividerLocation(hSplit, "TripView.horizontalSplit.right.dividerLocation", 0.50);
 
 		SpecimenTable specimenTable = createSpecimenTable();
+		SplitPane vSplit = new SplitPane(hSplit, specimenTable);
+		vSplit.setOrientation(VERTICAL);
+		bindPersistedDividerLocation(vSplit, "TripView.verticalSplit.dividerLocation", 0.75);
 
-		VBox box = new VBox(20, topBox, specimenTable);
-		VBox.setVgrow(topBox, Priority.ALWAYS);
-		VBox.setVgrow(specimenTable, Priority.ALWAYS);
-		topBox.prefHeightProperty().bind(box.heightProperty().multiply(0.60));
-		specimenTable.prefHeightProperty().bind(box.heightProperty().multiply(0.40));
+		return vSplit;
+	}
 
-		return box;
+	private void bindPersistedDividerLocation(SplitPane split, String key, double defaultValue)
+	{
+        Preferences preferences = Preferences.userRoot();
+        Divider divider = split.getDividers().get(0);
+        divider.setPosition(preferences.getDouble(key, defaultValue));
+        divider.positionProperty().addListener((obs, oldValue, newValue) -> preferences.putDouble(key, newValue.doubleValue()));
 	}
 
 	private DatePicker createDatePicker(Property<LocalDate> property)
@@ -165,12 +172,9 @@ class TripView implements View
 
 	private SplitPane createSplitPane()
 	{
-		SplitPane split = new SplitPane();
-		split.getItems().add(list);
-		split.getItems().add(tripPane);
-		split.setDividerPosition(0, 0.20);
-		list.setMinWidth(200);
-		list.setMaxWidth(400);
+		SplitPane split = new SplitPane(list, tripPane);
+		bindPersistedDividerLocation(split, "TripView.horizontalSplit.left.dividerLocation", 0.20);
+		list.setMinWidth(50);
 		tripPane.setVisible(false);
 		wrapper.addListener(obs -> tripPane.setVisible(wrapper.getWrapee() != EMPTY_TRIP));
 		return split;
