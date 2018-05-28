@@ -84,9 +84,6 @@ public class SlideshowPane extends BorderPane
         bottomBox = new VBox(statusLabel, buttons);
         setBottom(bottomBox);
 
-        imageView.fitHeightProperty().bind(heightProperty().subtract(bottomBox.heightProperty()));
-        imageView.fitWidthProperty().bind(widthProperty());
-
         if (openStageOnClick)
         {
             imageView.setOnMouseClicked(SlideshowStage.openOnClick(hasPhoto -> photos.copy()));
@@ -362,11 +359,11 @@ public class SlideshowPane extends BorderPane
 		double height = minLength;
 		setPrefWidth(width);
 		setPrefHeight(height + bottomBox.getHeight());
-		imageView.setFitWidth(width);
-		imageView.setFitHeight(0);
+		imageView.setFitWidth(width); // FIXME Needed with ResizableImageView?
+		imageView.setFitHeight(0);    // FIXME Needed with ResizableImageView?
 	}
 
-	private class ImageView extends javafx.scene.image.ImageView implements HasPhoto
+	private class ImageView extends ResizableImageView implements HasPhoto
 	{
         @Override
         public Photo getPhoto()
