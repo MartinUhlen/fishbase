@@ -25,7 +25,6 @@ import javafx.beans.property.Property;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.control.ComboBox;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
@@ -38,6 +37,7 @@ import javafx.util.converter.IntegerStringConverter;
 import se.martinuhlen.fishbase.domain.AutoCompleteField;
 import se.martinuhlen.fishbase.domain.Specie;
 import se.martinuhlen.fishbase.domain.Specimen;
+import se.martinuhlen.fishbase.javafx.controls.ComboBox;
 import se.martinuhlen.fishbase.javafx.data.SpecimenWrapper;
 
 class SpecimenDialog extends Dialog<Specimen>
