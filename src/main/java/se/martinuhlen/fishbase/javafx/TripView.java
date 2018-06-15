@@ -38,6 +38,7 @@ import se.martinuhlen.fishbase.drive.photo.FishingPhoto;
 import se.martinuhlen.fishbase.drive.photo.PhotoService;
 import se.martinuhlen.fishbase.javafx.action.Action;
 import se.martinuhlen.fishbase.javafx.action.RunnableAction;
+import se.martinuhlen.fishbase.javafx.controls.DatePicker;
 import se.martinuhlen.fishbase.javafx.data.TripWrapper;
 import se.martinuhlen.fishbase.javafx.photo.PhotoPane;
 

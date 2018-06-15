@@ -1,4 +1,4 @@
-package se.martinuhlen.fishbase.javafx;
+package se.martinuhlen.fishbase.javafx.utils;
 
 import static java.time.LocalTime.MIDNIGHT;
 import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
@@ -18,7 +18,12 @@ import javafx.util.converter.LocalDateStringConverter;
 import javafx.util.converter.LocalTimeStringConverter;
 import se.martinuhlen.fishbase.domain.Specie;
 
-final class Converters
+/**
+ * A set of {@link StringConverter converters}.
+ * 
+ * @author Martin
+ */
+public final class Converters
 {
 	private Converters()
 	{}
@@ -32,7 +37,7 @@ final class Converters
         }
 	}
 
-	static <T> ReadOnlyStringConverter<T> converter(Function<T, String> function)
+	public static <T> ReadOnlyStringConverter<T> converter(Function<T, String> function)
 	{
 	    return new ReadOnlyStringConverter<>()
         {
@@ -44,12 +49,12 @@ final class Converters
         };
 	}
 
-	static StringConverter<Specie> specieConverter()
+	public static StringConverter<Specie> specieConverter()
 	{
 	    return converter(Specie::getName);
 	}
 
-	static StringConverter<Float> lengthConverter()
+	public static StringConverter<Float> lengthConverter()
 	{
 		return new FloatStringConverter()
 		{
@@ -67,12 +72,12 @@ final class Converters
 		};
 	}
 
-	static StringConverter<LocalDate> dateConverter()
+	public static StringConverter<LocalDate> dateConverter()
 	{
 		return new LocalDateStringConverter(DATE_FORMAT, DATE_FORMAT);
 	}
 
-	static StringConverter<LocalTime> timeConverter()
+	public static StringConverter<LocalTime> timeConverter()
 	{
 		return new LocalTimeStringConverter(TIME_FORMAT, TIME_FORMAT)
 		{

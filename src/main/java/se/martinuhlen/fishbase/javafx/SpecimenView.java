@@ -8,7 +8,7 @@ import static java.util.stream.Collectors.reducing;
 import static javafx.beans.binding.Bindings.createStringBinding;
 import static javafx.geometry.Pos.BOTTOM_RIGHT;
 import static org.controlsfx.control.textfield.TextFields.createClearableTextField;
-import static se.martinuhlen.fishbase.javafx.Converters.converter;
+import static se.martinuhlen.fishbase.javafx.utils.Converters.converter;
 import static se.martinuhlen.fishbase.javafx.utils.ImageSize.SIZE_16;
 import static se.martinuhlen.fishbase.utils.EmptyCursor.emptyCursor;
 

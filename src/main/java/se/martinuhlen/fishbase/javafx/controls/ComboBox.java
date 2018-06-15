@@ -12,7 +12,7 @@ import javafx.scene.control.skin.ComboBoxListViewSkin;
 import javafx.scene.input.KeyEvent;
 
 /**
- * A {@link javafx.scene.control.ComboBox} with extended features.
+ * A {@link javafx.scene.control.ComboBox} with extended features such as better key navigation.
  *
  * @author Martin
  */

@@ -9,10 +9,10 @@ import static se.martinuhlen.fishbase.domain.AutoCompleteField.BAIT;
 import static se.martinuhlen.fishbase.domain.AutoCompleteField.LOCATION;
 import static se.martinuhlen.fishbase.domain.AutoCompleteField.METHOD;
 import static se.martinuhlen.fishbase.domain.AutoCompleteField.WEATHER;
-import static se.martinuhlen.fishbase.javafx.Converters.lengthConverter;
-import static se.martinuhlen.fishbase.javafx.Converters.specieConverter;
-import static se.martinuhlen.fishbase.javafx.Converters.timeConverter;
 import static se.martinuhlen.fishbase.javafx.utils.Constants.RIGHT_ALIGNMENT;
+import static se.martinuhlen.fishbase.javafx.utils.Converters.lengthConverter;
+import static se.martinuhlen.fishbase.javafx.utils.Converters.specieConverter;
+import static se.martinuhlen.fishbase.javafx.utils.Converters.timeConverter;
 
 import java.time.LocalTime;
 import java.util.Collection;
@@ -38,6 +38,7 @@ import se.martinuhlen.fishbase.domain.AutoCompleteField;
 import se.martinuhlen.fishbase.domain.Specie;
 import se.martinuhlen.fishbase.domain.Specimen;
 import se.martinuhlen.fishbase.javafx.controls.ComboBox;
+import se.martinuhlen.fishbase.javafx.controls.DatePicker;
 import se.martinuhlen.fishbase.javafx.data.SpecimenWrapper;
 
 class SpecimenDialog extends Dialog<Specimen>

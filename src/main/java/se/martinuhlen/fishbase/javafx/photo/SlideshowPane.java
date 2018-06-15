@@ -27,6 +27,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.media.Media;
 import se.martinuhlen.fishbase.drive.photo.Photo;
+import se.martinuhlen.fishbase.javafx.controls.ResizableImageView;
 import se.martinuhlen.fishbase.javafx.utils.ImageSize;
 import se.martinuhlen.fishbase.javafx.utils.Images;
 import se.martinuhlen.fishbase.utils.Cursor;

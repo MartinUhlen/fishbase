@@ -1,4 +1,4 @@
-package se.martinuhlen.fishbase.javafx.photo;
+package se.martinuhlen.fishbase.javafx.controls;
 
 import javafx.scene.image.ImageView;
 

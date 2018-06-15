@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 
 import javafx.util.StringConverter;
 import se.martinuhlen.fishbase.domain.Specie;
+import se.martinuhlen.fishbase.javafx.utils.Converters;
 
 /**
  * Unit tests of {@link Converters}.

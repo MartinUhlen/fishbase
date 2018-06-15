@@ -5,11 +5,11 @@ import static javafx.scene.control.Alert.AlertType.CONFIRMATION;
 import static javafx.scene.control.ButtonBar.ButtonData.OK_DONE;
 import static javafx.scene.control.ButtonType.CANCEL;
 import static javafx.scene.control.cell.TextFieldTableCell.forTableColumn;
-import static se.martinuhlen.fishbase.javafx.Converters.dateConverter;
-import static se.martinuhlen.fishbase.javafx.Converters.lengthConverter;
-import static se.martinuhlen.fishbase.javafx.Converters.specieConverter;
-import static se.martinuhlen.fishbase.javafx.Converters.timeConverter;
 import static se.martinuhlen.fishbase.javafx.utils.Constants.RIGHT_ALIGNMENT;
+import static se.martinuhlen.fishbase.javafx.utils.Converters.dateConverter;
+import static se.martinuhlen.fishbase.javafx.utils.Converters.lengthConverter;
+import static se.martinuhlen.fishbase.javafx.utils.Converters.specieConverter;
+import static se.martinuhlen.fishbase.javafx.utils.Converters.timeConverter;
 import static se.martinuhlen.fishbase.javafx.utils.Images.getImageView16;
 
 import java.time.LocalDate;
