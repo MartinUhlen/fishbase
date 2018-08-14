@@ -8,12 +8,13 @@ import static javafx.scene.control.ButtonBar.ButtonData.OK_DONE;
 import static javafx.scene.control.ButtonType.CANCEL;
 import static javafx.scene.control.TabPane.TabClosingPolicy.ALL_TABS;
 import static se.martinuhlen.fishbase.javafx.View.EMPTY_VIEW;
+import static se.martinuhlen.fishbase.javafx.utils.Constants.BUILD_TIME;
+import static se.martinuhlen.fishbase.javafx.utils.Constants.DATE_TIME_FORMAT;
 import static se.martinuhlen.fishbase.javafx.utils.ImageSize.SIZE_256;
 import static se.martinuhlen.fishbase.javafx.utils.Images.getImageView;
 import static se.martinuhlen.fishbase.javafx.utils.Images.getImageView16;
 import static se.martinuhlen.fishbase.javafx.utils.Images.getImages;
 
-import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -197,8 +198,7 @@ public class FishBaseApplication extends Application
             Alert alert = new Alert(INFORMATION);
             alert.setTitle("About");
             alert.setHeaderText("FishBase 0.3");
-            // TODO Add build date
-            alert.setContentText("Martin Uhlén 2006-" + LocalDate.now().getYear());
+            alert.setContentText("Built on: " + DATE_TIME_FORMAT.format(BUILD_TIME) + "\n" + "Martin Uhlén 2006-" + BUILD_TIME.getYear());
             alert.showAndWait();
         });
         return about;
