@@ -66,6 +66,7 @@ class SpecimenView extends AbstractTableView<SpecimenWrapper, Specimen>
         this.filterField = createClearableTextField();
 		this.ratioSlider = new Slider(0, 1.0, 0.5);
 		this.personalBestCheckBox = new CheckBox("PB");
+		filterField.setPromptText("Filter...");
 		filterField.setTooltip(new Tooltip("Filter specimens by free text"));
 		ratioSlider.setTooltip(new Tooltip("Filter specimens by the ratio of their weight compared to the reg weight of it's specie"));
 		personalBestCheckBox.setTooltip(new Tooltip("Show only personal best of each specie"));

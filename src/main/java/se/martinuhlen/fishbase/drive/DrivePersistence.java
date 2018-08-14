@@ -52,7 +52,7 @@ public class DrivePersistence implements Persistence
 	}
 
 	/**
-	 * Shuts down this persistence instance, blocks until all data have written/read.
+	 * Shuts down this persistence instance, blocks until all data have been written/read.
 	 */
 	public void shutdown()
 	{
