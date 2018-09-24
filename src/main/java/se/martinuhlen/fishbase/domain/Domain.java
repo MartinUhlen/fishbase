@@ -117,7 +117,7 @@ public abstract class Domain<D extends Domain<D>>
 	 * Checks if this object has the same (equal) ID as given object.
 	 * 
 	 * @param that object whose ID to compare against this object's ID
-	 * @return {@code true} if they have the equal ID
+	 * @return {@code true} if they have equal ID
 	 */
 	public final boolean equalsId(D that)
 	{
@@ -129,7 +129,7 @@ public abstract class Domain<D extends Domain<D>>
 	 * Checks if this object has the same (equal) data as given object.
 	 * 
 	 * @param that object whose data to compare against this object's data
-	 * @return {@code true} if they have the equal data
+	 * @return {@code true} if they have equal data
 	 */
 	protected abstract boolean equalsData(D that);
 

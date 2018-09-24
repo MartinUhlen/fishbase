@@ -11,22 +11,25 @@ import se.martinuhlen.fishbase.domain.Specimen;
  */
 public class SpecimenTextPredicate extends TextPredicate<Specimen>
 {
+    private final SpecieTextPredicate speciePredicate;
+
 	public SpecimenTextPredicate(String text)
 	{
 		super(text);
+		this.speciePredicate = new SpecieTextPredicate(text);
 	}
 
 	@Override
 	boolean matchesText(Specimen s, String text)
 	{
-		return Stream.of(
-				s.getSpecie().getName(),
-				s.getLocation(),
-				s.getInstant().toString(),
-				s.getMethod(),
-				s.getBait(),
-				s.getWeather(),
-				s.getText())
-						.anyMatch(str -> containsIgnoreCase(str, text));
+		return speciePredicate.test(s.getSpecie())
+	        || Stream.of(
+    			s.getLocation(),
+    			s.getInstant().toString(),
+    			s.getMethod(),
+    			s.getBait(),
+    			s.getWeather(),
+    			s.getText())
+    					.anyMatch(str -> containsIgnoreCase(str, text));
 	}
 }

@@ -37,5 +37,11 @@ abstract class TextPredicate<T> implements Predicate<T>
 		}
 	}
 
+	/**
+	 * Tests if the filtered object matches the text.
+	 * @param obj being filtered
+	 * @param text to compare {@code obj} against
+	 * @return {@code true} if the object matches the text
+	 */
 	abstract boolean matchesText(T obj, String text);
 }
