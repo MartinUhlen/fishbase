@@ -1,7 +1,9 @@
 package se.martinuhlen.fishbase.javafx;
 
+import static java.util.stream.Collectors.toList;
 import static javafx.application.Platform.runLater;
 import static javafx.collections.FXCollections.observableArrayList;
+import static javafx.geometry.Pos.BASELINE_LEFT;
 import static javafx.geometry.Pos.CENTER;
 import static javafx.scene.control.ButtonType.CANCEL;
 import static javafx.scene.control.ButtonType.OK;
@@ -23,7 +25,6 @@ import org.controlsfx.control.textfield.TextFields;
 
 import javafx.beans.property.Property;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
@@ -41,6 +42,11 @@ import se.martinuhlen.fishbase.javafx.controls.ComboBox;
 import se.martinuhlen.fishbase.javafx.controls.DatePicker;
 import se.martinuhlen.fishbase.javafx.data.SpecimenWrapper;
 
+/**
+ * A dialog to add new or edit existing {@link Specimen}s.
+ *
+ * @author Martin
+ */
 class SpecimenDialog extends Dialog<Specimen>
 {
 	private final SpecimenWrapper wrapper;
@@ -159,14 +165,42 @@ class SpecimenDialog extends Dialog<Specimen>
     {
 	    TextField field = new TextField();
 	    field.textProperty().bindBidirectional(property);
-	    TextFields.bindAutoCompletion(field, autoCompleter.apply(autoCompleteField));
+	    SortedSet<String> suggestions = autoCompleter.apply(autoCompleteField);
+	    TextFields.bindAutoCompletion(field, request ->
+        {
+            String text = request.getUserText().toLowerCase().trim();
+            if (text.isEmpty())
+            {
+                return suggestions;
+            }
+            else
+            {
+                return suggestions
+                        .stream()
+                        .filter(str -> str.toLowerCase().contains(text))
+                        .sorted((String s1, String s2) ->
+                        {
+                            String str1 = s1.toLowerCase();
+                            String str2 = s2.toLowerCase();
+                            return str1.startsWith(text) && str2.startsWith(text) 
+                                    ? str1.length() - str2.length() 
+                                    : str1.startsWith(text) 
+                                        ? -1 
+                                        : str2.startsWith(text) 
+                                            ? 1 
+                                            : 0;
+                        })
+                        .collect(toList());
+            }
+        });
+
 	    return field;
     }
 
     private Node suffix(TextField field, String suffix)
 	{
 		HBox box = new HBox(field, new Label(suffix));
-		box.setAlignment(Pos.BASELINE_LEFT);
+		box.setAlignment(BASELINE_LEFT);
 		return box;
 	}
 
