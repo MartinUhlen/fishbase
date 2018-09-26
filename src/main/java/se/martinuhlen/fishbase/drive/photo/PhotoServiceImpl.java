@@ -3,6 +3,7 @@ package se.martinuhlen.fishbase.drive.photo;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNullElseGet;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toUnmodifiableList;
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 import static se.martinuhlen.fishbase.utils.Checked.get;
 import static se.martinuhlen.fishbase.utils.Checked.run;
@@ -13,6 +14,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -29,7 +31,10 @@ import se.martinuhlen.fishbase.utils.Logger;
 class PhotoServiceImpl implements PhotoService
 {
 	private static final Logger LOGGER = Logger.getLogger(PhotoService.class);
-	private static final DateTimeFormatter EXIF_TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss");
+	private static final List<DateTimeFormatter> EXIF_TIME_FORMATS = List.of("yyyy:MM:dd HH:mm:ss", "yyyy-MM-dd HH:mm:ss")
+	        .stream()
+	        .map(DateTimeFormatter::ofPattern)
+	        .collect(toUnmodifiableList());
 
 	private static final String FISHING_KEY = "fishing";
 	private static final String TRIP_KEY = "trip";
@@ -188,8 +193,39 @@ class PhotoServiceImpl implements PhotoService
 	{
 		return meta == null || meta.getTime() == null
 				? null
-				: LocalDateTime.parse(meta.getTime(), EXIF_TIME_FORMAT);
+				: timeOf(meta.getTime());
 	}
+
+	private LocalDateTime timeOf(String exifTime)
+	{
+	    LocalDateTime parsedTime = parseOrNull(exifTime, EXIF_TIME_FORMATS.get(0));
+	    if (parsedTime != null)
+	    {
+	        return parsedTime;
+	    }
+	    else
+	    {
+    	    return EXIF_TIME_FORMATS
+    	        .stream()
+    	        .skip(1)
+    	        .map(format -> parseOrNull(exifTime, format))
+        	    .filter(time -> time != null)
+        	    .findAny()
+        	    .orElseThrow(() -> new IllegalArgumentException("Unsupported EXIF date/time format: " + exifTime));
+	    }
+	}
+
+    private LocalDateTime parseOrNull(String exifTime, DateTimeFormatter format)
+    {
+        try
+        {
+            return LocalDateTime.parse(exifTime, format);	            
+        }
+        catch (DateTimeParseException e)
+        {
+            return null;
+        }
+    }
 
 	/**
 	 * Converts UTC date "2016-06-13T16:51:25.000Z" to local date "2016-06-13T18:51:25".
