@@ -29,70 +29,43 @@ public class PhotoImpl implements Photo
 		this.contentUrl = requireNonNull(contentUrl);
 		this.contentStream = requireNonNull(contentStream);
 	}
-//
-//	public PhotoImpl(Photo p, String tripId)
-//	{
-//		this(p.id, p.name, p.time, p.video, p.thumbnailUrl, p.contentUrl, p.contentStream);
-//		this.tripId = tripId;
-//	}
 
-	/* (non-Javadoc)
-	 * @see se.martinuhlen.fishbase.drive.photo.PhotoImpl#getId()
-	 */
 	@Override
 	public String getId()
 	{
 		return id;
 	}
 
-	/* (non-Javadoc)
-	 * @see se.martinuhlen.fishbase.drive.photo.PhotoImpl#getName()
-	 */
 	@Override
 	public String getName()
 	{
 		return name;
 	}
 
-	/* (non-Javadoc)
-	 * @see se.martinuhlen.fishbase.drive.photo.PhotoImpl#getTime()
-	 */
 	@Override
 	public LocalDateTime getTime()
 	{
 		return time;
 	}
 
-	/* (non-Javadoc)
-	 * @see se.martinuhlen.fishbase.drive.photo.PhotoImpl#isVideo()
-	 */
 	@Override
 	public boolean isVideo()
 	{
 		return video;
 	}
 
-	/* (non-Javadoc)
-	 * @see se.martinuhlen.fishbase.drive.photo.PhotoImpl#getThumbnailUrl()
-	 */
 	@Override
 	public String getThumbnailUrl()
 	{
 		return thumbnailUrl;
 	}
 
-	/* (non-Javadoc)
-	 * @see se.martinuhlen.fishbase.drive.photo.PhotoImpl#getContentUrl()
-	 */
 	@Override
 	public String getContentUrl()
 	{
 		return contentUrl;
 	}
 
-	/* (non-Javadoc)
-	 * @see se.martinuhlen.fishbase.drive.photo.PhotoImpl#getContentStream()
-	 */
 	@Override
 	public InputStream getContentStream()
 	{
