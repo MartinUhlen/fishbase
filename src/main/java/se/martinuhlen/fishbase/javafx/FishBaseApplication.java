@@ -7,6 +7,7 @@ import static javafx.scene.control.Alert.AlertType.INFORMATION;
 import static javafx.scene.control.ButtonBar.ButtonData.OK_DONE;
 import static javafx.scene.control.ButtonType.CANCEL;
 import static javafx.scene.control.TabPane.TabClosingPolicy.ALL_TABS;
+import static javafx.scene.input.KeyCombination.keyCombination;
 import static javafx.stage.WindowEvent.WINDOW_CLOSE_REQUEST;
 import static se.martinuhlen.fishbase.javafx.View.EMPTY_VIEW;
 import static se.martinuhlen.fishbase.javafx.utils.Constants.BUILD_TIME;
@@ -213,7 +214,7 @@ public class FishBaseApplication extends Application
     private MenuItem createExitItem()
     {
         MenuItem exit = new MenuItem("Exit");
-        exit.setAccelerator(KeyCombination.keyCombination("ALT+F4"));
+        exit.setAccelerator(keyCombination("ALT+F4"));
         exit.setOnAction(e -> stage.fireEvent(new WindowEvent(stage, WINDOW_CLOSE_REQUEST)));
         return exit;
     }
