@@ -7,6 +7,7 @@ import static javafx.scene.control.Alert.AlertType.INFORMATION;
 import static javafx.scene.control.ButtonBar.ButtonData.OK_DONE;
 import static javafx.scene.control.ButtonType.CANCEL;
 import static javafx.scene.control.TabPane.TabClosingPolicy.ALL_TABS;
+import static javafx.stage.WindowEvent.WINDOW_CLOSE_REQUEST;
 import static se.martinuhlen.fishbase.javafx.View.EMPTY_VIEW;
 import static se.martinuhlen.fishbase.javafx.utils.Constants.BUILD_TIME;
 import static se.martinuhlen.fishbase.javafx.utils.Constants.DATE_TIME_FORMAT;
@@ -40,6 +41,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 import se.martinuhlen.fishbase.dao.FishBaseDao;
 import se.martinuhlen.fishbase.drive.DriveFactory;
 import se.martinuhlen.fishbase.drive.DrivePersistence;
@@ -75,6 +77,8 @@ public class FishBaseApplication extends Application
 	private final ReplaceableAction saveAction = new ReplaceableAction();
 	private final ReplaceableAction refreshAction = new ReplaceableAction();
 	private final ReplaceableAction deleteAction = new ReplaceableAction();
+
+	private Stage stage;
 	private final Scene scene;
 	private final TabPane tabPane;
 
@@ -100,6 +104,7 @@ public class FishBaseApplication extends Application
 	@Override
 	public void start(Stage stage) throws Exception
 	{
+	    this.stage = stage;
 		DriveFactory factory = DriveFactory.get();
 		photoService = PhotoService.create(factory.create());
 		driveService = new DriveService(factory.create());
@@ -135,8 +140,8 @@ public class FishBaseApplication extends Application
 			{
 				Alert alert = new Alert(CONFIRMATION);
 				alert.setTitle("Discard changes?");
-				alert.setHeaderText("There are unsaved changes, discard them and shutdown anyway?");
-				ButtonType shutdown = new ButtonType("Shutdown", OK_DONE);
+				alert.setHeaderText("There are unsaved changes, discard them and exit anyway?");
+				ButtonType shutdown = new ButtonType("Exit application", OK_DONE);
 				alert.getButtonTypes().setAll(shutdown, CANCEL);
 				alert.showAndWait()
 					.filter(b -> b != shutdown)
@@ -153,7 +158,8 @@ public class FishBaseApplication extends Application
                 createOpenItem("Species", SpecieView.class),
                 createOpenItem("Photos", PhotoView.class),
                 new SeparatorMenuItem(),
-                createAboutItem());
+                createAboutItem(),
+                createExitItem());
 	    menu.setAutoHide(true);
 
 	    Button button = createButton("Menu", "menu.png", "CTRL+SPACE");
@@ -202,6 +208,14 @@ public class FishBaseApplication extends Application
             alert.showAndWait();
         });
         return about;
+    }
+
+    private MenuItem createExitItem()
+    {
+        MenuItem exit = new MenuItem("Exit");
+        exit.setAccelerator(KeyCombination.keyCombination("ALT+F4"));
+        exit.setOnAction(e -> stage.fireEvent(new WindowEvent(stage, WINDOW_CLOSE_REQUEST)));
+        return exit;
     }
 
 	private ImageView image(String name)
