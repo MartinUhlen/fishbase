@@ -89,7 +89,7 @@ public class FishBaseApplication extends Application
 	private FishBaseDao dao;
 
 	private final Consumer<String> tripOpener = tripId -> openTab(TripView.class).selectTrip(tripId);
-	
+
 	private final Map<Class<? extends View>, Supplier<? extends View>> viewSuppliers = Map.of(
 			TripView.class, () -> new TripView(dao, photoService),
 			SpecimenView.class, () -> new SpecimenView(dao, photoService, tripOpener),
@@ -154,10 +154,10 @@ public class FishBaseApplication extends Application
 	private Button createStartButton()
     {
 	    ContextMenu menu = new ContextMenu(
-                createOpenItem("Trips", TripView.class),
-                createOpenItem("Specimens", SpecimenView.class),
-                createOpenItem("Species", SpecieView.class),
-                createOpenItem("Photos", PhotoView.class),
+                createOpenItem("Trips", "F1", TripView.class),
+                createOpenItem("Specimens", "F2", SpecimenView.class),
+                createOpenItem("Species", "F3", SpecieView.class),
+                createOpenItem("Photos", "F4", PhotoView.class),
                 new SeparatorMenuItem(),
                 createAboutItem(),
                 createExitItem());
@@ -172,10 +172,12 @@ public class FishBaseApplication extends Application
 	    return button;
     }
 
-    private <V extends View> MenuItem createOpenItem(String text, Class<V> typeOfView)
+    private <V extends View> MenuItem createOpenItem(String text, String shortcut, Class<V> typeOfView)
     {
         MenuItem item = new MenuItem(text);
         item.setOnAction(e -> openTab(typeOfView));
+        item.setAccelerator(keyCombination(shortcut));
+        scene.getAccelerators().put(item.getAccelerator(), () -> item.fire());
         return item;
     }
 
