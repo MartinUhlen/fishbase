@@ -6,7 +6,7 @@
     <artifactId>fishbase</artifactId>
     <version>0.3</version>
     <name>fishbase</name>
-    <url>http://maven.apache.org</url>
+    <url>https://github.com/MartinUhlen/fishbase</url>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
