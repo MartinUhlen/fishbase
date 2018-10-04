@@ -14,6 +14,7 @@ import java.util.function.Function;
 
 import javafx.util.StringConverter;
 import javafx.util.converter.FloatStringConverter;
+import javafx.util.converter.IntegerStringConverter;
 import javafx.util.converter.LocalDateStringConverter;
 import javafx.util.converter.LocalTimeStringConverter;
 import se.martinuhlen.fishbase.domain.Specie;
@@ -53,6 +54,24 @@ public final class Converters
 	{
 	    return converter(Specie::getName);
 	}
+
+    public static StringConverter<Integer> weightConverter()
+    {
+        return new IntegerStringConverter()
+        {
+            @Override
+            public String toString(Integer value)
+            {
+                return value.intValue() <= 0 ? "" : super.toString(value);
+            }
+
+            @Override
+            public Integer fromString(String value)
+            {
+                return defaultIfNull(super.fromString(value), 0);
+            }
+        };
+    }
 
 	public static StringConverter<Float> lengthConverter()
 	{

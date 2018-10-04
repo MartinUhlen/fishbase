@@ -30,6 +30,22 @@ public class ConvertersTest
     }
 
     @Test
+    public void weight()
+    {
+        StringConverter<Integer> c = Converters.weightConverter();
+        assertEquals(Integer.valueOf(0),  c.fromString(""));
+        assertEquals(Integer.valueOf(0),  c.fromString(" "));
+        assertEquals(Integer.valueOf(0),  c.fromString(null));
+
+        assertEquals(Integer.valueOf(53), c.fromString("53"));
+        assertEquals(Integer.valueOf(123), c.fromString("123"));
+        assertEquals(Integer.valueOf(9), c.fromString(" 9 "));
+
+        assertEquals("37", c.toString(37));
+        assertEquals("", c.toString(0));
+    }
+
+    @Test
     public void length()
     {
         StringConverter<Float> c = Converters.lengthConverter();

@@ -7,14 +7,25 @@ import static javafx.geometry.Pos.BASELINE_LEFT;
 import static javafx.geometry.Pos.CENTER;
 import static javafx.scene.control.ButtonType.CANCEL;
 import static javafx.scene.control.ButtonType.OK;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.math.NumberUtils.isDigits;
+import static org.controlsfx.validation.Validator.createPredicateValidator;
 import static se.martinuhlen.fishbase.domain.AutoCompleteField.BAIT;
 import static se.martinuhlen.fishbase.domain.AutoCompleteField.LOCATION;
 import static se.martinuhlen.fishbase.domain.AutoCompleteField.METHOD;
 import static se.martinuhlen.fishbase.domain.AutoCompleteField.WEATHER;
+import static se.martinuhlen.fishbase.domain.Specimen.BAIT_IS_REQUIRED;
+import static se.martinuhlen.fishbase.domain.Specimen.DATE_IS_REQUIRED;
+import static se.martinuhlen.fishbase.domain.Specimen.LOCATION_IS_REQUIRED;
+import static se.martinuhlen.fishbase.domain.Specimen.METHOD_IS_REQUIRED;
+import static se.martinuhlen.fishbase.domain.Specimen.SPECIE_IS_REQUIRED;
+import static se.martinuhlen.fishbase.domain.Specimen.WEATHER_IS_REQUIRED;
+import static se.martinuhlen.fishbase.domain.Specimen.WEIGHT_IS_REQUIRED;
 import static se.martinuhlen.fishbase.javafx.utils.Constants.RIGHT_ALIGNMENT;
 import static se.martinuhlen.fishbase.javafx.utils.Converters.lengthConverter;
 import static se.martinuhlen.fishbase.javafx.utils.Converters.specieConverter;
 import static se.martinuhlen.fishbase.javafx.utils.Converters.timeConverter;
+import static se.martinuhlen.fishbase.javafx.utils.Converters.weightConverter;
 
 import java.time.LocalTime;
 import java.util.Collection;
@@ -22,10 +33,14 @@ import java.util.SortedSet;
 import java.util.function.Function;
 
 import org.controlsfx.control.textfield.TextFields;
+import org.controlsfx.validation.ValidationSupport;
 
+import javafx.beans.InvalidationListener;
+import javafx.beans.Observable;
 import javafx.beans.property.Property;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
+import javafx.scene.control.Control;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
@@ -34,7 +49,6 @@ import javafx.scene.control.TextFormatter;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
-import javafx.util.converter.IntegerStringConverter;
 import se.martinuhlen.fishbase.domain.AutoCompleteField;
 import se.martinuhlen.fishbase.domain.Specie;
 import se.martinuhlen.fishbase.domain.Specimen;
@@ -96,16 +110,32 @@ class SpecimenDialog extends Dialog<Specimen>
 
 		Label weightLabel = new Label("Weight");
 		grid.add(weightLabel, 0, 3);
-		TextFormatter<Integer> weightFormatter = new TextFormatter<>(new IntegerStringConverter());
+		TextFormatter<Integer> weightFormatter = new TextFormatter<>(weightConverter(), 0);
 		weightFormatter.valueProperty().bindBidirectional(wrapper.weightProperty());
 		TextField weightField = new TextField();
 		weightField.setTextFormatter(weightFormatter);
 		weightField.setStyle(RIGHT_ALIGNMENT);
 		grid.add(suffix(weightField, " g"), 0, 4);
+        weightField.textProperty().addListener(new InvalidationListener() // Commit weight value on any edit so error icon disappears.
+        {
+            private boolean syncing;
+
+            @Override
+            public void invalidated(Observable observable)
+            {
+                if (!syncing && (isDigits(weightField.getText()) || isBlank(weightField.getText())))
+                {
+                    syncing = true;
+                    weightField.commitValue();
+                    syncing = false;
+                }
+            }
+        });
+
 
 		Label lengthLabel = new Label("Length");
 		grid.add(lengthLabel, 1, 3);
-		TextFormatter<Float> lengthFormatter = new TextFormatter<>(lengthConverter());
+		TextFormatter<Float> lengthFormatter = new TextFormatter<>(lengthConverter(), 0f);
 		lengthFormatter.valueProperty().bindBidirectional(wrapper.lengthProperty());
 		TextField lengthField = new TextField();
 		lengthField.setTextFormatter(lengthFormatter);
@@ -158,10 +188,25 @@ class SpecimenDialog extends Dialog<Specimen>
 		textArea.setPrefColumnCount(2);
 		grid.add(textArea, 0, 19, 2, 2);
 
+		ValidationSupport vs = new ValidationSupport();
+		addValidation(vs, specieCombo, SPECIE_IS_REQUIRED);
+		addValidation(vs, weightField, WEIGHT_IS_REQUIRED);
+		addValidation(vs, locationField, LOCATION_IS_REQUIRED);
+		addValidation(vs, datePicker, DATE_IS_REQUIRED);
+		addValidation(vs, methodField, METHOD_IS_REQUIRED);
+		addValidation(vs, baitField, BAIT_IS_REQUIRED);
+		addValidation(vs, weatherField, WEATHER_IS_REQUIRED);
+		vs.initInitialDecoration();
+
 		return grid;
 	}
 
-	private TextField textField(Property<String> property, AutoCompleteField autoCompleteField)
+	private void addValidation(ValidationSupport vs, Control control, String message)
+    {
+	    vs.registerValidator(control, false, createPredicateValidator(x -> !wrapper.getWrapee().getValidationErrors().anyMatch(str -> str.equals(message)), message));
+    }
+
+    private TextField textField(Property<String> property, AutoCompleteField autoCompleteField)
     {
 	    TextField field = new TextField();
 	    field.textProperty().bindBidirectional(property);

@@ -23,6 +23,14 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
  */
 public final class Specimen extends Domain<Specimen>
 {
+    public static final String SPECIE_IS_REQUIRED = "Specie is required";
+    public static final String DATE_IS_REQUIRED = "Date is required";
+    public static final String WEIGHT_IS_REQUIRED = "Weight is required";
+    public static final String LOCATION_IS_REQUIRED = "Location is required";
+    public static final String METHOD_IS_REQUIRED = "Method is required";
+    public static final String BAIT_IS_REQUIRED = "Bait is required";
+    public static final String WEATHER_IS_REQUIRED = "Weather is required";
+
 	public static TripBuilder asPersisted(String id)
 	{
 	    return new Builder(id, true);
@@ -112,15 +120,14 @@ public final class Specimen extends Domain<Specimen>
 	public Stream<String> getValidationErrors()
 	{
 		return Stream.of(
-				specie == EMPTY_SPECIE ? "Specie" : "",
-				instant == LocalDateTime.MIN ? "Date" : "",
-				weight <= 0 ? "Weight" : "",
-				isBlank(location) ? "Location" : "",
-				isBlank(method) ? "Method" : "",
-				isBlank(bait) ? "Bait" : "",
-				isBlank(weather) ? "Weather" : "")
-		.filter(str -> !str.isEmpty())
-		.map(str -> str + " is required");
+				specie == EMPTY_SPECIE ? SPECIE_IS_REQUIRED : "",
+				instant == LocalDateTime.MIN ? DATE_IS_REQUIRED : "",
+				weight <= 0 ? WEIGHT_IS_REQUIRED : "",
+				isBlank(location) ? LOCATION_IS_REQUIRED : "",
+				isBlank(method) ? METHOD_IS_REQUIRED : "",
+				isBlank(bait) ? BAIT_IS_REQUIRED : "",
+				isBlank(weather) ? WEATHER_IS_REQUIRED : "")
+		.filter(str -> !str.isEmpty());
 	}
 
 	@Override

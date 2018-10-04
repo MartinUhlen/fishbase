@@ -5,7 +5,6 @@
     <groupId>se.martinuhlen</groupId>
     <artifactId>fishbase</artifactId>
     <version>0.3</version>
-
     <name>fishbase</name>
     <url>http://maven.apache.org</url>
 

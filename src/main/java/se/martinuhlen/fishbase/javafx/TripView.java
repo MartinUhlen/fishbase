@@ -8,7 +8,12 @@ import static javafx.scene.control.Alert.AlertType.ERROR;
 import static javafx.scene.control.ButtonBar.ButtonData.OK_DONE;
 import static javafx.scene.control.ButtonType.CANCEL;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.controlsfx.validation.Validator.createPredicateValidator;
+import static se.martinuhlen.fishbase.domain.Trip.DATES_IN_RANGE;
+import static se.martinuhlen.fishbase.domain.Trip.DATE_NOT_IN_FUTURE;
+import static se.martinuhlen.fishbase.domain.Trip.DESCRIPTION_IS_MANDATORY;
 import static se.martinuhlen.fishbase.domain.Trip.EMPTY_TRIP;
+import static se.martinuhlen.fishbase.domain.Trip.TEXT_IS_MANDATORY;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -16,14 +21,18 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.prefs.Preferences;
 
+import org.controlsfx.validation.ValidationSupport;
+
 import javafx.beans.property.Property;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
+import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.Control;
 import javafx.scene.control.Label;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.SplitPane.Divider;
@@ -115,6 +124,7 @@ class TripView implements View
 	private Node createTripPane()
 	{
 		VBox overviewBox = new VBox();
+		overviewBox.setPadding(new Insets(8));
 		descriptionField = new TextField("");
 		descriptionField.textProperty().bindBidirectional(wrapper.description());
 		overviewBox.getChildren().add(new Label("Description"));
@@ -143,10 +153,21 @@ class TripView implements View
 		vSplit.setOrientation(VERTICAL);
 		bindPersistedDividerLocation(vSplit, "TripView.verticalSplit.dividerLocation", 0.75);
 
+		ValidationSupport vs = new ValidationSupport();
+		addValidation(vs, descriptionField, DESCRIPTION_IS_MANDATORY);
+		addValidation(vs, startDatePicker, DATE_NOT_IN_FUTURE);
+		addValidation(vs, endDatePicker, DATES_IN_RANGE);
+		addValidation(vs, textArea, TEXT_IS_MANDATORY);
+
 		return vSplit;
 	}
 
-	private void bindPersistedDividerLocation(SplitPane split, String key, double defaultValue)
+	private void addValidation(ValidationSupport vs, Control control, String message)
+    {
+	    vs.registerValidator(control, false, createPredicateValidator(x -> !wrapper.getWrapee().getValidationErrors().anyMatch(str -> str.equals(message)), message));
+    }
+
+    private void bindPersistedDividerLocation(SplitPane split, String key, double defaultValue)
 	{
         Preferences preferences = Preferences.userRoot();
         Divider divider = split.getDividers().get(0);

@@ -26,7 +26,12 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
  */
 public final class Trip extends Domain<Trip>
 {
-	public static final Trip EMPTY_TRIP = new Builder("", false).build();
+	public static final String DESCRIPTION_IS_MANDATORY = "Description is mandatory";
+	public static final String DATES_IN_RANGE = "End date cannot be less than start date";
+	public static final String DATE_NOT_IN_FUTURE = "Date cannot be in the future";
+	public static final String TEXT_IS_MANDATORY = "Text is mandatory";
+	
+    public static final Trip EMPTY_TRIP = new Builder("", false).build();
 
 	public static DescriptionBuilder asPersisted(String id)
 	{
@@ -111,16 +116,20 @@ public final class Trip extends Domain<Trip>
 		List<String> errors = new LinkedList<>();
 		if (isBlank(description))
 		{
-			errors.add("Description is mandatory");
+			errors.add(DESCRIPTION_IS_MANDATORY);
 		}
 		if (startDate.isAfter(endDate))
 		{
-			errors.add("Start date must be <= end date");
+			errors.add(DATES_IN_RANGE);
 		}
 		if (startDate.isAfter(now()))
 		{
-		    errors.add("Date cannot be in the future.");
+		    errors.add(DATE_NOT_IN_FUTURE);
 		}
+        if (isBlank(text))
+        {
+            errors.add(TEXT_IS_MANDATORY);
+        }
 		return errors.stream();
 	}
 
