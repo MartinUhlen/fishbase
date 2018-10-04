@@ -1,10 +1,11 @@
 package se.martinuhlen.fishbase.javafx.utils;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.util.jar.Manifest;
@@ -32,8 +33,6 @@ public final class Constants
 
     private static LocalDateTime readBuildTime()
     {
-        try
-        {
             URL resource = Constants.class.getResource("/META-INF/MANIFEST.MF");
             try (InputStream is = resource.openStream())
             {
@@ -41,20 +40,19 @@ public final class Constants
                         .getMainAttributes()
                         .getValue("Build-Time");
 
-                if (buildValue == null)
+                if (isBlank(buildValue)) // Empty when debugging
                 {
                     return LocalDateTime.now();
                 }
-
-                return ZonedDateTime.parse(buildValue)
-                        .withZoneSameInstant(ZoneId.systemDefault())
-                        .toLocalDateTime();
+                else
+                {
+                    return LocalDateTime.parse(buildValue, DateTimeFormatter.ofPattern("yyyyMMdd-HHmm"));
+                }
             }
-        }
-        catch (Exception ex)
-        {
-            ex.printStackTrace();
-            throw new RuntimeException(ex);
-        }
+            catch (IOException ex)
+            {
+                ex.printStackTrace();
+                throw new RuntimeException("Failed to read build time from manifest", ex);
+            }
     }
 }
