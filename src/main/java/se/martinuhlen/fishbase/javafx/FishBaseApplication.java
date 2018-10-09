@@ -10,12 +10,13 @@ import static javafx.scene.control.TabPane.TabClosingPolicy.ALL_TABS;
 import static javafx.scene.input.KeyCombination.keyCombination;
 import static javafx.stage.WindowEvent.WINDOW_CLOSE_REQUEST;
 import static se.martinuhlen.fishbase.javafx.View.EMPTY_VIEW;
-import static se.martinuhlen.fishbase.javafx.utils.Constants.BUILD_TIME;
-import static se.martinuhlen.fishbase.javafx.utils.Constants.DATE_TIME_FORMAT;
 import static se.martinuhlen.fishbase.javafx.utils.ImageSize.SIZE_256;
 import static se.martinuhlen.fishbase.javafx.utils.Images.getImageView;
 import static se.martinuhlen.fishbase.javafx.utils.Images.getImageView16;
 import static se.martinuhlen.fishbase.javafx.utils.Images.getImages;
+import static se.martinuhlen.fishbase.utils.Constants.APPLICATION_NAME;
+import static se.martinuhlen.fishbase.utils.Constants.BUILD_TIME;
+import static se.martinuhlen.fishbase.utils.Constants.DATE_TIME_FORMAT;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -130,7 +131,7 @@ public class FishBaseApplication extends Application
 
 		scene.setRoot(borderPane);
 		stage.setScene(scene);
-		stage.setTitle("FishBase");
+		stage.setTitle(APPLICATION_NAME);
 		stage.getIcons().setAll(getImages("fish.png"));
 		stage.setMaximized(true);
 		stage.show();

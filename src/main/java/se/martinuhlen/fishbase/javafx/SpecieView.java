@@ -3,7 +3,7 @@ package se.martinuhlen.fishbase.javafx;
 import static java.util.Arrays.asList;
 import static javafx.scene.control.Alert.AlertType.ERROR;
 import static javafx.scene.control.cell.TextFieldTableCell.forTableColumn;
-import static se.martinuhlen.fishbase.javafx.utils.Constants.RIGHT_ALIGNMENT;
+import static se.martinuhlen.fishbase.javafx.utils.Styles.RIGHT_ALIGNMENT;
 
 import javafx.collections.transformation.SortedList;
 import javafx.scene.control.Alert;

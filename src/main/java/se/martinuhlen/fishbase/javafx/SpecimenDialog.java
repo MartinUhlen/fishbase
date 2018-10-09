@@ -21,11 +21,11 @@ import static se.martinuhlen.fishbase.domain.Specimen.METHOD_IS_REQUIRED;
 import static se.martinuhlen.fishbase.domain.Specimen.SPECIE_IS_REQUIRED;
 import static se.martinuhlen.fishbase.domain.Specimen.WEATHER_IS_REQUIRED;
 import static se.martinuhlen.fishbase.domain.Specimen.WEIGHT_IS_REQUIRED;
-import static se.martinuhlen.fishbase.javafx.utils.Constants.RIGHT_ALIGNMENT;
 import static se.martinuhlen.fishbase.javafx.utils.Converters.lengthConverter;
 import static se.martinuhlen.fishbase.javafx.utils.Converters.specieConverter;
 import static se.martinuhlen.fishbase.javafx.utils.Converters.timeConverter;
 import static se.martinuhlen.fishbase.javafx.utils.Converters.weightConverter;
+import static se.martinuhlen.fishbase.javafx.utils.Styles.RIGHT_ALIGNMENT;
 
 import java.time.LocalTime;
 import java.util.Collection;

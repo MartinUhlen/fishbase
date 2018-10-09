@@ -1,4 +1,4 @@
-package se.martinuhlen.fishbase.javafx.utils;
+package se.martinuhlen.fishbase.utils;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
@@ -16,7 +16,7 @@ public final class Constants
 	{
 	}
 
-	public static final String RIGHT_ALIGNMENT = "-fx-alignment: CENTER-RIGHT;";
+	public static final String APPLICATION_NAME = "FishBase";
 
 	public static final DateTimeFormatter DATE_FORMAT =  DateTimeFormatter.ISO_LOCAL_DATE;
 
@@ -27,7 +27,8 @@ public final class Constants
 	public static final DateTimeFormatter DATE_TIME_FORMAT = new DateTimeFormatterBuilder()
 			.append(DATE_FORMAT)
 			.appendLiteral(' ')
-			.append(TIME_FORMAT).toFormatter();
+			.append(TIME_FORMAT)
+			.toFormatter();
 
 	public static final LocalDateTime BUILD_TIME = readBuildTime();
 

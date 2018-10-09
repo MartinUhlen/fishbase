@@ -18,7 +18,7 @@ import static javafx.geometry.Orientation.VERTICAL;
 import static javafx.geometry.Pos.TOP_LEFT;
 import static javafx.scene.control.ScrollPane.ScrollBarPolicy.AS_NEEDED;
 import static javafx.scene.control.ScrollPane.ScrollBarPolicy.NEVER;
-import static se.martinuhlen.fishbase.javafx.utils.Constants.DATE_TIME_FORMAT;
+import static se.martinuhlen.fishbase.utils.Constants.DATE_TIME_FORMAT;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

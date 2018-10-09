@@ -5,12 +5,14 @@ import static javafx.scene.control.Alert.AlertType.CONFIRMATION;
 import static javafx.scene.control.ButtonBar.ButtonData.OK_DONE;
 import static javafx.scene.control.ButtonType.CANCEL;
 import static javafx.scene.control.cell.TextFieldTableCell.forTableColumn;
-import static se.martinuhlen.fishbase.javafx.utils.Constants.RIGHT_ALIGNMENT;
 import static se.martinuhlen.fishbase.javafx.utils.Converters.dateConverter;
 import static se.martinuhlen.fishbase.javafx.utils.Converters.lengthConverter;
 import static se.martinuhlen.fishbase.javafx.utils.Converters.specieConverter;
 import static se.martinuhlen.fishbase.javafx.utils.Converters.timeConverter;
 import static se.martinuhlen.fishbase.javafx.utils.Images.getImageView16;
+import static se.martinuhlen.fishbase.javafx.utils.Styles.BACKGROUND_GREEN;
+import static se.martinuhlen.fishbase.javafx.utils.Styles.BACKGROUND_RED;
+import static se.martinuhlen.fishbase.javafx.utils.Styles.RIGHT_ALIGNMENT;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -199,11 +201,11 @@ class SpecimenTable extends TableView<SpecimenWrapper>
         		{
         			if (ratio >= 1.0)
         			{
-        				getGraphic().setStyle("-fx-accent: green;");
+        				getGraphic().setStyle(BACKGROUND_GREEN);
         			}
         			else if (ratio <= 0.5)
         			{
-        				getGraphic().setStyle("-fx-accent: red;");
+        				getGraphic().setStyle(BACKGROUND_RED);
         			}
         			else
         			{

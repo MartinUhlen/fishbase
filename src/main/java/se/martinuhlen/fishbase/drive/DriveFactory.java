@@ -1,6 +1,7 @@
 package se.martinuhlen.fishbase.drive;
 
 import static java.util.Arrays.asList;
+import static se.martinuhlen.fishbase.utils.Constants.APPLICATION_NAME;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -23,7 +24,6 @@ import com.google.api.services.drive.DriveScopes;
 
 public class DriveFactory
 {
-	private static final String APPLICATION_NAME = "FishBase";
 	private static final String USER_ID = "user";
 	private static final java.io.File LOCAL_FOLDER = new java.io.File(System.getProperty("user.home"), "." + APPLICATION_NAME.toLowerCase());
 

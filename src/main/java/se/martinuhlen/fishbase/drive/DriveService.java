@@ -3,6 +3,7 @@ package se.martinuhlen.fishbase.drive;
 import static java.util.Arrays.asList;
 import static se.martinuhlen.fishbase.utils.Checked.$;
 import static se.martinuhlen.fishbase.utils.Checked.get;
+import static se.martinuhlen.fishbase.utils.Constants.APPLICATION_NAME;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,7 +20,6 @@ import se.martinuhlen.fishbase.utils.Logger;
 
 public class DriveService
 {
-	private static final String APPLICATION_NAME = "FishBase";
 	private static final Logger LOGGER = Logger.getLogger(DriveService.class);
 	private static final String MIMETYPE_FOLDER = "application/vnd.google-apps.folder";
 

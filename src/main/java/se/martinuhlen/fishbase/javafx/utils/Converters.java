@@ -5,8 +5,8 @@ import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.leftPad;
 import static org.apache.commons.lang3.StringUtils.removeEnd;
-import static se.martinuhlen.fishbase.javafx.utils.Constants.DATE_FORMAT;
-import static se.martinuhlen.fishbase.javafx.utils.Constants.TIME_FORMAT;
+import static se.martinuhlen.fishbase.utils.Constants.DATE_FORMAT;
+import static se.martinuhlen.fishbase.utils.Constants.TIME_FORMAT;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
