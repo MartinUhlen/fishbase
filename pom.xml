@@ -5,7 +5,7 @@
     <groupId>se.martinuhlen</groupId>
     <artifactId>fishbase</artifactId>
     <version>0.3</version>
-    <name>fishbase</name>
+    <name>Fishbase</name>
     <url>https://github.com/MartinUhlen/fishbase</url>
 
     <properties>
@@ -14,6 +14,7 @@
         <maven.compiler.target>11</maven.compiler.target>
     </properties>
 
+    <!-- Compile and runtime dependencies -->
     <dependencies>
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -66,7 +67,7 @@
             <version>1.23.0</version>
         </dependency>
 
-		<!-- Test -->
+        <!-- Test dependencies -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
@@ -101,6 +102,8 @@
 
     <build>
         <plugins>
+
+            <!-- Run all tests. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
@@ -118,6 +121,8 @@
                     </dependency>
                 </dependencies>
             </plugin>
+
+            <!-- Create shaded jar with all dependencies embedded. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
@@ -138,6 +143,8 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <!-- Define property with current date and time -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
@@ -156,11 +163,13 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <!-- Name jar with current date and time. -->
             <plugin>
                 <artifactId>maven-jar-plugin</artifactId>
                 <version>2.2</version>
                 <configuration>
-                    <finalName>${project.artifactId}-${build.time}</finalName>
+                    <finalName>${project.name}-${build.time}</finalName>
                     <archive>
                         <manifestEntries>
                             <Build-Time>${build.time}</Build-Time>
@@ -168,6 +177,123 @@
                     </archive>
                 </configuration>
             </plugin>
+
+            <!-- Copy JDK to dist directory -->
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>2.6</version>
+                <executions>
+                    <execution>
+                        <id>Copy-JDK-to-dist</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <resources>
+                                <resource>
+                                    <directory>${java.home}</directory>
+                                </resource>
+                            </resources>
+                            <outputDirectory>${basedir}/target/dist/java</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <!-- Windows distribution -->
+        <profile>
+            <id>Windows</id>
+            <activation>
+                <os>
+                    <family>Windows</family>
+                </os>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.akathist.maven.plugins.launch4j</groupId>
+                        <artifactId>launch4j-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>l4j-clui</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>launch4j</goal>
+                                </goals>
+                                <configuration>
+                                    <headerType>gui</headerType>
+                                    <jar>target/${project.name}-${build.time}.jar</jar>
+                                    <outfile>target/dist/${project.name}-${build.time}.exe</outfile>
+                                    <classPath>
+                                        <mainClass>se.martinuhlen.fishbase.javafx.FishBaseMain</mainClass>
+                                        <addDependencies>false</addDependencies>
+                                        <preCp>anything</preCp>
+                                    </classPath>
+                                    <jre>
+                                        <path>./java</path>
+                                    </jre>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!-- Linux distribution -->
+        <profile>
+            <id>Linux</id>
+            <activation>
+                <os>
+                    <family>Windows</family>
+                </os>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-resources-plugin</artifactId>
+                        <version>2.6</version>
+                        <executions>
+                            <execution>
+                                <id>Copy-jar-to-dist</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>copy-resources</goal>
+                                </goals>
+                                <configuration>
+                                    <resources>
+                                        <resource>
+                                            <directory>${basedir}/target</directory>
+                                            <include>${project.name}-${build.time}.jar</include>
+                                        </resource>
+                                    </resources>
+                                    <outputDirectory>${basedir}/target/dist/lib</outputDirectory>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>Copy-shellscript-to-dist</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>copy-resources</goal>
+                                </goals>
+                                <configuration>
+                                    <resources>
+                                        <resource>
+                                            <directory>${basedir}/target/classes</directory>
+                                            <include>${project.name}.sh</include>
+                                        </resource>
+                                    </resources>
+                                    <outputDirectory>${basedir}/target/dist</outputDirectory>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
