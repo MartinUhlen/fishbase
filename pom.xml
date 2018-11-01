@@ -122,6 +122,27 @@
                 </dependencies>
             </plugin>
 
+            <!-- Define property with current date and time -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>1.9.1</version>
+                <executions>
+                    <execution>
+                        <id>timestamp-property</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>timestamp-property</goal>
+                        </goals>
+                        <configuration>
+                            <name>build.time</name>
+                            <pattern>yyyyMMdd-HHmm</pattern>
+                            <timeZone>GMT+2</timeZone>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
             <!-- Create shaded jar with all dependencies embedded. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -140,26 +161,6 @@
                         <goals>
                             <goal>shade</goal>
                         </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <!-- Define property with current date and time -->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
-                <version>1.9.1</version>
-                <executions>
-                    <execution>
-                        <id>timestamp-property</id>
-                        <goals>
-                            <goal>timestamp-property</goal>
-                        </goals>
-                        <configuration>
-                            <name>build.time</name>
-                            <pattern>yyyyMMdd-HHmm</pattern>
-                            <timeZone>GMT+2</timeZone>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>
