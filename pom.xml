@@ -5,7 +5,7 @@
     <groupId>se.martinuhlen</groupId>
     <artifactId>fishbase</artifactId>
     <version>0.3</version>
-    <name>Fishbase</name>
+    <name>FishBase</name>
     <packaging>jar</packaging>
     <url>https://github.com/MartinUhlen/fishbase</url>
 
@@ -137,8 +137,9 @@
                         </goals>
                         <configuration>
                             <name>build.time</name>
-                            <pattern>yyyyMMdd-HHmm</pattern>
+                            <locale>sv,SE</locale>
                             <timeZone>CET</timeZone>
+                            <pattern>yyyyMMdd-HHmm</pattern>
                         </configuration>
                     </execution>
                 </executions>
@@ -149,6 +150,7 @@
                 <artifactId>maven-jar-plugin</artifactId>
                 <version>2.2</version>
                 <configuration>
+                    <finalName>${project.name}</finalName>
                     <archive>
                         <manifestEntries>
                             <Build-Time>${build.time}</Build-Time>
@@ -229,7 +231,7 @@
                                 </goals>
                                 <configuration>
                                     <headerType>gui</headerType>
-                                    <jar>target/${project.build.finalName}.jar</jar>
+                                    <jar>target/${project.name}.jar</jar>
                                     <outfile>target/${dist}/${project.name}.exe</outfile>
                                     <classPath>
                                         <mainClass>se.martinuhlen.fishbase.javafx.FishBaseMain</mainClass>
@@ -271,13 +273,13 @@
                                 <configuration>
                                     <target>
                                         <copy toDir="target/${dist}/lib">
-                                            <fileset file="target/${project.build.finalName}.jar" />
+                                            <fileset file="target/${project.name}.jar" />
                                         </copy>
                                     </target>
                                 </configuration>
                             </execution>
                             <execution>
-                                <id>copy-shell-script-to-dist</id>
+                                <id>copy-launch-script-to-dist</id>
                                 <phase>package</phase>
                                 <goals>
                                     <goal>run</goal>
