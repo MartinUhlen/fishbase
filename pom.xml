@@ -13,6 +13,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
+        <dist>${project.name}-${project.version}-${build.time}</dist>
     </properties>
 
     <!-- Compile and runtime dependencies -->
@@ -137,10 +138,23 @@
                         <configuration>
                             <name>build.time</name>
                             <pattern>yyyyMMdd-HHmm</pattern>
-                            <timeZone>GMT+2</timeZone>
+                            <timeZone>CET</timeZone>
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+
+            <!-- Embedd build time into jar manifest. -->
+            <plugin>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>2.2</version>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <Build-Time>${build.time}</Build-Time>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
             </plugin>
 
             <!-- Create shaded jar with all dependencies embedded. -->
@@ -165,38 +179,24 @@
                 </executions>
             </plugin>
 
-            <!-- Name jar with current date and time. -->
-            <plugin>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>2.2</version>
-                <configuration>
-                    <finalName>${project.name}</finalName>
-                    <archive>
-                        <manifestEntries>
-                            <Build-Time>${build.time}</Build-Time>
-                        </manifestEntries>
-                    </archive>
-                </configuration>
-            </plugin>
-
             <!-- Copy JDK to dist directory -->
             <plugin>
-                <artifactId>maven-resources-plugin</artifactId>
-                <version>2.6</version>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.8</version>
                 <executions>
                     <execution>
-                        <id>Copy-JDK-to-dist</id>
+                        <id>copy-java-to-dist</id>
                         <phase>package</phase>
                         <goals>
-                            <goal>copy-resources</goal>
+                            <goal>run</goal>
                         </goals>
                         <configuration>
-                            <resources>
-                                <resource>
-                                    <directory>${java.home}</directory>
-                                </resource>
-                            </resources>
-                            <outputDirectory>${basedir}/target/dist/java</outputDirectory>
+                            <target>
+                                <copy toDir="target/${dist}/java">
+                                    <fileset dir="${java.home}" />
+                                </copy>
+                            </target>
                         </configuration>
                     </execution>
                 </executions>
@@ -205,6 +205,7 @@
     </build>
 
     <profiles>
+
         <!-- Windows distribution -->
         <profile>
             <id>Windows</id>
@@ -218,17 +219,18 @@
                     <plugin>
                         <groupId>com.akathist.maven.plugins.launch4j</groupId>
                         <artifactId>launch4j-maven-plugin</artifactId>
+                        <version>1.7.24</version>
                         <executions>
                             <execution>
-                                <id>l4j-clui</id>
+                                <id>create-windows-exe</id>
                                 <phase>package</phase>
                                 <goals>
                                     <goal>launch4j</goal>
                                 </goals>
                                 <configuration>
                                     <headerType>gui</headerType>
-                                    <jar>target/${project.name}.jar</jar>
-                                    <outfile>target/dist/${project.name}.exe</outfile>
+                                    <jar>target/${project.build.finalName}.jar</jar>
+                                    <outfile>target/${dist}/${project.name}.exe</outfile>
                                     <classPath>
                                         <mainClass>se.martinuhlen.fishbase.javafx.FishBaseMain</mainClass>
                                         <addDependencies>false</addDependencies>
@@ -250,45 +252,42 @@
             <id>Linux</id>
             <activation>
                 <os>
-                    <family>Windows</family>
-                    <!-- <family>Linux</family> -->
+                    <family>Linux</family>
                 </os>
             </activation>
             <build>
                 <plugins>
                     <plugin>
-                        <artifactId>maven-resources-plugin</artifactId>
-                        <version>2.6</version>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <version>1.8</version>
                         <executions>
                             <execution>
-                                <id>Copy-jar-to-dist</id>
+                                <id>copy-jar-to-dist-lib</id>
                                 <phase>package</phase>
                                 <goals>
-                                    <goal>copy-resources</goal>
+                                    <goal>run</goal>
                                 </goals>
                                 <configuration>
-                                    <resources>
-                                        <resource>
-                                            <directory>${basedir}/target</directory>
-                                            <include>${project.name}.jar</include>
-                                        </resource>
-                                    </resources>
-                                    <outputDirectory>${basedir}/target/dist/lib</outputDirectory>
+                                    <target>
+                                        <copy toDir="target/${dist}/lib">
+                                            <fileset file="target/${project.build.finalName}.jar" />
+                                        </copy>
+                                    </target>
                                 </configuration>
                             </execution>
                             <execution>
-                                <id>Copy-shellscript-to-dist</id>
+                                <id>copy-shell-script-to-dist</id>
                                 <phase>package</phase>
                                 <goals>
-                                    <goal>copy-resources</goal>
+                                    <goal>run</goal>
                                 </goals>
                                 <configuration>
-                                    <resources>
-                                        <resource>
-                                            <directory>${basedir}/scripts</directory>
-                                        </resource>
-                                    </resources>
-                                    <outputDirectory>${basedir}/target/dist</outputDirectory>
+                                    <target>
+                                        <copy toDir="target/${dist}">
+                                            <fileset file="scripts/${project.name}.sh" />
+                                        </copy>
+                                    </target>
                                 </configuration>
                             </execution>
                         </executions>
