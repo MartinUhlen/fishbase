@@ -102,7 +102,6 @@
 
     <build>
         <plugins>
-
             <!-- Run all tests. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -130,7 +129,7 @@
                 <executions>
                     <execution>
                         <id>timestamp-property</id>
-                        <phase>prepare-package</phase>
+                        <phase>initialize</phase>
                         <goals>
                             <goal>timestamp-property</goal>
                         </goals>
@@ -170,7 +169,7 @@
                 <artifactId>maven-jar-plugin</artifactId>
                 <version>2.2</version>
                 <configuration>
-                    <finalName>${project.name}-${build.time}</finalName>
+<!--                             <finalName>${project.name}</finalName> -->
                     <archive>
                         <manifestEntries>
                             <Build-Time>${build.time}</Build-Time>
@@ -227,8 +226,8 @@
                                 </goals>
                                 <configuration>
                                     <headerType>gui</headerType>
-                                    <jar>target/${project.name}-${build.time}.jar</jar>
-                                    <outfile>target/dist/${project.name}-${build.time}.exe</outfile>
+                                    <jar>target/${project.artifactId}-${project.version}.jar</jar>
+                                    <outfile>target/dist/${project.name}.exe</outfile>
                                     <classPath>
                                         <mainClass>se.martinuhlen.fishbase.javafx.FishBaseMain</mainClass>
                                         <addDependencies>false</addDependencies>
@@ -269,7 +268,7 @@
                                     <resources>
                                         <resource>
                                             <directory>${basedir}/target</directory>
-                                            <include>${project.name}-${build.time}.jar</include>
+                                            <include>${project.artifactId}-${project.version}.jar</include>
                                         </resource>
                                     </resources>
                                     <outputDirectory>${basedir}/target/dist/lib</outputDirectory>
@@ -284,8 +283,7 @@
                                 <configuration>
                                     <resources>
                                         <resource>
-                                            <directory>${basedir}/target/classes</directory>
-                                            <include>${project.name}.sh</include>
+                                            <directory>${basedir}/scripts</directory>
                                         </resource>
                                     </resources>
                                     <outputDirectory>${basedir}/target/dist</outputDirectory>
