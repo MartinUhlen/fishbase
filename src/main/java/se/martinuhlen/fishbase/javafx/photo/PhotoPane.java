@@ -32,6 +32,7 @@ import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.stage.Screen;
 import se.martinuhlen.fishbase.domain.Specimen;
@@ -86,7 +87,15 @@ public class PhotoPane extends BorderPane
 		toggleGroup.selectedToggleProperty().addListener((obs, oldToggle, newToggle) ->
 		{
 			boolean thumbnail = toggleGroup.getSelectedToggle() == thumbnailToggle;
-			setCenter(thumbnail ? thumbnailPane : slideshowPane);
+			Pane pane = thumbnail ? thumbnailPane : slideshowPane;
+			if (pane != getCenter())
+			{
+    			setCenter(pane);
+    			if (!thumbnail)
+    			{
+    			    setPhotosToSlideshow();
+    			}
+			}
 		});
 
 		thumbnailPane.prefWidthProperty().bind(widthProperty());
@@ -113,6 +122,7 @@ public class PhotoPane extends BorderPane
 			{
 				syncing.set(true);
 				thumbnailPane.setPhotos(fishingPhotos);
+				setPhotosToSlideshow();
 				syncing.set(false);
 			}
 		});
@@ -123,18 +133,21 @@ public class PhotoPane extends BorderPane
 				syncing.set(true);
 				List<FishingPhoto> photos = thumbnailPane.getPhotos().stream().map(FishingPhoto.class::cast).collect(toList());
 				fishingPhotos.setAll(photos);
-				slideshowPane.setPhotos(Cursor.of(photos, 0));
+				setPhotosToSlideshow();
 				syncing.set(false);
 			}
 		});
-		thumbnailPane.getPhotos().addListener((Observable obs) ->
-		{
-			ObservableSet<Photo> photos = thumbnailPane.getPhotos();
-			slideshowPane.setPhotos(Cursor.of(photos, 0)); // FIXME Remember previous index, in case of specimen editing
-		});
 	}
 
-	private void addPhotos()
+	private void setPhotosToSlideshow()
+    {
+        if (getCenter() == slideshowPane)
+        {
+            slideshowPane.setPhotos(Cursor.of(thumbnailPane.getPhotos(), 0)); // FIXME Remember previous index, in case of specimen editing
+        }
+    }
+
+    private void addPhotos()
 	{
 		ThumbnailPane pane = ThumbnailPane.forAdding(addStartDate.getValue().toString(), str -> service.searchPhotos(str));
 		DialogPane dialogPane = new DialogPane();

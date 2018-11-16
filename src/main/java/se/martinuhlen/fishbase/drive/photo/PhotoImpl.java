@@ -1,5 +1,6 @@
 package se.martinuhlen.fishbase.drive.photo;
 
+import static com.google.common.base.Preconditions.checkState;
 import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
 
@@ -9,25 +10,25 @@ import java.util.function.Supplier;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
-public class PhotoImpl implements Photo
+class PhotoImpl implements Photo
 {
 	private final String id;
 	private final String name;
 	private final LocalDateTime time;
 	private final boolean video;
-	private final String thumbnailUrl;
-	private final String contentUrl;
-	private final Supplier<InputStream> contentStream;
+	private final PhotoSource thumbnail;
+	private final PhotoSource image;
+	private final Supplier<InputStream> videoStream;
 
-	public PhotoImpl(String id, String name, LocalDateTime time, boolean video, String thumbnailUrl, String contentUrl, Supplier<InputStream> contentStream)
+	PhotoImpl(String id, String name, LocalDateTime time, boolean video, PhotoSource thumbnail, PhotoSource image, Supplier<InputStream> videoStream)
 	{
-		this.id = requireNonNull(id);
+        this.id = requireNonNull(id);
 		this.name = requireNonNull(name);
 		this.time = requireNonNull(time);
 		this.video = video;
-		this.thumbnailUrl = requireNonNull(thumbnailUrl);
-		this.contentUrl = requireNonNull(contentUrl);
-		this.contentStream = requireNonNull(contentStream);
+		this.thumbnail = requireNonNull(thumbnail);
+		this.image = requireNonNull(image);
+		this.videoStream = requireNonNull(videoStream);
 	}
 
 	@Override
@@ -57,19 +58,34 @@ public class PhotoImpl implements Photo
 	@Override
 	public String getThumbnailUrl()
 	{
-		return thumbnailUrl;
+	    return thumbnail.getUrl();
 	}
 
 	@Override
-	public String getContentUrl()
+	public InputStream getThumbnailStream()
 	{
-		return contentUrl;
+		return thumbnail.getInputStream();
+	}
+
+    @Override
+    public String getImageUrl()
+    {
+        checkState(isImage(), "is not an image");
+        return image.getUrl();
+    }
+
+	@Override
+	public InputStream getImageStream()
+	{
+	    checkState(isImage(), "is not an image");
+	    return image.getInputStream();
 	}
 
 	@Override
-	public InputStream getContentStream()
+	public InputStream getVideoStream()
 	{
-		return contentStream.get();
+	    checkState(isVideo(), "is not a video+");
+		return videoStream.get();
 	}
 
 	@Override

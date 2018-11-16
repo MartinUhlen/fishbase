@@ -561,7 +561,7 @@ public class ThumbnailPane extends BorderPane
 		{
 			if (!imageLoaded)
 			{
-				new ImageViewLoader(imageView, photo.getThumbnailUrl()).start();
+				new ImageViewLoader(imageView, photo.getThumbnailStream()).start();
 				imageLoaded = true;
 			}
 		}

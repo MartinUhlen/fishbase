@@ -18,9 +18,12 @@ public interface Photo
 		return !isVideo();
 	}
 
+	// Initially we had only URLS, then refactored to streams.
+	// But JavaFX was dead slow with loading larger images with InputStream, so decided to keep both variants.
 	String getThumbnailUrl();
+	InputStream getThumbnailStream();
+	String getImageUrl();
+	InputStream getImageStream();
 
-	String getContentUrl();
-
-	InputStream getContentStream();
+	InputStream getVideoStream();
 }

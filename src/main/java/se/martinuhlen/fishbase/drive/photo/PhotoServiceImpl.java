@@ -36,6 +36,12 @@ class PhotoServiceImpl implements PhotoService
 	        .map(DateTimeFormatter::ofPattern)
 	        .collect(toUnmodifiableList());
 
+	private static final java.io.File CACHE_DIR = new java.io.File(new java.io.File(System.getProperty("user.home"), ".fishbase"), "cache");
+	static
+	{
+	    CACHE_DIR.mkdirs();
+	}
+
 	private static final String FISHING_KEY = "fishing";
 	private static final String TRIP_KEY = "trip";
 	private static final String SPECIMENS_KEY = "specimens";
@@ -166,18 +172,17 @@ class PhotoServiceImpl implements PhotoService
 	 */
 	private Photo toPhoto(File f)
 	{
-		String contentUrl = f.getThumbnailLink() + "0"; // HACK!
 		return new PhotoImpl(
 			f.getId(),
 			f.getName(),
 			timeOf(f),
 			f.getMimeType().startsWith("video"),
-			f.getThumbnailLink(),
-			contentUrl,
-			() -> streamPhoto(f.getId()));
+			new PhotoSource(f, f.getThumbnailLink(), "_thumb"),
+			new PhotoSource(f, f.getThumbnailLink() + "0", ""), // HACK!
+			() -> streamVideo(f.getId()));
 	}
 
-	private InputStream streamPhoto(String id)
+    private InputStream streamVideo(String id)
 	{
 		return get(() -> drive.files().get(id).executeMediaAsInputStream());
 	}

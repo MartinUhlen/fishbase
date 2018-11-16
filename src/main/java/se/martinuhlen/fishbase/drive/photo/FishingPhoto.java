@@ -79,19 +79,31 @@ public class FishingPhoto implements Photo
 	@Override
 	public String getThumbnailUrl()
 	{
-		return photo.getThumbnailUrl();
+	    return photo.getThumbnailUrl();
 	}
 
 	@Override
-	public String getContentUrl()
+	public InputStream getThumbnailStream()
 	{
-		return photo.getContentUrl();
+		return photo.getThumbnailStream();
+	}
+
+    @Override
+    public String getImageUrl()
+    {
+        return photo.getImageUrl();
+    }
+
+	@Override
+	public InputStream getImageStream()
+	{
+		return photo.getImageStream();
 	}
 
 	@Override
-	public InputStream getContentStream()
+	public InputStream getVideoStream()
 	{
-		return photo.getContentStream();
+		return photo.getVideoStream();
 	}
 
 	public String getTripId()

@@ -180,7 +180,7 @@ public class SlideshowPane extends BorderPane
 	    {
 	        return ofNullable(imageView.getImage())
 	                .map(img -> (Supplier<Image>) () -> img)
-	                .orElseGet(() -> new ImageLoader(photos.current().getContentUrl(), true));
+	                .orElseGet(() -> new ImageLoader(photos.current().getImageUrl(), true));
 	    }
 	}
 
@@ -217,7 +217,7 @@ public class SlideshowPane extends BorderPane
         }
         else
         {
-            return new ImageLoader(photo.getContentUrl(), true);
+            return new ImageLoader(photo.getImageUrl(), true);
         }
     }
 
@@ -235,47 +235,48 @@ public class SlideshowPane extends BorderPane
 		updateState(photo);
 	}
 
-	private void showVideo(Photo photo)
-	{
-		videoPane.setVideo(null, false);
-		setCenter(videoPane);
-		new Service<Media>()
-		{
-			@Override
-			protected Task<Media> createTask()
-			{
-				return new Task<>()
-				{
-					@Override
-					protected Media call() throws Exception
-					{
-						File cacheDir = new File("/home/martin/.fishbase/cache/");
-						cacheDir.mkdirs();
-						File file = new File(cacheDir, photo.getName());
-						if (!file.exists())
-						{
-							IOUtils.copy(photo.getContentStream(), new FileOutputStream(file));
-						}
-						return new Media(file.toURI().toURL().toExternalForm());
-					}
-				};
-			}
+    private void showVideo(Photo photo)
+    {
+        videoPane.setVideo(null, false);
+        setCenter(videoPane);
+        new Service<Media>()
+        {
+            @Override
+            protected Task<Media> createTask()
+            {
+                return new Task<>()
+                {
+                    @Override
+                    protected Media call() throws Exception
+                    {
+                        File cacheDir = new File("/home/martin/.fishbase/cache/");
+                        cacheDir.mkdirs();
+                        File file = new File(cacheDir, photo.getName());
+                        if (!file.exists())
+                        {
+                            IOUtils.copy(photo.getVideoStream(), new FileOutputStream(file));
+                        }
+                        return new Media(file.toURI().toURL().toExternalForm());
+                    }
+                };
+            }
 
-			@Override
-			protected void succeeded()
-			{
-				if (photos.current().equals(photo))
-				{
-					boolean autoPlay = getParent() != null;
-					videoPane.setVideo(getValue(), autoPlay);
-				}
-			}
-		}.start();
-	}
+            @Override
+            protected void succeeded()
+            {
+                if (photos.current().equals(photo))
+                {
+                    boolean autoPlay = getParent() != null;
+                    videoPane.setVideo(getValue(), autoPlay);
+                }
+            }
+        }.start();
+    }
 
 	private void showImage(Photo photo, Supplier<Image> supplier)
 	{
 		setCenter(imageView);
+		imageView.setImage(null);
 		ofNullable(supplier.get())
 		        .ifPresentOrElse(
 		                img -> imageView.setImage(img),
@@ -288,7 +289,7 @@ public class SlideshowPane extends BorderPane
         {
             loader.cancel();
         }
-        loader = new ImageViewLoader(imageView, photo.getContentUrl());
+        loader = new ImageViewLoader(imageView, photo.getImageUrl());
         loader.start();
     }
 
