@@ -7,7 +7,6 @@ import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
 
-import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.HashSet;
@@ -77,33 +76,15 @@ public class FishingPhoto implements Photo
 	}
 
 	@Override
-	public String getThumbnailUrl()
+	public PhotoData getThumbnail()
 	{
-	    return photo.getThumbnailUrl();
+	    return photo.getThumbnail();
 	}
 
 	@Override
-	public InputStream getThumbnailStream()
+	public PhotoData getContent()
 	{
-		return photo.getThumbnailStream();
-	}
-
-    @Override
-    public String getImageUrl()
-    {
-        return photo.getImageUrl();
-    }
-
-	@Override
-	public InputStream getImageStream()
-	{
-		return photo.getImageStream();
-	}
-
-	@Override
-	public InputStream getVideoStream()
-	{
-		return photo.getVideoStream();
+	    return photo.getContent();
 	}
 
 	public String getTripId()

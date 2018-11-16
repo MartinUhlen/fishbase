@@ -7,11 +7,7 @@ import static javafx.geometry.Pos.CENTER;
 import static se.martinuhlen.fishbase.javafx.utils.ImageSize.SIZE_16;
 import static se.martinuhlen.fishbase.javafx.utils.ImageSize.SIZE_32;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.util.function.Supplier;
-
-import org.apache.commons.io.IOUtils;
 
 import javafx.beans.InvalidationListener;
 import javafx.beans.value.ObservableValue;
@@ -180,7 +176,7 @@ public class SlideshowPane extends BorderPane
 	    {
 	        return ofNullable(imageView.getImage())
 	                .map(img -> (Supplier<Image>) () -> img)
-	                .orElseGet(() -> new ImageLoader(photos.current().getImageUrl(), true));
+	                .orElseGet(() -> new ImageLoader(photos.current().getContent().getUrl(), true));
 	    }
 	}
 
@@ -217,7 +213,7 @@ public class SlideshowPane extends BorderPane
         }
         else
         {
-            return new ImageLoader(photo.getImageUrl(), true);
+            return new ImageLoader(photo.getContent().getUrl(), true);
         }
     }
 
@@ -249,14 +245,7 @@ public class SlideshowPane extends BorderPane
                     @Override
                     protected Media call() throws Exception
                     {
-                        File cacheDir = new File("/home/martin/.fishbase/cache/");
-                        cacheDir.mkdirs();
-                        File file = new File(cacheDir, photo.getName());
-                        if (!file.exists())
-                        {
-                            IOUtils.copy(photo.getVideoStream(), new FileOutputStream(file));
-                        }
-                        return new Media(file.toURI().toURL().toExternalForm());
+                        return new Media(photo.getContent().getUrl());
                     }
                 };
             }
@@ -266,11 +255,10 @@ public class SlideshowPane extends BorderPane
             {
                 if (photos.current().equals(photo))
                 {
-                    boolean autoPlay = getParent() != null;
-                    videoPane.setVideo(getValue(), autoPlay);
+                    videoPane.setVideo(getValue(), true);
                 }
             }
-        }.start();
+        }.start();        
     }
 
 	private void showImage(Photo photo, Supplier<Image> supplier)
@@ -289,7 +277,7 @@ public class SlideshowPane extends BorderPane
         {
             loader.cancel();
         }
-        loader = new ImageViewLoader(imageView, photo.getImageUrl());
+        loader = new ImageViewLoader(imageView, photo.getContent().getUrl());
         loader.start();
     }
 

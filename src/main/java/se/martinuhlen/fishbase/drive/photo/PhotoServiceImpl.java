@@ -4,12 +4,13 @@ import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNullElseGet;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toUnmodifiableList;
+import static org.apache.commons.io.FilenameUtils.getExtension;
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
+import static se.martinuhlen.fishbase.utils.Checked.$;
 import static se.martinuhlen.fishbase.utils.Checked.get;
 import static se.martinuhlen.fishbase.utils.Checked.run;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -35,6 +36,12 @@ class PhotoServiceImpl implements PhotoService
 	        .stream()
 	        .map(DateTimeFormatter::ofPattern)
 	        .collect(toUnmodifiableList());
+
+    static final java.io.File CACHE_DIR = new java.io.File(new java.io.File(System.getProperty("user.home"), ".fishbase"), "cache");
+    static
+    {
+        CACHE_DIR.mkdirs();
+    }
 
 	private static final String FISHING_KEY = "fishing";
 	private static final String TRIP_KEY = "trip";
@@ -166,20 +173,35 @@ class PhotoServiceImpl implements PhotoService
 	 */
 	private Photo toPhoto(File f)
 	{
+	    boolean video = f.getMimeType().startsWith("video");
 		return new PhotoImpl(
 			f.getId(),
 			f.getName(),
 			timeOf(f),
-			f.getMimeType().startsWith("video"),
-			new PhotoSource(f, f.getThumbnailLink(), "_thumb"),
-			new PhotoSource(f, f.getThumbnailLink() + "0", ""), // HACK!
-			() -> streamVideo(f.getId()));
+			video,
+			new ImageData(localFileOf(f, "_thumb"), f.getThumbnailLink()),
+			contentSourceOf(f, video));
 	}
 
-    private InputStream streamVideo(String id)
-	{
-		return get(() -> drive.files().get(id).executeMediaAsInputStream());
-	}
+    private PhotoData contentSourceOf(File f, boolean video)
+    {
+        if (video)
+        {
+            return new VideoData(localFileOf(f, ""), $(() -> drive.files().get(f.getId()).executeMediaAsInputStream()));
+        }
+        else
+        {
+            return new ImageData(localFileOf(f, ""), f.getThumbnailLink() + "0"); // HACK!
+        }
+    }
+
+    private java.io.File localFileOf(File remoteFile, String suffix)
+    {
+        String fileName = remoteFile.getName().replace(":", "");
+        String extension = getExtension(fileName);
+        fileName = fileName.replace("." + extension, "_" + remoteFile.getId() + suffix + "." + extension);
+        return new java.io.File(CACHE_DIR, fileName);
+    }
 
 	private LocalDateTime timeOf(File f)
 	{
