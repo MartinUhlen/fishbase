@@ -36,12 +36,6 @@ class PhotoServiceImpl implements PhotoService
 	        .map(DateTimeFormatter::ofPattern)
 	        .collect(toUnmodifiableList());
 
-	private static final java.io.File CACHE_DIR = new java.io.File(new java.io.File(System.getProperty("user.home"), ".fishbase"), "cache");
-	static
-	{
-	    CACHE_DIR.mkdirs();
-	}
-
 	private static final String FISHING_KEY = "fishing";
 	private static final String TRIP_KEY = "trip";
 	private static final String SPECIMENS_KEY = "specimens";
