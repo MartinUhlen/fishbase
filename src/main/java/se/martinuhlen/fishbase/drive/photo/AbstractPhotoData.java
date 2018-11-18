@@ -1,6 +1,7 @@
 package se.martinuhlen.fishbase.drive.photo;
 
 import static java.io.OutputStream.nullOutputStream;
+import static java.util.UUID.randomUUID;
 import static se.martinuhlen.fishbase.utils.Checked.get;
 
 import java.io.BufferedOutputStream;
@@ -24,8 +25,6 @@ import se.martinuhlen.fishbase.utils.Checked;
  */
 abstract class AbstractPhotoData implements PhotoData
 {
-    // TODO [Martin] Lock the file while downloading, and check for lock when reading. In slideshow (that uses prefetch) one can see corrupt images.
-    
     final File localFile;
 
     AbstractPhotoData(File localFile)
@@ -108,6 +107,7 @@ abstract class AbstractPhotoData implements PhotoData
         {
             private InputStream inputStream;
             private OutputStream outputStream;
+            private File tempFile;
             private boolean closed;
 
             @Override
@@ -124,10 +124,13 @@ abstract class AbstractPhotoData implements PhotoData
             {
                 if (inputStream == null)
                 {
+                    String tempFileName = localFile.getName() + "." + randomUUID() + ".temp";
+                    tempFile = new File(localFile.getParentFile(), tempFileName);
+                    tempFile.deleteOnExit();
+                    outputStream = new BufferedOutputStream(new FileOutputStream(tempFile));
                     inputStream = getRemoteStream();
-                    outputStream = new BufferedOutputStream(new FileOutputStream(localFile));
                 }
-
+                
                 int read = inputStream.read();
                 if (read != -1)
                 {
@@ -136,6 +139,7 @@ abstract class AbstractPhotoData implements PhotoData
                 else
                 {
                     close();
+                    tempFile.renameTo(localFile);
                 }
                 return read;
             }
