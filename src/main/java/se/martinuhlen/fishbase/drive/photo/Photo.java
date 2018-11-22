@@ -2,6 +2,13 @@ package se.martinuhlen.fishbase.drive.photo;
 
 import java.time.LocalDateTime;
 
+/**
+ * A photo taken by a camera.
+ * <p>
+ * Most often an {@link #isImage() image} but can also be a {@link #isVideo() video}.
+ *
+ * @author Martin
+ */
 public interface Photo
 {
     /**

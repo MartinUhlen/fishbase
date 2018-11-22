@@ -16,6 +16,13 @@ import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
+/**
+ * Extends {@link Photo} with the concept of "fishing".
+ * <p>
+ * A {@code FishingPhoto} refers a specific fishing trip, and might also refer to specimens caught that trip.
+ *
+ * @author Martin
+ */
 public class FishingPhoto implements Photo
 {
 	private final Photo photo;
