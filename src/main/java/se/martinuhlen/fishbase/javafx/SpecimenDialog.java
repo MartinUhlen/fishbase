@@ -7,6 +7,7 @@ import static javafx.geometry.Pos.BASELINE_LEFT;
 import static javafx.geometry.Pos.CENTER;
 import static javafx.scene.control.ButtonType.CANCEL;
 import static javafx.scene.control.ButtonType.OK;
+import static javafx.scene.layout.Region.USE_COMPUTED_SIZE;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.math.NumberUtils.isDigits;
 import static org.controlsfx.validation.Validator.createPredicateValidator;
@@ -74,6 +75,10 @@ class SpecimenDialog extends Dialog<Specimen>
 		specieCombo = new ComboBox<>(observableArrayList(species));
 		getDialogPane().getButtonTypes().setAll(CANCEL, OK);
 		getDialogPane().setContent(createForm());
+		getDialogPane().setPrefSize(USE_COMPUTED_SIZE, USE_COMPUTED_SIZE);
+		setWidth(USE_COMPUTED_SIZE);
+		setHeight(USE_COMPUTED_SIZE);
+		setResizable(true);
 		setResultConverter(b -> b == OK ? wrapper.getWrapee() : null);
 		setTitle(add ? "Add new specimen" : "Edit specimen");
 		setOnShowing(e -> onShowing());
