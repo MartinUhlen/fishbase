@@ -131,10 +131,18 @@ class TripList extends VBox
 		listView.getItems().stream()
 				.filter(trip -> trip.getId().equals(tripId))
 				.findAny()
-				.ifPresent(trip ->
+				.ifPresentOrElse(trip ->
 				{
 					listView.getSelectionModel().select(trip);
 					listView.scrollTo(trip);
+				},
+				() ->
+				{
+					if (!filter.getText().equals(""))
+					{
+						filter.setText("");
+						selectTrip(tripId);
+					}
 				});
 	}
 }
