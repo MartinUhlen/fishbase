@@ -7,6 +7,7 @@ import static java.util.Comparator.comparing;
 import static java.util.Comparator.naturalOrder;
 import static java.util.Comparator.reverseOrder;
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static javafx.application.Platform.runLater;
 import static javafx.collections.FXCollections.observableSet;
@@ -18,6 +19,7 @@ import static javafx.geometry.Orientation.VERTICAL;
 import static javafx.geometry.Pos.TOP_LEFT;
 import static javafx.scene.control.ScrollPane.ScrollBarPolicy.AS_NEEDED;
 import static javafx.scene.control.ScrollPane.ScrollBarPolicy.NEVER;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static se.martinuhlen.fishbase.utils.Constants.DATE_TIME_FORMAT;
 
 import java.time.LocalDate;
@@ -36,6 +38,7 @@ import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import javafx.animation.KeyFrame;
@@ -69,24 +72,46 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.util.Duration;
 import javafx.util.StringConverter;
+import se.martinuhlen.fishbase.domain.Specimen;
+import se.martinuhlen.fishbase.domain.Trip;
+import se.martinuhlen.fishbase.drive.photo.FishingPhoto;
 import se.martinuhlen.fishbase.drive.photo.Photo;
 import se.martinuhlen.fishbase.utils.Cursor;
 
 public class ThumbnailPane extends BorderPane
 {
-	public static ThumbnailPane forTimeline()
+	public static ThumbnailPane forTimeline(Function<String, Trip> tripLoader)
 	{
-		return new ThumbnailPane(false, false, true);
+		Function<Photo, String> tooltipFunction = photo ->
+		{
+            FishingPhoto p = (FishingPhoto) photo;
+            Trip trip = tripLoader.apply(p.getTripId());
+            return trip.getDescription()
+                +  trip.getSpecimens()
+                        .stream()
+                        .filter(s -> p.containsSpecimen(s.getId()))
+                        .map(s -> s.getLabel() + " " + s.getMethod() + "/" + s.getBait() + " " + s.getLocation())
+                        .collect(joining("\n", "\n", ""));
+		};
+		return new ThumbnailPane(false, false, true, tooltipFunction);
 	}
 
-	public static ThumbnailPane forTrip()
+	public static ThumbnailPane forTrip(Supplier<Stream<Specimen>> specimens)
 	{
-		return new ThumbnailPane(true, true, false);
+		Function<Photo, String> tooltipFunction = photo ->
+		{
+            FishingPhoto p = (FishingPhoto) photo;
+            return specimens.get()
+                        .filter(s -> p.containsSpecimen(s.getId()))
+                        .map(Specimen::getLabel)
+                        .collect(joining("\n", "", ""));
+		};
+		return new ThumbnailPane(true, true, false, tooltipFunction);
 	}
 
 	public static ThumbnailPane forAdding(String initialSearch, Function<String, Collection<Photo>> searcher)
 	{
-		ThumbnailPane pane = new ThumbnailPane(true, false, false);
+		ThumbnailPane pane = new ThumbnailPane(true, false, false, null);
 		TextField searchField = new TextField();
 		ProgressIndicator progress = new ProgressIndicator();
 		progress.setVisible(false);
@@ -151,9 +176,10 @@ public class ThumbnailPane extends BorderPane
 	private EventHandler<? super ContextMenuEvent> contextMenuHandler;
 	private Function<Photo, String> tooltipFunction;
 
-	private ThumbnailPane(boolean thumbnailsAreSelectable, boolean ascendingOrder, boolean showDateSlider)
+	private ThumbnailPane(boolean thumbnailsAreSelectable, boolean ascendingOrder, boolean showDateSlider, Function<Photo, String> tooltipFunction)
 	{
 		this.thumbnailsAreSelectable = thumbnailsAreSelectable;
+		this.tooltipFunction = tooltipFunction;
 		photoTimeComparator = ascendingOrder ? naturalOrder() : reverseOrder();
 		photoComparator = comparing(Photo::getTime, photoTimeComparator).thenComparing(Photo::getId); // For the rare event that two photos has exactly the same time
 		photos = observableSet(new TreeSet<>(photoComparator));
@@ -414,11 +440,13 @@ public class ThumbnailPane extends BorderPane
     		thumbnail.imageView.setOnMouseEntered(e ->
             {
                 String tooltipText = tooltipFunction.apply(thumbnail.photo);
-                Tooltip.install(thumbnail.imageView, new Tooltip(tooltipText));
+                if (isNotBlank(tooltipText))
+                {
+                	Tooltip.install(thumbnail.imageView, new Tooltip(tooltipText));
+                }
                 thumbnail.imageView.setOnMouseEntered(null);
             });
 		}
-
 		return thumbnail;
 	}
 

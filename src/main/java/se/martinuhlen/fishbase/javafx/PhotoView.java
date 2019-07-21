@@ -3,7 +3,6 @@ package se.martinuhlen.fishbase.javafx;
 import static java.lang.Math.min;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
-import static java.util.stream.Collectors.joining;
 import static javafx.scene.layout.Region.USE_PREF_SIZE;
 import static se.martinuhlen.fishbase.javafx.utils.Images.getImageView16;
 
@@ -24,7 +23,6 @@ import javafx.scene.control.ProgressIndicator;
 import javafx.scene.layout.StackPane;
 import javafx.util.Duration;
 import se.martinuhlen.fishbase.dao.FishBaseDao;
-import se.martinuhlen.fishbase.domain.Trip;
 import se.martinuhlen.fishbase.drive.photo.FishingPhoto;
 import se.martinuhlen.fishbase.drive.photo.PhotoService;
 import se.martinuhlen.fishbase.javafx.action.Action;
@@ -58,19 +56,7 @@ class PhotoView implements View
 
     private ThumbnailPane createThumbnailPane()
     {
-        ThumbnailPane pane = ThumbnailPane.forTimeline();
-        pane.setTooltipFunction(photo ->
-        {
-            FishingPhoto p = (FishingPhoto) photo;
-            Trip trip = dao.getTrip(p.getTripId());
-            return trip.getDescription()
-                +  trip.getSpecimens()
-                        .stream()
-                        .filter(s -> p.containsSpecimen(s.getId()))
-                        .map(s -> s.getLabel() + " " + s.getMethod() + "/" + s.getBait() + " " + s.getLocation())
-                        .collect(joining("\n", "\n", ""));
-        });
-
+        ThumbnailPane pane = ThumbnailPane.forTimeline(dao::getTrip);
         MenuItem openTrip = new MenuItem("Open trip", getImageView16("window_next.png"));
         openTrip.setOnAction(e -> tripOpener.accept(openTrip.getUserData().toString()));
         ContextMenu contextMenu = new ContextMenu(openTrip);

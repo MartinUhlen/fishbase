@@ -68,7 +68,7 @@ public class PhotoPane extends BorderPane
 		this.specimens = specimens;
 		this.fishingPhotos = fishingPhotos;
 
-		thumbnailPane = ThumbnailPane.forTrip();
+		thumbnailPane = ThumbnailPane.forTrip(() -> specimens.getValue().stream());
 		slideshowPane = new SlideshowPane();
 		slideshowPane.prefWidthProperty().bind(widthProperty());
 
