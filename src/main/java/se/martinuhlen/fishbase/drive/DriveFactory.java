@@ -44,7 +44,7 @@ public class DriveFactory
 		HttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
 		FileDataStoreFactory dataStoreFactory = new FileDataStoreFactory(LOCAL_FOLDER);
 		JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
-		GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(jsonFactory, new InputStreamReader(DriveFactory.class.getResourceAsStream("/client_secrets.json")));
+		GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(jsonFactory, new InputStreamReader(DriveFactory.class.getResourceAsStream("/ClientSecrets.json")));
 
 		GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(httpTransport, jsonFactory, clientSecrets, scopes())
 				.setDataStoreFactory(dataStoreFactory)
