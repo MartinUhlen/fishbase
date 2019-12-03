@@ -26,6 +26,8 @@ public interface FishBaseDao
 	    });
 	}
 
+	Specie getSpecie(String id);
+
 	List<Specie> getSpecies();
 
 	void saveSpecies(Collection<Specie> species);
@@ -34,6 +36,8 @@ public interface FishBaseDao
 
 	void deleteSpecies(Collection<Specie> species);
 
+	Specimen getSpecimen(String id);
+	
 	List<Specimen> getSpecimens();
 
 	void saveSpecimens(Collection<Specimen> specimens);
@@ -46,7 +50,7 @@ public interface FishBaseDao
 
 	void saveTrip(Trip trip);
 
-	void deleteTrip(Trip wrapee);
+	void deleteTrip(Trip trip);
 
 	SortedSet<String> getAutoCompletions(AutoCompleteField field);
 }

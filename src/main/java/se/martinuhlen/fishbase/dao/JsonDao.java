@@ -1,9 +1,10 @@
 package se.martinuhlen.fishbase.dao;
 
 import static java.lang.String.CASE_INSENSITIVE_ORDER;
-import static java.util.Collections.emptySet;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySortedSet;
 import static java.util.Comparator.comparing;
+import static java.util.Optional.ofNullable;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.groupingBy;
@@ -39,14 +40,15 @@ class JsonDao implements FishBaseDao
 	private final JsonHandler<Trip> tripHandler;
 
 	private final Map<String, Specie> species;
+	private final Map<String, Specimen> specimens;
 	private final Map<String, Trip> trips;
     private Map<AutoCompleteField, SortedSet<String>> autoCompleteMap;
 
 	JsonDao(Persistence persistence)
 	{
 		specieHandler = new SpecieJsonHandler(persistence);
-		specimenHandler = new SpecimenJsonHandler(persistence);
-		tripHandler = new TripJsonHandler(persistence);
+		specimenHandler = new SpecimenJsonHandler(persistence, this::getSpecie);
+		tripHandler = new TripJsonHandler(persistence, this::getSpecimen);
 
 	    JsonHandler<Specie>.Reader specieReader = specieHandler.reader();
 	    JsonHandler<Specimen>.Reader specimenReader = specimenHandler.reader();
@@ -56,14 +58,12 @@ class JsonDao implements FishBaseDao
                 .stream()
                 .collect(toMap(Specie::getId, identity()));
 
-        Map<String, Set<Specimen>> tripSpecimens = specimenReader.read()
-                .stream()
-                .map(s -> s.withSpecie(species.get(s.getSpecie().getId())))
-                .collect(groupingBy(Specimen::getTripId, toSet()));
+        specimens = specimenReader.read()
+        		.stream()
+        		.collect(toMap(Specimen::getId, identity()));
 
-        this.trips = tripReader.read()
+        trips = tripReader.read()
             .stream()
-            .map(trip -> trip.withSpecimens(tripSpecimens.getOrDefault(trip.getId(), emptySet())))
             .collect(toMap(Trip::getId, identity()));
 	}
 
@@ -73,6 +73,8 @@ class JsonDao implements FishBaseDao
 	    this(persistence);
 	    this.species.clear();
 	    this.species.putAll(testSpecies.stream().collect(toMap(Specie::getId, identity())));
+	    this.specimens.clear();
+	    this.specimens.putAll(testTrips.stream().flatMap(t -> t.getSpecimens().stream()).collect(toMap(Specimen::getId, identity())));
 	    this.trips.clear();
 	    this.trips.putAll(testTrips.stream().collect(toMap(Trip::getId, identity())));
     }
@@ -107,8 +109,7 @@ class JsonDao implements FishBaseDao
 
 	private Stream<Specimen> streamSpecimens()
 	{
-	    return streamTrips()
-	            .flatMap(trip -> trip.getSpecimens().stream());
+		return specimens.values().stream();
 	}
 
 	private Stream<Trip> streamTrips()
@@ -119,6 +120,17 @@ class JsonDao implements FishBaseDao
     private Stream<Specie> streamSpecies()
     {
         return species.values().stream();
+    }
+
+    @Override
+    public Specie getSpecie(String id)
+    {
+	    Specie specie = species.get(id);
+	    if (specie == null)
+	    {
+	    	throw new IllegalArgumentException("There's no Specie with id="+id);
+	    }
+	    return specie;
     }
 
 	@Override
@@ -143,7 +155,8 @@ class JsonDao implements FishBaseDao
         	        .filter(specimen -> specieMap.containsKey(specimen.getSpecie().getId()))
         	        .map(specimen -> specimen.withSpecie(specieMap.get(specimen.getSpecie().getId())))
         	        .collect(toSet());
-    	    saveSpecimens(newSpecimens);
+
+    	    saveSpecimens(newSpecimens, false);
 	    }
 	}
 
@@ -169,6 +182,17 @@ class JsonDao implements FishBaseDao
 	}
 
 	@Override
+	public Specimen getSpecimen(String id)
+	{
+	    Specimen specimen = specimens.get(id);
+	    if (specimen == null)
+	    {
+	        throw new IllegalArgumentException("There's no Specimen with id="+id);
+	    }
+	    return specimen;
+	}
+
+	@Override
 	public List<Specimen> getSpecimens()
 	{
 	    return streamSpecimens()
@@ -182,21 +206,47 @@ class JsonDao implements FishBaseDao
 	{
 	    if (!specimens.isEmpty())
 	    {
-    	    Map<String, Specimen> specimenMap = specimens.stream().collect(toMap(Specimen::getId, identity()));
-    	    Map<String, Set<Specimen>> tripSpecimens = specimens.stream()
-    	            .collect(groupingBy(Specimen::getTripId, toSet()));
-
-            trips.putAll(tripSpecimens.entrySet().stream()
-                    .map(e ->
-                    {
-                        Trip trip = getTrip(e.getKey());
-                        return trip.withSpecimens(new ArrayList<>(trip.getSpecimens().stream().map(specimen -> specimenMap.getOrDefault(specimen.getId(), specimen)).collect(toList())));
-                    })
-                    .collect(toMap(Trip::getId, trip -> trip)));
-
-            writeSpecimens();
-            specimens.forEach(Specimen::markPersisted);
+    	    saveSpecimens(specimens, true);
 	    }
+	}
+
+	private void saveSpecimens(Collection<Specimen> specimens, boolean writeSpecimens)
+	{
+		Map<String, Specimen> specimenMap = specimens.stream().collect(toMap(Specimen::getId, identity()));
+		Map<String, Set<Specimen>> tripSpecimens = specimens.stream()
+		        .collect(groupingBy(Specimen::getTripId, toSet()));
+
+		Map<String, Trip> modifiedTrips = tripSpecimens.entrySet().stream()
+		        .map(e ->
+		        {
+		            Trip trip = getTrip(e.getKey());
+		            ArrayList<Specimen> newSpecimens = new ArrayList<>(trip.getSpecimens());
+		            newSpecimens.removeIf(s -> specimenMap.containsKey(s.getId()));
+		            newSpecimens.addAll(e.getValue());
+		            return trip.withSpecimens(newSpecimens);
+		        })
+		        .collect(toMap(Trip::getId, trip -> trip));
+
+		boolean writeTrips = modifiedTrips
+				.entrySet()
+				.stream()
+				.anyMatch(e -> getSpecimenIds(getTrip(e.getKey())).size() != e.getValue().getSpecimens().size());
+
+		trips.putAll(modifiedTrips);
+
+		specimens.forEach(specimen -> this.specimens.put(specimen.getId(), specimen));
+
+		if (writeTrips)
+		{
+			writeTrips();
+		}
+
+		if (writeSpecimens)
+		{
+			writeSpecimens();
+		}
+
+		specimens.forEach(Specimen::markPersisted);
 	}
 
 	@Override
@@ -217,7 +267,10 @@ class JsonDao implements FishBaseDao
                     })
                     .collect(toMap(Trip::getId, trip -> trip)));
 
+            specimens.forEach(specimen -> this.specimens.remove(specimen.getId()));
+
             writeSpecimens();
+            writeTrips();
         }
 	}
 
@@ -235,7 +288,7 @@ class JsonDao implements FishBaseDao
 	    Trip trip = trips.get(id);
 	    if (trip == null)
 	    {
-	        throw new IllegalArgumentException("There's no trip with id="+id);
+	        throw new IllegalArgumentException("There's no Trip with id="+id);
 	    }
 	    return trip;
 	}
@@ -245,6 +298,11 @@ class JsonDao implements FishBaseDao
 	{
 		boolean tripChanged = isTripChanged(trip);
 		boolean specimensChanged = isSpecimensChanged(trip);
+		ofNullable(trips.get(trip.getId()))
+				.map(Trip::getSpecimens)
+				.orElse(emptyList())
+				.stream().map(Specimen::getId).forEach(specimens::remove);
+		trip.getSpecimens().forEach(specimen -> specimens.put(specimen.getId(), specimen));
 		trips.put(trip.getId(), trip);
 
 		if (tripChanged)
@@ -262,7 +320,13 @@ class JsonDao implements FishBaseDao
 	private boolean isTripChanged(Trip trip)
 	{
 		return trip.isNew()
-			|| !trips.get(trip.getId()).equalsWithoutSpecimens(trip);
+			|| !trips.get(trip.getId()).equalsWithoutSpecimens(trip)
+			|| !getSpecimenIds(trips.get(trip.getId())).equals(getSpecimenIds(trip));
+	}
+
+	private Set<String> getSpecimenIds(Trip trip)
+	{
+		return trip.getSpecimens().stream().map(Specimen::getId).collect(toSet());
 	}
 
 	private boolean isSpecimensChanged(Trip trip)
@@ -278,6 +342,8 @@ class JsonDao implements FishBaseDao
         if (trips.containsKey(id))
 	    {
 	        Trip trip = trips.remove(id);
+	        trip.getSpecimens().stream().map(Specimen::getId).forEach(specimens::remove);
+
 	        writeTrips();
 	        if (trip.hasSpecimens())
 	        {

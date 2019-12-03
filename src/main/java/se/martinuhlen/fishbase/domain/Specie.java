@@ -22,11 +22,6 @@ public final class Specie extends Domain<Specie>
 	    return new Builder(id, true);
 	}
 
-    public static Specie asIdentity(String id)
-    {
-        return new Builder(id, true).build();
-    }
-
 	public static Specie asNew()
 	{
 		return new Builder(UUID.randomUUID().toString(), false).build();
@@ -93,19 +88,15 @@ public final class Specie extends Domain<Specie>
 		return new Specie(getId(), isPersisted(), name, regWeight, freshWater);
 	}
 
-	private static class Builder implements NameBuilder, RegWeightBuilder, FreshWaterBuilder
+	private static class Builder extends Domain.Builder<Specie> implements NameBuilder, RegWeightBuilder, FreshWaterBuilder
 	{
-	    private final String id;
-	    private final boolean persisted;
-
         private String name = "";
         private int regWeight;
         private boolean freshWater = true;
 
 	    Builder(String id, boolean persisted)
         {
-            this.id = id;
-            this.persisted = persisted;
+	    	super(id, persisted);
         }
 
 	    @Override

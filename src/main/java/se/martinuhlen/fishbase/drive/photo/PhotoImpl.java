@@ -50,39 +50,6 @@ class PhotoImpl implements Photo
 		return video;
 	}
 
-//	@Override
-//	public String getThumbnailUrl()
-//	{
-//	    return thumbnail.getUrl();
-//	}
-//
-//	@Override
-//	public InputStream getThumbnailStream()
-//	{
-//		return thumbnail.getStream();
-//	}
-//
-//    @Override
-//    public String getImageUrl()
-//    {
-//        checkState(isImage(), "is not an content");
-//        return content.getUrl();
-//    }
-//
-//	@Override
-//	public InputStream getImageStream()
-//	{
-//	    checkState(isImage(), "is not an content");
-//	    return content.getStream();
-//	}
-//
-//	@Override
-//	public InputStream getVideoStream()
-//	{
-//	    checkState(isVideo(), "is not a video+");
-//		return videoStream.get();
-//	}
-
 	@Override
 	public PhotoData getThumbnail()
 	{

@@ -173,11 +173,8 @@ public final class Specimen extends Domain<Specimen>
 	    return new Specimen(UUID.randomUUID().toString(), false, tripId, specie, weight, length, location, instant, method, bait, weather, text);
 	}
 
-	private static class Builder implements TripBuilder, SpecieBuilder, WeightBuilder, LengthBuilder, LocationBuilder, InstantBuilder, MethodBuilder, BaitBuilder, WeatherBuilder, TextBuilder
+	private static class Builder extends Domain.Builder<Specimen> implements TripBuilder, SpecieBuilder, WeightBuilder, LengthBuilder, LocationBuilder, InstantBuilder, MethodBuilder, BaitBuilder, WeatherBuilder, TextBuilder
 	{
-        private final String id;
-        private final boolean persisted;
-
         private String tripId;
         private Specie specie = EMPTY_SPECIE;
         private int weight;
@@ -191,8 +188,7 @@ public final class Specimen extends Domain<Specimen>
 
         Builder(String id, boolean persisted)
         {
-            this.id = id;
-            this.persisted = persisted;
+        	super(id, persisted);
         }
 
         @Override

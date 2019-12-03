@@ -191,20 +191,17 @@ public final class Trip extends Domain<Trip>
         return !specimens.isEmpty();
     }
 
-    private static class Builder implements DescriptionBuilder, StartDateBuilder, EndDateBuilder, TextBuilder, SpecimenBuilder
+    private static class Builder extends Domain.Builder<Trip> implements DescriptionBuilder, StartDateBuilder, EndDateBuilder, TextBuilder, SpecimenBuilder
     {
-        private final String id;
-        private final boolean persisted;
         private String description = "";
         private LocalDate startDate = LocalDate.MIN;
         private LocalDate endDate = LocalDate.MAX;
         private String text = "";
         private Collection<Specimen> specimens = emptySet();
 
-        Builder(String id, boolean persisted)
+        private Builder(String id, boolean persisted)
         {
-            this.id = requireNonNull(id);
-            this.persisted = persisted;
+        	super(id, persisted);
         }
 
         @Override

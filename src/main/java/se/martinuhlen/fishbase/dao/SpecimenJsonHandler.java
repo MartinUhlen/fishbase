@@ -1,7 +1,9 @@
 package se.martinuhlen.fishbase.dao;
 
+import static java.time.LocalDateTime.parse;
+
 import java.lang.reflect.Type;
-import java.time.LocalDateTime;
+import java.util.function.Function;
 
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonElement;
@@ -14,9 +16,12 @@ import se.martinuhlen.fishbase.domain.Specimen;
 
 class SpecimenJsonHandler extends JsonHandler<Specimen>
 {
-	SpecimenJsonHandler(Persistence persistence)
+	private Function<String, Specie> specie;
+
+	SpecimenJsonHandler(Persistence persistence, Function<String, Specie> specie)
 	{
 		super(Specimen.class, persistence);
+		this.specie = specie;
 	}
 
 	@Override
@@ -24,8 +29,8 @@ class SpecimenJsonHandler extends JsonHandler<Specimen>
 	{
 		JsonObject json = new JsonObject();
 		json.addProperty("id", s.getId());
-		json.addProperty("tripId", s.getTripId());
-		json.addProperty("specieId", s.getSpecie().getId());
+		json.addProperty("trip", s.getTripId());
+		json.addProperty("specie", s.getSpecie().getId());
 		json.addProperty("weight", s.getWeight());
 		json.addProperty("length", s.getLength());
 		json.addProperty("location", s.getLocation());
@@ -42,12 +47,12 @@ class SpecimenJsonHandler extends JsonHandler<Specimen>
 	{
 		JsonObject obj = json.getAsJsonObject();
 		return Specimen.asPersisted(obj.get("id").getAsString())
-		        .tripId(obj.get("tripId").getAsString())
-				.specie(Specie.asIdentity(obj.get("specieId").getAsString()))
+		        .tripId(obj.get("trip").getAsString())
+				.specie(specie.apply(obj.get("specie").getAsString()))
 				.weight(obj.get("weight").getAsInt())
 				.length(obj.get("length").getAsFloat())
 				.location(obj.get("location").getAsString())
-				.instant(LocalDateTime.parse(obj.get("instant").getAsString()))
+				.instant(parse(obj.get("instant").getAsString()))
 				.method(obj.get("method").getAsString())
 				.bait(obj.get("bait").getAsString())
 				.weather(obj.get("weather").getAsString())

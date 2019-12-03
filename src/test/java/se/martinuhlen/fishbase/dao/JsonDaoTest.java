@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -48,6 +49,9 @@ import se.martinuhlen.fishbase.domain.Specie;
 import se.martinuhlen.fishbase.domain.Specimen;
 import se.martinuhlen.fishbase.domain.Trip;
 
+/**
+ * Unit tests of {@link JsonDao}.
+ */
 public class JsonDaoTest
 {
 	private File dataDir;
@@ -77,7 +81,7 @@ public class JsonDaoTest
 		    dao = FishBaseDao.create(persistence);
 		}
 	}
-
+	
 	@Test
 	public void getAllSpecies()
 	{
@@ -103,6 +107,18 @@ public class JsonDaoTest
 	}
 
     @Test
+    public void gettingUnknownSpecieFails()
+    {
+        assertThrows(IllegalArgumentException.class, () -> dao.getSpecie("?"));
+    }
+
+    @Test
+    public void gettingUnknownSpecimenFails()
+    {
+        assertThrows(IllegalArgumentException.class, () -> dao.getSpecimen("?"));
+    }
+
+    @Test
     public void gettingUnknownTripFails()
     {
         assertThrows(IllegalArgumentException.class, () -> dao.getTrip("?"));
@@ -121,14 +137,16 @@ public class JsonDaoTest
 	}
 
 	@Test
-	public void saveExistingSpecies()
+	public void saveExistingSpecies() throws Exception
 	{
+		reset(persistence);
 		Specie bream = bream().withName("Braxen");
 		Specie tench = tench().withName("Sutare").withFreshWater(false);
 		List<Specie> species = asList(bream, tench);
 
 		dao.saveSpecies(species);
 
+		verify(persistence, never()).output("Specimen.json");
 		species.forEach(s -> assertSpecieEquals(s));
 		assertEquals(bream, getSpecimen(bream5120().getId()).getSpecie());
 		assertEquals(tench, getSpecimen(tench3540().getId()).getSpecie());
@@ -143,15 +161,34 @@ public class JsonDaoTest
 	}
 
 	@Test
-	public void saveExistingSpecimens()
+	public void saveExistingSpecimens() throws Exception
 	{
+		reset(persistence);
 		Specimen perch = perch1000().withText("A nice perch");
 		Specimen tench = tench3540().withText("A fat tench");
 		List<Specimen> specimens = asList(perch, tench);
 
 		dao.saveSpecimens(specimens);
 
+		verify(persistence, never()).output("Trip.json");
 		specimens.forEach(s -> assertSpecimenEquals(s));
+		assertTripEquals(trip2().withSpecimens(asList(perch, tench)));
+	}
+
+	@Test
+	public void saveNewSpecimen()
+	{
+		Trip trip = trip2();
+		Specimen newSpecimen = newSpecimen(trip.getId());
+		Collection<Specimen> specimens = new ArrayList<>(trip.getSpecimens());
+		specimens.add(newSpecimen);
+		trip = trip.withSpecimens(specimens);
+
+		dao.saveSpecimens(asList(newSpecimen));
+
+		assertTrue(newSpecimen.isPersisted());
+		specimens.forEach(s -> assertSpecimenEquals(s));
+		assertTripEquals(trip);
 	}
 
     @Test
@@ -160,6 +197,12 @@ public class JsonDaoTest
         reset(persistence);
         dao.saveSpecimens(emptyList());
         verifyZeroInteractions(persistence);
+    }
+
+    @Test
+    public void saveOrphanSpecimenFails()
+    {
+    	assertThrows(IllegalArgumentException.class, () -> dao.saveSpecimens(asList(newSpecimen("UnknownTrip"))));
     }
 
 	@Test
@@ -392,7 +435,10 @@ public class JsonDaoTest
 
     private Specimen getSpecimen(String id)
     {
-        return dao.getSpecimens().stream().filter(s -> s.getId().equals(id)).findAny().orElseThrow(() -> new AssertionError("Specimen with id=" + id + " not found"));
+    	Specimen byLookup = dao.getSpecimen(id);
+        Specimen byStream = dao.getSpecimens().stream().filter(s -> s.getId().equals(id)).findAny().orElseThrow(() -> new AssertionError("Specimen with id=" + id + " not found"));
+        assertEquals(byLookup, byStream, "Expect equal specimen found by lookup and stream");
+        return byLookup;
     }
 
 	private void assertSpecieEquals(Specie expected)

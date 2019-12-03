@@ -29,7 +29,7 @@ public abstract class Domain<D extends Domain<D>>
 	 * 
 	 * @return ID that uniquely identifies this object.
 	 */
-	public String getId()
+	public final String getId()
 	{
 		return id;
 	}
@@ -65,6 +65,7 @@ public abstract class Domain<D extends Domain<D>>
 	 * 
 	 * @return stream of validation errors
 	 */
+	// FIXME Move this to Builder. Domain is always valid. Use Builder in UI.
 	public abstract Stream<String> getValidationErrors();
 
 	/**
@@ -122,7 +123,8 @@ public abstract class Domain<D extends Domain<D>>
 	public final boolean equalsId(D that)
 	{
 		return that != null
-			&& this.getId().equals(that.getId());
+			&& this.getId().equals(that.getId())
+			&& this.isPersisted() == that.isPersisted();
 	}
 
 	/**
@@ -159,5 +161,17 @@ public abstract class Domain<D extends Domain<D>>
             throw new IllegalArgumentException(message);
         }
         return value;
+    }
+
+    protected abstract static class Builder<D extends Domain<D>>
+    {
+        protected final String id;
+        protected final boolean persisted;
+
+        protected Builder(String id, boolean persisted)
+        {
+            this.id = requireNonNull(id);
+            this.persisted = persisted;
+        }
     }
 }
