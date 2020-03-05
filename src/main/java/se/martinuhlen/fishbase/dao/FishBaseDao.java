@@ -10,6 +10,7 @@ import java.util.SortedSet;
 import java.util.concurrent.CompletableFuture;
 
 import se.martinuhlen.fishbase.domain.AutoCompleteField;
+import se.martinuhlen.fishbase.domain.Photo;
 import se.martinuhlen.fishbase.domain.Specie;
 import se.martinuhlen.fishbase.domain.Specimen;
 import se.martinuhlen.fishbase.domain.Trip;
@@ -25,6 +26,10 @@ public interface FishBaseDao
 	        return method.invoke(dao, args);
 	    });
 	}
+
+	Photo getPhoto(String id);
+
+	List<Photo> getPhotos(); // FIXME In which order?
 
 	Specie getSpecie(String id);
 

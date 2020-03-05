@@ -4,6 +4,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 import static java.util.Objects.requireNonNullElse;
+import static java.util.stream.Collectors.toUnmodifiableList;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -12,10 +13,15 @@ import java.io.Writer;
 import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collector;
+import java.util.stream.StreamSupport;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializer;
 import com.google.gson.reflect.TypeToken;
 
@@ -96,5 +102,29 @@ abstract class JsonHandler<D extends Domain<D>> implements JsonSerializer<D>, Js
 		{
 			throw new RuntimeException(e);
 		}
+	}
+
+	protected <E> JsonArray serializeArray(Collection<E> collection, Function<? super E, String> mapper)
+	{
+		return collection
+				.stream()
+				.map(mapper)
+				.collect(Collector.of(
+						() -> new JsonArray(collection.size()),
+						(array, value) -> array.add(value),
+						(array1, array2) ->
+						{
+							array1.addAll(array2);
+							return array1;
+						}));
+	}
+
+	protected <E> List<E> deserializeArray(JsonObject obj, String name, Function<String, E> mapper)
+	{
+		JsonArray jsonArray = obj.get(name).getAsJsonArray();
+		return StreamSupport.stream(jsonArray.spliterator(), false)
+				.map(element -> element.getAsString())
+				.map(photoId -> mapper.apply(photoId))
+				.collect(toUnmodifiableList());
 	}
 }

@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static se.martinuhlen.fishbase.domain.TestData.newTrip;
 import static se.martinuhlen.fishbase.domain.TestData.trip1;
-import static se.martinuhlen.fishbase.domain.TestData.trip2;
+import static se.martinuhlen.fishbase.domain.TestData.*;
 
 import java.time.LocalDateTime;
 
@@ -51,6 +51,8 @@ public class TripTest
 	@Test
 	public void equalsAndHashCode()
 	{
+		assertEquals(trip3(), trip3());
+		assertEquals(trip2(), trip2());
 		assertEquals(trip1(), trip1());
 		assertEquals(trip1().hashCode(), trip1().hashCode());
 
@@ -119,11 +121,11 @@ public class TripTest
     public void invariants()
     {
         Trip t = Trip.asNew();
-        assertThrows(NullPointerException.class, () -> Trip.asPersisted(null));
-        assertThrows(NullPointerException.class, () -> t.withDescription(null));
-        assertThrows(NullPointerException.class, () -> t.withStartDate(null));
-        assertThrows(NullPointerException.class, () -> t.withEndDate(null));
-        assertThrows(NullPointerException.class, () -> t.withText(null));
-        assertThrows(NullPointerException.class, () -> t.withSpecimens(null));
+        assertThrows(IllegalArgumentException.class, () -> Trip.asPersisted(null));
+        assertThrows(IllegalArgumentException.class, () -> t.withDescription(null));
+        assertThrows(IllegalArgumentException.class, () -> t.withStartDate(null));
+        assertThrows(IllegalArgumentException.class, () -> t.withEndDate(null));
+        assertThrows(IllegalArgumentException.class, () -> t.withText(null));
+        assertThrows(IllegalArgumentException.class, () -> t.withSpecimens(null));
     }
 }

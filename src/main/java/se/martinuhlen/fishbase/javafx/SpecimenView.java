@@ -46,6 +46,8 @@ import se.martinuhlen.fishbase.utils.Cursor;
 
 class SpecimenView extends AbstractTableView<SpecimenWrapper, Specimen>
 {
+	// FIXME Add a column (of icons) indicating if specimen has photo or not.
+
 	private final FishBaseDao dao;
 	private final PhotoService photoService;
 	private final SlideshowPane slideshow;

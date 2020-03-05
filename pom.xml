@@ -53,20 +53,25 @@
             <artifactId>controlsfx</artifactId>
             <version>11.0.0</version>
         </dependency>
-        <dependency>
-            <groupId>com.google.apis</groupId>
-            <artifactId>google-api-services-drive</artifactId>
-            <version>v3-rev103-1.23.0</version>
-        </dependency>
+		<dependency>
+			<groupId>com.google.photos.library</groupId>
+			<artifactId>google-photos-library-client</artifactId>
+			<version>1.4.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.apis</groupId>
+			<artifactId>google-api-services-drive</artifactId>
+			<version>v3-rev173-1.25.0</version>
+		</dependency>
         <dependency>
             <groupId>com.google.oauth-client</groupId>
             <artifactId>google-oauth-client-java6</artifactId>
-            <version>1.23.0</version>
+            <version>1.25.0</version>
         </dependency>
         <dependency>
             <groupId>com.google.oauth-client</groupId>
             <artifactId>google-oauth-client-jetty</artifactId>
-            <version>1.23.0</version>
+            <version>1.25.0</version>
         </dependency>
 
         <!-- Test dependencies -->

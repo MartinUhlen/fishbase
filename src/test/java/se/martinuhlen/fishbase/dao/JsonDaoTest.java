@@ -20,11 +20,15 @@ import static se.martinuhlen.fishbase.domain.AutoCompleteField.METHOD;
 import static se.martinuhlen.fishbase.domain.AutoCompleteField.WEATHER;
 import static se.martinuhlen.fishbase.domain.TestData.bream;
 import static se.martinuhlen.fishbase.domain.TestData.bream5120;
+import static se.martinuhlen.fishbase.domain.TestData.newPhoto;
 import static se.martinuhlen.fishbase.domain.TestData.newSpecie;
 import static se.martinuhlen.fishbase.domain.TestData.newSpecimen;
 import static se.martinuhlen.fishbase.domain.TestData.newTrip;
 import static se.martinuhlen.fishbase.domain.TestData.perch;
 import static se.martinuhlen.fishbase.domain.TestData.perch1000;
+import static se.martinuhlen.fishbase.domain.TestData.photo1InTrip1;
+import static se.martinuhlen.fishbase.domain.TestData.photo1InTrip2;
+import static se.martinuhlen.fishbase.domain.TestData.photo2InTrip1;
 import static se.martinuhlen.fishbase.domain.TestData.tench;
 import static se.martinuhlen.fishbase.domain.TestData.tench3540;
 import static se.martinuhlen.fishbase.domain.TestData.trip1;
@@ -45,6 +49,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import se.martinuhlen.fishbase.domain.Photo;
 import se.martinuhlen.fishbase.domain.Specie;
 import se.martinuhlen.fishbase.domain.Specimen;
 import se.martinuhlen.fishbase.domain.Trip;
@@ -81,7 +86,13 @@ public class JsonDaoTest
 		    dao = FishBaseDao.create(persistence);
 		}
 	}
-	
+
+	@Test
+	public void getAllPhotos()
+	{
+		assertEquals(Set.of(photo1InTrip1(), photo1InTrip2(), photo2InTrip1()), Set.copyOf(dao.getPhotos()));
+	}
+
 	@Test
 	public void getAllSpecies()
 	{
@@ -273,8 +284,69 @@ public class JsonDaoTest
 		assertTripsEquals(asList(newTrip, trip3(), trip2(), trip1()));
 	}
 
+	@Test
+	public void saveNewTripWithPhoto()
+	{
+		Trip newTrip = newTrip();
+		newTrip = newTrip.withPhotos(Set.of(newPhoto("SomeNewPhoto", newTrip.getId())));
+
+		dao.saveTrip(newTrip);
+
+		assertTrue(newTrip.isPersisted());
+		assertTripsEquals(asList(newTrip, trip3(), trip2(), trip1()));
+	}
+
+	@Test
+	public void saveExistingTripWithAddedPhoto()
+	{
+		Trip trip = trip2();
+		Collection<Photo> photos = new ArrayList<>(trip.getPhotos());
+		photos.add(newPhoto("SomeAddedPhoto", trip.getId()));
+		trip = trip.withPhotos(photos);
+
+		dao.saveTrip(trip);
+
+		assertTrue(trip.isPersisted());
+		assertTripEquals(trip);
+		assertEquals(photos.size(), trip.getPhotos().size());
+		trip.getPhotos().forEach(p ->
+		{
+			assertTrue(p.isPersisted());
+			assertPhotoEquals(p);
+		});
+	}
+
+	@Test
+	public void saveExistingTripWithRemovedPhoto()
+	{
+		List<Photo> removedPhotos = List.of(trip1().getPhotos().get(1));
+		List<Photo> newPhotos = new ArrayList<>(trip1().getPhotos());
+		newPhotos.removeAll(removedPhotos);
+		Trip trip = trip1().withPhotos(newPhotos);
+
+		dao.saveTrip(trip);
+
+		assertEquals(newPhotos, dao.getTrip(trip.getId()).getPhotos());
+		assertTripEquals(trip);
+		removedPhotos.forEach(s -> assertFalse(dao.getPhotos().contains(s)));
+	}
+
+	@Test
+	public void saveExistingTripWithEditedPhoto()
+	{
+		List<Photo> editedPhotos = new ArrayList<>(trip1().getPhotos());
+		editedPhotos.set(0, editedPhotos.get(0).withStarred(!editedPhotos.get(0).isStarred()));
+		Trip trip = trip1().withPhotos(editedPhotos);
+
+		dao.saveTrip(trip);
+
+		assertTripEquals(trip);
+		editedPhotos.forEach(s -> assertPhotoEquals(s));
+		assertTrue(dao.getPhotos().containsAll(editedPhotos));
+	}
+
     @Test
-    public void saveNewTripWithoutSpecimensDoesNotPersistSpecimens() throws IOException
+    public void saveNewTripWithoutSpecimensOrPhotosDoesNotPersistSpecimensOrPhotos() throws IOException
     {
         reset(persistence);
 
@@ -380,8 +452,16 @@ public class JsonDaoTest
 		assertSpecimensEquals(asList(bream5120()));
 	}
 
+	@Test
+	public void deleteTripWithPhotos()
+	{
+		dao.deleteTrip(trip1());
+		assertTripsEquals(asList(trip3(), trip2()));
+		assertPhotosEquals(asList(photo1InTrip2()));
+	}
+
     @Test
-    public void deleteTripWithoutSpecimens() throws Exception
+    public void deleteTripWithoutSpecimensOrPhotos() throws Exception
     {
         reset(persistence);
         dao.deleteTrip(trip3());
@@ -428,9 +508,20 @@ public class JsonDaoTest
         assertTrue(dao.getAutoCompletions(WEATHER).contains("HHH"));
 	}
 
+	private Photo getPhoto(String id)
+	{
+		Photo byLookup = dao.getPhoto(id);
+		Photo byStream = dao.getPhotos().stream().filter(s -> s.getId().equals(id)).findAny().orElseThrow(() -> new AssertionError("Photo with id=" + id + " not found"));
+	    assertEquals(byLookup, byStream, "Expect equal photo found by lookup and stream");
+	    return byLookup;
+	}
+
 	private Specie getSpecie(String id)
 	{
-	    return dao.getSpecies().stream().filter(s -> s.getId().equals(id)).findAny().orElseThrow(() -> new AssertionError("Specie with id=" + id + " not found"));
+		Specie byLookup = dao.getSpecie(id);
+	    Specie byStream = dao.getSpecies().stream().filter(s -> s.getId().equals(id)).findAny().orElseThrow(() -> new AssertionError("Specie with id=" + id + " not found"));
+	    assertEquals(byLookup, byStream, "Expect equal specie found by lookup and stream");
+	    return byLookup;
 	}
 
     private Specimen getSpecimen(String id)
@@ -440,6 +531,20 @@ public class JsonDaoTest
         assertEquals(byLookup, byStream, "Expect equal specimen found by lookup and stream");
         return byLookup;
     }
+
+	private void assertPhotoEquals(Photo expected)
+	{
+		assertEquals(expected, getPhoto(expected.getId()));
+		createDao();
+		assertEquals(expected, getPhoto(expected.getId()));
+	}
+
+	private void assertPhotosEquals(List<Photo> expected)
+	{
+		assertEquals(expected, dao.getPhotos());
+		createDao();
+		assertEquals(expected, dao.getPhotos());
+	}
 
 	private void assertSpecieEquals(Specie expected)
 	{

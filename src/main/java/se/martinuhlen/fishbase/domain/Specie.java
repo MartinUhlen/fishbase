@@ -1,6 +1,5 @@
 package se.martinuhlen.fishbase.domain;
 
-import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import java.util.UUID;
@@ -15,7 +14,7 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
  */
 public final class Specie extends Domain<Specie>
 {
-	public static final Specie EMPTY_SPECIE = new Builder("", false).build();
+	public static final Specie EMPTY_SPECIE = new Builder("#emptySpecie", false).build();
 
 	public static NameBuilder asPersisted(String id)
 	{

@@ -45,10 +45,10 @@ import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import se.martinuhlen.fishbase.dao.FishBaseDao;
-import se.martinuhlen.fishbase.drive.DriveFactory;
-import se.martinuhlen.fishbase.drive.DrivePersistence;
-import se.martinuhlen.fishbase.drive.DriveService;
 import se.martinuhlen.fishbase.drive.photo.PhotoService;
+import se.martinuhlen.fishbase.google.GoogleServiceFactory;
+import se.martinuhlen.fishbase.google.drive.DrivePersistence;
+import se.martinuhlen.fishbase.google.drive.DriveService;
 import se.martinuhlen.fishbase.javafx.action.Action;
 import se.martinuhlen.fishbase.javafx.action.ReplaceableAction;
 import se.martinuhlen.fishbase.javafx.utils.Images;
@@ -107,9 +107,8 @@ public class FishBaseApplication extends Application
 	public void start(Stage stage) throws Exception
 	{
 	    this.stage = stage;
-		DriveFactory factory = DriveFactory.get();
-		photoService = PhotoService.create(factory.create());
-		driveService = new DriveService(factory.create());
+		photoService = PhotoService.create(GoogleServiceFactory.get().createDrive());
+		driveService = new DriveService(GoogleServiceFactory.get().createDrive());
 		drivePersistence = new DrivePersistence(driveService);
 		dao = FishBaseDao.create(drivePersistence);
 

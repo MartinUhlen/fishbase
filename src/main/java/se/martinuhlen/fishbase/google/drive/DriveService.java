@@ -1,4 +1,4 @@
-package se.martinuhlen.fishbase.drive;
+package se.martinuhlen.fishbase.google.drive;
 
 import static java.util.Arrays.asList;
 import static se.martinuhlen.fishbase.utils.Checked.$;

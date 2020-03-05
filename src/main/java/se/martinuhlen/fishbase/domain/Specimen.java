@@ -1,7 +1,6 @@
 package se.martinuhlen.fishbase.domain;
 
 import static java.time.LocalDateTime.MIN;
-import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static se.martinuhlen.fishbase.domain.AutoCompleteField.BAIT;
 import static se.martinuhlen.fishbase.domain.AutoCompleteField.LOCATION;

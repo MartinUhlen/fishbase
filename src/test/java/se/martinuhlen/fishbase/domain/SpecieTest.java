@@ -81,7 +81,7 @@ public class SpecieTest
 	public void invariants()
 	{
 	    Specie s = Specie.asNew();
-	    assertThrows(NullPointerException.class, () -> s.withName(null));
+	    assertThrows(IllegalArgumentException.class, () -> s.withName(null));
 	    assertThrows(IllegalArgumentException.class, () -> s.withRegWeight(-500));
 	}
 }

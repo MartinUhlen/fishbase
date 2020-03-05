@@ -29,16 +29,19 @@ import java.util.stream.Stream;
 import com.google.common.annotations.VisibleForTesting;
 
 import se.martinuhlen.fishbase.domain.AutoCompleteField;
+import se.martinuhlen.fishbase.domain.Photo;
 import se.martinuhlen.fishbase.domain.Specie;
 import se.martinuhlen.fishbase.domain.Specimen;
 import se.martinuhlen.fishbase.domain.Trip;
 
 class JsonDao implements FishBaseDao
 {
+	private final JsonHandler<Photo> photoHandler;
 	private final JsonHandler<Specie> specieHandler;
 	private final JsonHandler<Specimen> specimenHandler;
 	private final JsonHandler<Trip> tripHandler;
 
+	private final Map<String, Photo> photos;
 	private final Map<String, Specie> species;
 	private final Map<String, Specimen> specimens;
 	private final Map<String, Trip> trips;
@@ -46,13 +49,19 @@ class JsonDao implements FishBaseDao
 
 	JsonDao(Persistence persistence)
 	{
+		photoHandler = new PhotoJsonHandler(persistence);
 		specieHandler = new SpecieJsonHandler(persistence);
 		specimenHandler = new SpecimenJsonHandler(persistence, this::getSpecie);
-		tripHandler = new TripJsonHandler(persistence, this::getSpecimen);
+		tripHandler = new TripJsonHandler(persistence, this::getSpecimen, this::getPhoto);
 
+		JsonHandler<Photo>.Reader photoReader = photoHandler.reader();
 	    JsonHandler<Specie>.Reader specieReader = specieHandler.reader();
 	    JsonHandler<Specimen>.Reader specimenReader = specimenHandler.reader();
 	    JsonHandler<Trip>.Reader tripReader = tripHandler.reader();
+
+        photos = photoReader.read()
+        		.stream()
+        		.collect(toMap(Photo::getId, identity()));
 
         species = specieReader.read()
                 .stream()
@@ -71,6 +80,8 @@ class JsonDao implements FishBaseDao
 	JsonDao(Persistence persistence, Collection<Specie> testSpecies, Collection<Trip> testTrips)
     {
 	    this(persistence);
+	    this.photos.clear();
+	    this.photos.putAll(testTrips.stream().flatMap(t -> t.getPhotos().stream()).collect(toMap(Photo::getId, identity())));
 	    this.species.clear();
 	    this.species.putAll(testSpecies.stream().collect(toMap(Specie::getId, identity())));
 	    this.specimens.clear();
@@ -82,9 +93,15 @@ class JsonDao implements FishBaseDao
 	@VisibleForTesting
 	void writeAll()
 	{
+		writePhotos();
 		writeSpecies();
 		writeSpecimens();
 		writeTrips();
+	}
+
+	private void writePhotos()
+	{
+		photoHandler.write(photos.values());
 	}
 
 	private void writeSpecies()
@@ -120,6 +137,22 @@ class JsonDao implements FishBaseDao
     private Stream<Specie> streamSpecies()
     {
         return species.values().stream();
+    }
+
+    public Photo getPhoto(String id)
+    {
+    	Photo photo = photos.get(id);
+    	if (photo == null)
+    	{
+    		throw new IllegalArgumentException("There's no Photo with id="+id);
+    	}
+    	return photo;
+    }
+
+    @Override
+    public List<Photo> getPhotos()
+    {
+    	return photos.values().stream().collect(toList());
     }
 
     @Override
@@ -298,11 +331,24 @@ class JsonDao implements FishBaseDao
 	{
 		boolean tripChanged = isTripChanged(trip);
 		boolean specimensChanged = isSpecimensChanged(trip);
+		boolean photosChanged = isPhotosChanged(trip);
+
 		ofNullable(trips.get(trip.getId()))
 				.map(Trip::getSpecimens)
 				.orElse(emptyList())
-				.stream().map(Specimen::getId).forEach(specimens::remove);
+				.stream()
+				.map(Specimen::getId)
+				.forEach(specimens::remove);
 		trip.getSpecimens().forEach(specimen -> specimens.put(specimen.getId(), specimen));
+
+		ofNullable(trips.get(trip.getId()))
+				.map(Trip::getPhotos)
+				.orElse(emptyList())
+				.stream()
+				.map(Photo::getId)
+				.forEach(photos::remove);
+		trip.getPhotos().forEach(photo -> photos.put(photo.getId(), photo));
+
 		trips.put(trip.getId(), trip);
 
 		if (tripChanged)
@@ -315,13 +361,19 @@ class JsonDao implements FishBaseDao
 			writeSpecimens();
 			trip.getSpecimens().forEach(Specimen::markPersisted);
 		}
+		if (photosChanged)
+		{
+			writePhotos();
+			trip.getPhotos().forEach(Photo::markPersisted);
+		}
 	}
 
 	private boolean isTripChanged(Trip trip)
 	{
 		return trip.isNew()
-			|| !trips.get(trip.getId()).equalsWithoutSpecimens(trip)
-			|| !getSpecimenIds(trips.get(trip.getId())).equals(getSpecimenIds(trip));
+			|| !trips.get(trip.getId()).equalsWithoutCollections(trip)
+			|| !getSpecimenIds(trips.get(trip.getId())).equals(getSpecimenIds(trip))
+			|| !getPhotoIds(trips.get(trip.getId())).equals(getPhotoIds(trip));
 	}
 
 	private Set<String> getSpecimenIds(Trip trip)
@@ -329,10 +381,21 @@ class JsonDao implements FishBaseDao
 		return trip.getSpecimens().stream().map(Specimen::getId).collect(toSet());
 	}
 
+	private Set<String> getPhotoIds(Trip trip)
+	{
+		return trip.getPhotos().stream().map(Photo::getId).collect(toSet());
+	}
+
 	private boolean isSpecimensChanged(Trip trip)
 	{
 		return (trip.isNew() && trip.hasSpecimens())
 			|| !trips.getOrDefault(trip.getId(), EMPTY_TRIP).getSpecimens().equals(trip.getSpecimens());
+	}
+
+	private boolean isPhotosChanged(Trip trip)
+	{
+		return (trip.isNew() && trip.hasPhotos())
+			|| !trips.getOrDefault(trip.getId(), EMPTY_TRIP).getPhotos().equals(trip.getPhotos());
 	}
 
 	@Override
@@ -343,11 +406,16 @@ class JsonDao implements FishBaseDao
 	    {
 	        Trip trip = trips.remove(id);
 	        trip.getSpecimens().stream().map(Specimen::getId).forEach(specimens::remove);
+	        trip.getPhotos().stream().map(Photo::getId).forEach(photos::remove);
 
 	        writeTrips();
 	        if (trip.hasSpecimens())
 	        {
 	            writeSpecimens();
+	        }
+	        if (trip.hasPhotos())
+	        {
+	        	writePhotos();
 	        }
 	    }
 	}

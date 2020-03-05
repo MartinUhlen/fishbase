@@ -127,13 +127,13 @@ public class SpecimenTest
     public void invariants()
     {
         Specimen s = Specimen.asNew("tripId");
-        assertThrows(NullPointerException.class, () -> s.withSpecie(null));
-        assertThrows(NullPointerException.class, () -> s.withLocation(null));
-        assertThrows(NullPointerException.class, () -> s.withInstant(null));
-        assertThrows(NullPointerException.class, () -> s.withMethod(null));
-        assertThrows(NullPointerException.class, () -> s.withBait(null));
-        assertThrows(NullPointerException.class, () -> s.withWeather(null));
-        assertThrows(NullPointerException.class, () -> s.withText(null));
+        assertThrows(IllegalArgumentException.class, () -> s.withSpecie(null));
+        assertThrows(IllegalArgumentException.class, () -> s.withLocation(null));
+        assertThrows(IllegalArgumentException.class, () -> s.withInstant(null));
+        assertThrows(IllegalArgumentException.class, () -> s.withMethod(null));
+        assertThrows(IllegalArgumentException.class, () -> s.withBait(null));
+        assertThrows(IllegalArgumentException.class, () -> s.withWeather(null));
+        assertThrows(IllegalArgumentException.class, () -> s.withText(null));
         assertThrows(IllegalArgumentException.class, () -> s.withWeight(-500));
         assertThrows(IllegalArgumentException.class, () -> s.withLength(-1));
     }

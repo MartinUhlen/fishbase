@@ -1,6 +1,6 @@
 package se.martinuhlen.fishbase.domain;
 
-import static java.util.Objects.requireNonNull;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
 
 import java.util.stream.Stream;
@@ -136,6 +136,40 @@ public abstract class Domain<D extends Domain<D>>
 	protected abstract boolean equalsData(D that);
 
 	/**
+	 * Checks that a value is not {@code null}.
+	 * 
+	 * @param <T> type of value to check
+	 * @param value to check
+	 * @param message in case value is blank
+	 * @return {@code value} when not {@code null}
+	 * @throws IllegalArgumentException if value is {@code null}
+	 */
+	protected static <T> T requireNonNull(T value, String message)
+	{
+		if (value == null)
+		{
+			throw new IllegalArgumentException(message);
+		}
+		return value;
+	}
+
+	/**
+	 * Checks that string is not {@code null}, empty or only contain whitespace.
+	 * @param value to check
+	 * @param message in case value is blank
+	 * @return value when not blank
+	 * @throws IllegalArgumentException if value is blank
+	 */
+	protected static String requireNonBlank(String value, String message)
+	{
+		if (isBlank(value))
+		{
+			throw new IllegalArgumentException(message);
+		}
+		return value;
+	}
+	
+	/**
 	 * Requires a value that is {@code >= 0}, otherwise throws {@link IllegalArgumentException}.
 	 * 
 	 * @param value to check
@@ -170,7 +204,7 @@ public abstract class Domain<D extends Domain<D>>
 
         protected Builder(String id, boolean persisted)
         {
-            this.id = requireNonNull(id);
+            this.id = requireNonBlank(id, "id cannot be blank");
             this.persisted = persisted;
         }
     }

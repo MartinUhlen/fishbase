@@ -104,6 +104,11 @@ public class FishingPhoto implements Photo
 		return specimenIds.stream().collect(joining(","));
 	}
 
+	public Set<String> specimenIds()
+	{
+		return Set.copyOf(specimenIds);
+	}
+
 	public boolean containsSpecimen(String specimenId)
 	{
 		return specimenIds.contains(specimenId);

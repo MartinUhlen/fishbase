@@ -17,7 +17,7 @@ public class DatePicker extends javafx.scene.control.DatePicker
     /**
      * Creates a new date picker.
      * 
-     * @param property this picker shoule be bound to
+     * @param property this picker should be bound to
      */
 	public DatePicker(Property<LocalDate> property)
 	{

@@ -2,18 +2,17 @@ package se.martinuhlen.fishbase.domain;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.time.LocalDate.now;
-import static java.util.Collections.emptySet;
-import static java.util.Collections.unmodifiableList;
 import static java.util.Comparator.comparing;
-import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toUnmodifiableList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -31,7 +30,7 @@ public final class Trip extends Domain<Trip>
 	public static final String DATE_NOT_IN_FUTURE = "Date cannot be in the future";
 	public static final String TEXT_IS_MANDATORY = "Text is mandatory";
 	
-    public static final Trip EMPTY_TRIP = new Builder("", false).build();
+    public static final Trip EMPTY_TRIP = new Builder("#emptyTrip", false).build();
 
 	public static DescriptionBuilder asPersisted(String id)
 	{
@@ -46,7 +45,7 @@ public final class Trip extends Domain<Trip>
 		        .build();
 	}
 
-    private Trip(String id, boolean persisted, String description, LocalDate startDate, LocalDate endDate, String text, List<Specimen> specimens)
+    private Trip(String id, boolean persisted, String description, LocalDate startDate, LocalDate endDate, String text, List<Specimen> specimens, List<Photo> photos)
     {
         super(id, persisted);
         this.description = requireNonNull(description, "description can't be null");
@@ -54,21 +53,33 @@ public final class Trip extends Domain<Trip>
         this.endDate = requireNonNull(endDate, "endDate can't be null");
         this.text = requireNonNull(text, "text can't be null");
         this.specimens = specimens;
+        this.photos = photos;
     }
 
-	private Trip(String id, boolean persisted, String description, LocalDate startDate, LocalDate endDate, String text, Collection<Specimen> specimens)
+	private Trip(String id, boolean persisted, String description, LocalDate startDate, LocalDate endDate, String text, Collection<Specimen> specimens, Collection<Photo> photos)
 	{
-	    this(id, persisted, description, startDate, endDate, text, applySpecimens(id, specimens));
+	    this(id, persisted, description, startDate, endDate, text, applySpecimens(id, specimens), applyPhotos(id, photos));
 	}
 
-    private static List<Specimen> applySpecimens(String id, Collection<Specimen> specimens)
+	private static List<Specimen> applySpecimens(String id, Collection<Specimen> specimens)
     {
-        return unmodifiableList(requireNonNull(specimens, "specimens can't be null")
+		requireNonBlank(id, "id cannot be blank");
+        return requireNonNull(specimens, "specimens cannot be null")
                 .stream()
+                .peek(s -> requireNonNull(s, "specimen cannot be null"))
                 .peek(s -> checkArgument(s.getTripId().equals(id), "Specimen#tripId must be equal to Trip#id"))
                 .sorted(comparing(Specimen::getInstant))
-                .collect(toList()));
+                .collect(toUnmodifiableList());
     }
+
+    private static List<Photo> applyPhotos(String id, Collection<Photo> photos)
+    {
+    	requireNonBlank(id, "id cannot be blank");
+    	requireNonNull(photos, "photos cannot be null");
+    	photos.forEach(photo -> requireNonNull(photo, "photo cannot be null"));
+    	photos.forEach(photo -> checkArgument(id.equals(photo.getTripId()), "Photo#tripId must be equal to Trip#id"));
+    	return List.copyOf(photos);
+	}
 
 	//@formatter:off
 	private final String description;
@@ -94,7 +105,17 @@ public final class Trip extends Domain<Trip>
 	    requireNonNull(specimens, "specimens can't be null");
 	    return ((this.specimens.isEmpty() && specimens.isEmpty()) || this.specimens.equals(specimens))
 	            ? this
-	            : new Trip(getId(), isPersisted(), description, startDate, endDate, text, specimens);
+	            : new Trip(getId(), isPersisted(), description, startDate, endDate, text, specimens, photos);
+	}
+
+	private List<Photo> photos;
+	public List<Photo> getPhotos(){return photos;}
+	public Trip withPhotos(Collection<Photo> photos)
+	{
+	    requireNonNull(photos, "photos cannot be null");
+	    return ((this.photos.isEmpty() && photos.isEmpty()) || this.photos.equals(photos))
+	            ? this
+	            : new Trip(getId(), isPersisted(), description, startDate, endDate, text, specimens, photos);
 	}
 	//@formatter:on
 
@@ -102,7 +123,7 @@ public final class Trip extends Domain<Trip>
 	{
 	    return currentValue.equals(newValue)
 	            ? this
-	            : new Trip(getId(), isPersisted(), description, startDate, endDate, text, specimens);
+	            : new Trip(getId(), isPersisted(), description, startDate, endDate, text, specimens, photos);
 	}
 
 	@Override
@@ -166,13 +187,14 @@ public final class Trip extends Domain<Trip>
 	@Override
 	protected boolean equalsData(Trip that)
 	{
-		return equalsWithoutSpecimens(that)
+		return equalsWithoutCollections(that)
 				&& this.specimens.equals(that.specimens);
 	}
 
-	public boolean equalsWithoutSpecimens(Trip that)
+	public boolean equalsWithoutCollections(Trip that)
 	{
 		return that != null && new EqualsBuilder()
+				.append(this.photos, that.photos)
 				.append(this.description, that.description)
 				.append(this.startDate, that.startDate)
 				.append(this.endDate, that.endDate)
@@ -183,7 +205,7 @@ public final class Trip extends Domain<Trip>
 	@Override
 	public Trip copy()
 	{
-		return new Trip(getId(), isPersisted(), description, startDate, endDate, text, specimens);
+		return new Trip(getId(), isPersisted(), description, startDate, endDate, text, specimens, photos);
 	}
 
     public boolean hasSpecimens()
@@ -191,13 +213,19 @@ public final class Trip extends Domain<Trip>
         return !specimens.isEmpty();
     }
 
-    private static class Builder extends Domain.Builder<Trip> implements DescriptionBuilder, StartDateBuilder, EndDateBuilder, TextBuilder, SpecimenBuilder
+    public boolean hasPhotos()
+    {
+        return !photos.isEmpty();
+    }
+
+    private static class Builder extends Domain.Builder<Trip> implements DescriptionBuilder, StartDateBuilder, EndDateBuilder, TextBuilder, SpecimenBuilder, PhotoBuilder
     {
         private String description = "";
         private LocalDate startDate = LocalDate.MIN;
         private LocalDate endDate = LocalDate.MAX;
         private String text = "";
-        private Collection<Specimen> specimens = emptySet();
+        private Collection<Specimen> specimens = Set.of();
+        private List<Photo> photos = List.of();
 
         private Builder(String id, boolean persisted)
         {
@@ -233,15 +261,22 @@ public final class Trip extends Domain<Trip>
         }
 
         @Override
-        public Trip specimens(Collection<Specimen> specimens)
+        public Builder specimens(Collection<Specimen> specimens)
         {
             this.specimens = specimens;
-            return build();
+            return this;
         }
 
+        @Override
+        public Trip photos(List<Photo> photos)
+        {
+        	this.photos = photos;
+        	return build();
+        }
+        
         private Trip build()
         {
-            return new Trip(id, persisted, description, startDate, endDate, text, specimens);
+            return new Trip(id, persisted, description, startDate, endDate, text, specimens, photos);
         }
     }
 
@@ -267,6 +302,11 @@ public final class Trip extends Domain<Trip>
 
     public interface SpecimenBuilder
     {
-        Trip specimens(Collection<Specimen> specimens);
+        PhotoBuilder specimens(Collection<Specimen> specimens);
     }
+
+	public interface PhotoBuilder
+	{
+		Trip photos(List<Photo> photos);
+	}
 }
