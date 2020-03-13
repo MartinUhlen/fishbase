@@ -1,6 +1,8 @@
 package se.martinuhlen.fishbase.javafx;
 
+import static java.lang.Boolean.TRUE;
 import static java.util.Arrays.asList;
+import static javafx.geometry.Pos.CENTER;
 import static javafx.scene.control.Alert.AlertType.CONFIRMATION;
 import static javafx.scene.control.ButtonBar.ButtonData.OK_DONE;
 import static javafx.scene.control.ButtonType.CANCEL;
@@ -22,8 +24,10 @@ import java.util.List;
 import java.util.SortedSet;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
@@ -32,6 +36,7 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
@@ -279,5 +284,28 @@ class SpecimenTable extends TableView<SpecimenWrapper>
 		double occupiedWidth = getColumns().stream().filter(c -> c != textColumn).mapToDouble(TableColumn::getWidth).sum();
 		double columnWidth = Math.max(getWidth() - occupiedWidth - 16, 80);
 		textColumn.setPrefWidth(columnWidth);
+	}
+
+	/**
+	 * Adds column to display if specimen has photo(s).
+	 * 
+	 * @param hasPhoto tests whether a specimen has photo(s) or not
+	 */
+	void addPhotoColumn(Predicate<SpecimenWrapper> hasPhoto)
+	{
+		TableColumn<SpecimenWrapper, Boolean> column = new TableColumn<>("");
+		column.setEditable(false);
+		column.setCellValueFactory(cdf -> new SimpleBooleanProperty(hasPhoto.test(cdf.getValue())));
+		column.setCellFactory(c -> new TableCell<>()
+		{
+			@Override
+			protected void updateItem(Boolean hasPhoto, boolean empty)
+			{
+				super.updateItem(hasPhoto, empty);
+				setGraphic(TRUE.equals(hasPhoto) ? getImageView16("photo.png") : null);
+				setAlignment(CENTER);
+			}
+		});
+		getColumns().add(10, column);
 	}
 }

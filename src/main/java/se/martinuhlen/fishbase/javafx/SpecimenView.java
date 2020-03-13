@@ -108,9 +108,19 @@ class SpecimenView extends AbstractTableView<SpecimenWrapper, Specimen>
         filterField.textProperty().addListener(listener);
         ratioSlider.valueProperty().addListener(listener);
         personalBestCheckBox.selectedProperty().addListener(listener);
+        specimenTable.addPhotoColumn(this::hasPhotos);
         return specimenTable;
 	}
 
+	private boolean hasPhotos(SpecimenWrapper wrapper)
+	{
+		Specimen specimen = wrapper.getWrapee();
+		return dao.getTrip(specimen.getTripId())
+				.getPhotos()
+				.stream()
+				.anyMatch(photo -> photo.getSpecimens().contains(specimen.getId()));
+	}
+	
     private Predicate<SpecimenWrapper> createFilterPredicate()
     {
         Predicate<Specimen> textPredicate = new SpecimenTextPredicate(filterField.getText());
@@ -158,25 +168,6 @@ class SpecimenView extends AbstractTableView<SpecimenWrapper, Specimen>
 	{
 	    ((SpecimenTable) getTable()).removeSelected();
 	}
-	
-	@Override
-	void deleteRows(List<Specimen> rowsToDelete)
-	{
-	    super.deleteRows(rowsToDelete);
-	    removeSpecimensFromPhotos(rowsToDelete);
-	}
-
-    private void removeSpecimensFromPhotos(List<Specimen> rowsToDelete)
-    {
-        rowsToDelete.forEach(specimen ->
-	    {
-	    	throw new UnsupportedOperationException("Not yet implemented");
-//	        photoService.getSpecimenPhotos(specimen.getTripId(), specimen.getId())
-//	                .stream()
-//	                .map(photo -> photo.withoutSpecimen(specimen.getId()))
-//	                .forEach(photo -> photoService.savePhoto(photo));
-	    });
-    }
 
 	private class PhotoLoader extends Service<List<FishingPhoto>>
 	{
@@ -196,11 +187,6 @@ class SpecimenView extends AbstractTableView<SpecimenWrapper, Specimen>
 					}
 					else
 					{
-//						Specimen specimen = selectedItem.getWrapee();
-//						List<FishingPhoto> photos = photoService.getSpecimenPhotos(specimen.getTripId(), specimen.getId());
-//						photos.sort(comparing(FishingPhoto::isStarred).reversed().thenComparing(Photo::getTime));
-//						return photos;
-
 						Specimen specimen = selectedItem.getWrapee();
 						List<Photo> photos = dao.getTrip(specimen.getTripId())
 								.getPhotos()
