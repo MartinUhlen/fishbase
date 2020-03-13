@@ -1,7 +1,9 @@
 package se.martinuhlen.fishbase.javafx;
 
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.joining;
 import static javafx.application.Platform.runLater;
+import static javafx.collections.FXCollections.observableArrayList;
 import static javafx.geometry.Orientation.VERTICAL;
 import static javafx.scene.control.Alert.AlertType.CONFIRMATION;
 import static javafx.scene.control.Alert.AlertType.ERROR;
@@ -17,15 +19,18 @@ import static se.martinuhlen.fishbase.domain.Trip.TEXT_IS_MANDATORY;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.prefs.Preferences;
+import java.util.stream.Collectors;
 
 import org.controlsfx.validation.ValidationSupport;
 
 import javafx.beans.property.Property;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.geometry.Insets;
@@ -42,9 +47,10 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import se.martinuhlen.fishbase.dao.FishBaseDao;
+import se.martinuhlen.fishbase.domain.Photo;
 import se.martinuhlen.fishbase.domain.Trip;
-import se.martinuhlen.fishbase.drive.photo.FishingPhoto;
-import se.martinuhlen.fishbase.drive.photo.PhotoService;
+import se.martinuhlen.fishbase.google.photos.FishingPhoto;
+import se.martinuhlen.fishbase.google.photos.PhotoService;
 import se.martinuhlen.fishbase.javafx.action.Action;
 import se.martinuhlen.fishbase.javafx.action.RunnableAction;
 import se.martinuhlen.fishbase.javafx.controls.DatePicker;
@@ -60,28 +66,104 @@ class TripView implements View
 
 	private final FishBaseDao dao;
 	private final PhotoService photoService;
-	private final PhotoLoader photoLoader;
 	private final TripWrapper wrapper;
 	private final ReadOnlyStringProperty titleProperty;
 	private final SplitPane splitPane;
 	private final TripList list;
 	private final Node tripPane;
-	private TextField descriptionField;
+	private final TextField descriptionField;
+	private final ObservableList<FishingPhoto> photos = observableArrayList();
 
 	TripView(FishBaseDao dao, PhotoService photoService)
 	{
 		this.dao = dao;
 		this.photoService = photoService;
-		this.photoLoader = new PhotoLoader();
 		this.wrapper = new TripWrapper();
 		this.titleProperty = createTitleProperty();
 		this.list = new TripList(trip -> selectTrip(trip));
+		this.descriptionField = new TextField("");
 		this.tripPane = createTripPane();
 		this.splitPane = createSplitPane();
+		bindPhotos();
+		bindButtons();
+	}
+
+	private void bindButtons()
+	{
 		wrapper.addListener(obs ->
 		{
 			saveAction.setEnabled(wrapper.hasChanges());
 			deleteAction.setEnabled(!wrapper.isEmpty());
+		});
+	}
+
+	private void bindPhotos()
+	{
+		AtomicBoolean sync = new AtomicBoolean(true);
+		Consumer<List<FishingPhoto>> resetter = fishingPhotos ->
+		{
+			sync.set(false);
+			try
+			{
+				photos.setAll(fishingPhotos);
+			}
+			finally
+			{
+				sync.set(true);
+			}			
+		};
+
+		photos.addListener(new ListChangeListener<FishingPhoto>()
+		{
+			@Override
+			public void onChanged(Change<? extends FishingPhoto> change)
+			{
+				while(change.next())
+				{
+					change.getAddedSubList().forEach(photo -> photo.addListener(p -> sync()));
+				}
+				sync();
+			}
+
+			private void sync()
+			{
+				if (sync.get())
+				{
+					List<Photo> domains = photos.stream().map(p -> p.getDomain()).collect(Collectors.toList());
+					wrapper.photos().setValue(domains);
+				}
+			}
+		});
+
+		Service<List<FishingPhoto>> loader = new Service<List<FishingPhoto>>()
+		{
+			@Override
+			protected Task<List<FishingPhoto>> createTask()
+			{
+				return new Task<>()
+				{
+					@Override
+					protected List<FishingPhoto> call() throws Exception
+					{
+						Thread.sleep(10);
+						List<Photo> photosToLoad = wrapper.photos().getValue();
+						List<FishingPhoto> loadedPhotos = photoService.load(photosToLoad);
+						return loadedPhotos;
+					}
+				};
+			}
+
+			@Override
+			protected void succeeded()
+			{
+				resetter.accept(getValue());
+			}
+		};
+
+		wrapper.id().addListener(change ->
+		{
+			resetter.accept(emptyList());
+			loader.restart();
 		});
 	}
 
@@ -125,7 +207,6 @@ class TripView implements View
 	{
 		VBox overviewBox = new VBox();
 		overviewBox.setPadding(new Insets(8));
-		descriptionField = new TextField("");
 		descriptionField.textProperty().bindBidirectional(wrapper.description());
 		overviewBox.getChildren().add(new Label("Description"));
 		overviewBox.getChildren().add(descriptionField);
@@ -189,7 +270,7 @@ class TripView implements View
 
 	private PhotoPane createPhotoPane()
 	{
-		return new PhotoPane(photoService, wrapper.startDate(), wrapper.id(), wrapper.specimens(), wrapper.photos());
+		return new PhotoPane(photoService, wrapper.startDate(), wrapper.endDate(), wrapper.id(), wrapper.specimens(), photos);
 	}
 
 	private SplitPane createSplitPane()
@@ -256,7 +337,6 @@ class TripView implements View
 	private void setTrip(Trip trip)
 	{
 		wrapper.setWrapee(trip);
-		photoLoader.restart();
 	}
 
 	@Override
@@ -280,20 +360,7 @@ class TripView implements View
 		else
 		{
 			dao.saveTrip(trip);
-			savePhotos(() -> refresh());
-		}
-	}
-
-	private void savePhotos(Runnable postAction)
-	{
-		if (wrapper.hasPhotoChanges())
-		{
-			new ProgressDisplayer(getContent().getScene().getWindow(), new PhotoSaver())
-				.startAndThen(postAction);
-		}
-		else
-		{
-			postAction.run();
+			refresh();
 		}
 	}
 
@@ -317,78 +384,8 @@ class TripView implements View
 
 	private void deleteImpl()
 	{
-		wrapper.photos().clear();
-		savePhotos(() ->
-		{
-			dao.deleteTrip(wrapper.getWrapee());
-			wrapper.setWrapee(EMPTY_TRIP);
-			refresh();
-		});
-	}
-
-	private class PhotoLoader extends Service<List<FishingPhoto>>
-	{
-		@Override
-		protected Task<List<FishingPhoto>> createTask()
-		{
-			return new Task<>()
-			{
-				private final String tripId = wrapper.getWrapee().getId();
-
-				@Override
-				protected List<FishingPhoto> call() throws Exception
-				{
-					return photoService.getTripPhotos(tripId);
-				}
-			};
-		}
-
-		@Override
-		protected void succeeded()
-		{
-			wrapper.setInitialPhotos(getValue());
-		}
-	}
-
-	private class PhotoSaver extends Service<Void>
-	{
-		@Override
-		protected Task<Void> createTask()
-		{
-			return new Task<>()
-			{
-				private final Set<FishingPhoto> removed = wrapper.getRemovedPhotos();
-				private final Set<FishingPhoto> added = wrapper.getAddedPhotos();
-				private final Set<FishingPhoto> modified = wrapper.getModifiedPhotos();
-				private final int photoCount = removed.size() + added.size() + modified.size();
-				private final int workPerPhoto = 2;
-				private final int totalWork = photoCount * workPerPhoto;
-				private int currentPhoto;
-
-				@Override
-				protected Void call() throws Exception
-				{
-					updateTitle("Saving photos");
-					updateProgress();
-					removed.forEach(p -> acceptPhoto(p, "Removing", photoService::removePhoto));
-					added.forEach(p -> acceptPhoto(p, "Adding", photoService::savePhoto));
-					modified.forEach(p -> acceptPhoto(p, "Updating", photoService::savePhoto));
-					return null;
-				}
-
-				private void acceptPhoto(FishingPhoto photo, String verb, Consumer<FishingPhoto> consumer)
-				{
-					currentPhoto++;
-					updateMessage(verb + " " + photo.getName() + " (" + currentPhoto + "/" + photoCount + ")");
-					consumer.accept(photo);
-					updateProgress();
-				}
-
-				private void updateProgress()
-				{
-					updateProgress((currentPhoto * workPerPhoto) + 1, totalWork);
-				}
-			};
-		}
+		dao.deleteTrip(wrapper.getWrapee());
+		wrapper.setWrapee(EMPTY_TRIP);
+		refresh();
 	}
 }

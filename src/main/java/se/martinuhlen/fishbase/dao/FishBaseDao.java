@@ -4,6 +4,7 @@ import static java.lang.Thread.currentThread;
 import static java.lang.reflect.Proxy.newProxyInstance;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.List;
 import java.util.SortedSet;
@@ -23,7 +24,14 @@ public interface FishBaseDao
 	    return (FishBaseDao) newProxyInstance(currentThread().getContextClassLoader(), new Class<?>[] {FishBaseDao.class}, (proxy, method, args) ->
 	    {
 	        JsonDao dao = futureDao.get();
-	        return method.invoke(dao, args);
+	        try
+	        {
+	        	return method.invoke(dao, args);
+	        }
+	        catch (InvocationTargetException e)
+	        {
+	        	throw e.getCause();
+	        }
 	    });
 	}
 

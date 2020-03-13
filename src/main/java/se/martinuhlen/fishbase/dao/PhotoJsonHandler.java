@@ -26,7 +26,7 @@ class PhotoJsonHandler extends JsonHandler<Photo>
 		JsonObject json = new JsonObject();
 		json.addProperty("id", photo.getId());
 		json.addProperty("trip", photo.getTripId());
-		json.add("specimens", serializeArray(photo.getSpecimenIds(), identity()));
+		json.add("specimens", serializeArray(photo.getSpecimens(), identity()));
 		json.addProperty("fileName", photo.getFileName());
 		json.addProperty("time", photo.getTime().toString());
 		json.addProperty("starred", photo.isStarred());
@@ -39,7 +39,7 @@ class PhotoJsonHandler extends JsonHandler<Photo>
 		JsonObject obj = json.getAsJsonObject();
 		return Photo.asPersisted(obj.get("id").getAsString())
 				.tripId(obj.get("trip").getAsString())
-				.specimenIds(deserializeArray(obj, "specimens", identity()))
+				.specimens(deserializeArray(obj, "specimens", identity()))
 				.fileName(obj.get("fileName").getAsString())
 				.time(parse(obj.get("time").getAsString()))
 				.starred(obj.get("starred").getAsBoolean());

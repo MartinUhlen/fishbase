@@ -22,7 +22,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.media.Media;
-import se.martinuhlen.fishbase.drive.photo.Photo;
+import se.martinuhlen.fishbase.google.photos.GooglePhoto;
 import se.martinuhlen.fishbase.javafx.controls.ResizableImageView;
 import se.martinuhlen.fishbase.javafx.utils.ImageSize;
 import se.martinuhlen.fishbase.javafx.utils.Images;
@@ -46,7 +46,7 @@ public class SlideshowPane extends BorderPane
 	private final Button lastButton;
 	private final VBox bottomBox;
 
-	private Cursor<Photo> photos;
+	private Cursor<GooglePhoto> photos;
 	private ImageSize buttonSize;
 
 	private ObservableValue<? extends Number> fitWidthValue;
@@ -124,7 +124,7 @@ public class SlideshowPane extends BorderPane
 		return button;
 	}
 
-	public void setPhotos(Cursor<Photo> photos)
+	public void setPhotos(Cursor<GooglePhoto> photos)
 	{
 		this.photos = requireNonNull(photos);
         previousImage = NULL_SUPPLIER;
@@ -176,7 +176,7 @@ public class SlideshowPane extends BorderPane
 	    {
 	        return ofNullable(imageView.getImage())
 	                .map(img -> (Supplier<Image>) () -> img)
-	                .orElseGet(() -> new ImageLoader(photos.current().getContent().getUrl(), true));
+	                .orElseGet(() -> new ImageLoader(() -> photos.current().getContent().getStream(), true));
 	    }
 	}
 
@@ -205,7 +205,7 @@ public class SlideshowPane extends BorderPane
 		}
 	}
 
-    private Supplier<Image> preload(Photo photo)
+    private Supplier<Image> preload(GooglePhoto photo)
     {
         if (photo.isVideo())
         {
@@ -213,11 +213,11 @@ public class SlideshowPane extends BorderPane
         }
         else
         {
-            return new ImageLoader(photo.getContent().getUrl(), true);
+            return new ImageLoader(() -> photo.getContent().getStream(), true);
         }
     }
 
-	private void showPhoto(Photo photo, Supplier<Image> supplier)
+	private void showPhoto(GooglePhoto photo, Supplier<Image> supplier)
 	{
 		if (photo.isVideo())
 		{
@@ -231,7 +231,7 @@ public class SlideshowPane extends BorderPane
 		updateState(photo);
 	}
 
-    private void showVideo(Photo photo)
+    private void showVideo(GooglePhoto photo)
     {
         videoPane.setVideo(null, false);
         setCenter(videoPane);
@@ -261,7 +261,7 @@ public class SlideshowPane extends BorderPane
         }.start();        
     }
 
-	private void showImage(Photo photo, Supplier<Image> supplier)
+	private void showImage(GooglePhoto photo, Supplier<Image> supplier)
 	{
 		setCenter(imageView);
 		imageView.setImage(null);
@@ -271,17 +271,17 @@ public class SlideshowPane extends BorderPane
 		                () -> loadImage(photo));
 	}
 
-    private void loadImage(Photo photo)
+    private void loadImage(GooglePhoto photo)
     {
         if (loader != null)
         {
             loader.cancel();
         }
-        loader = new ImageViewLoader(imageView, photo.getContent().getUrl());
+        loader = new ImageViewLoader(imageView, () -> photo.getContent().getStream());
         loader.start();
     }
 
-	private void updateState(Photo photo)
+	private void updateState(GooglePhoto photo)
 	{
 		statusLabel.setText(photo == null ? "" : getStatusText(photo));
 		firstButton.setDisable(photos.isFirst() || photos.isEmpty());
@@ -290,7 +290,7 @@ public class SlideshowPane extends BorderPane
 		lastButton.setDisable(photos.isLast() || photos.isEmpty());
 	}
 
-	private String getStatusText(Photo photo)
+	private String getStatusText(GooglePhoto photo)
 	{
 		return String.format("%s (%s/%s)",
 				photo.getName(),
@@ -356,7 +356,7 @@ public class SlideshowPane extends BorderPane
 	private class ImageView extends ResizableImageView implements HasPhoto
 	{
         @Override
-        public Photo getPhoto()
+        public GooglePhoto getPhoto()
         {
             return photos.hasCurrent() ? photos.current() : null;
         }

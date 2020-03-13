@@ -1,4 +1,4 @@
-package se.martinuhlen.fishbase.drive.photo;
+package se.martinuhlen.fishbase.google.photos;
 
 import java.io.InputStream;
 
@@ -17,7 +17,7 @@ public interface PhotoData
     String getUrl();
 
     /**
-     * Gets a stream to read the photo data.
+     * Gets an input stream to read the photo data.
      * 
      * @return photo stream
      */

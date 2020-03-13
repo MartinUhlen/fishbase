@@ -25,7 +25,7 @@ public class PhotoTest
 	{
 		Photo photo = Photo.asPersisted("thePhotoId")
 				.tripId("theTripId")
-				.specimenIds(Set.of("s1", "s2"))
+				.specimens(Set.of("s1", "s2"))
 				.fileName("SomeFile.jpg")
 				.time(parse("2020-02-29T16:29:37"))
 				.starred(false);
@@ -33,7 +33,7 @@ public class PhotoTest
 		assertEquals("thePhotoId", photo.getId());
 		assertTrue(photo.isPersisted());
 		assertEquals("theTripId", photo.getTripId());
-		assertEquals(Set.of("s1", "s2"), photo.getSpecimenIds());
+		assertEquals(Set.of("s1", "s2"), photo.getSpecimens());
 		assertEquals("SomeFile.jpg", photo.getFileName());
 		assertFalse(photo.isStarred());
 	}
@@ -43,6 +43,28 @@ public class PhotoTest
 	{
 		assertTrue(photo1InTrip1().withStarred(true).isStarred());
 		assertFalse(photo1InTrip1().withStarred(false).isStarred());
+	}
+
+	@Test
+	public void specimens()
+	{
+		Photo photo = TestData.newPhoto("photoId", "tripId");
+		assertTrue(photo.getSpecimens().isEmpty());
+
+		photo = photo.addSpecimen("a").addSpecimen("b").addSpecimen("c").addSpecimen("d");
+		assertEquals(Set.of("a", "b", "c", "d"), photo.getSpecimens());
+
+		photo = photo.addSpecimen("b");
+		assertEquals(Set.of("a", "b", "c", "d"), photo.getSpecimens());
+
+		photo = photo.removeSpecimen("X");
+		assertEquals(Set.of("a", "b", "c", "d"), photo.getSpecimens());
+
+		photo = photo.removeSpecimen("b");
+		assertEquals(Set.of("a", "c", "d"), photo.getSpecimens());
+
+		photo = photo.removeSpecimens(Set.of("a", "X", "d"));
+		assertEquals(Set.of("c"), photo.getSpecimens());
 	}
 
 	@Test

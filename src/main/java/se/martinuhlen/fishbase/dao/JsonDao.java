@@ -4,6 +4,7 @@ import static java.lang.String.CASE_INSENSITIVE_ORDER;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySortedSet;
 import static java.util.Comparator.comparing;
+import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.collectingAndThen;
@@ -310,6 +311,11 @@ class JsonDao implements FishBaseDao
 	@Override
 	public List<Trip> getTrips()
 	{
+		getPhotos()
+				.stream()
+				.filter(p -> !p.getFileName().toLowerCase().endsWith("jpg") && !p.getFileName().toLowerCase().endsWith("png"))
+				.forEach(System.err::println);
+
 		return streamTrips()
 				.sorted(comparing(Trip::getStartDate).reversed().thenComparing(Trip::getDescription))
 				.collect(toList());
@@ -329,6 +335,9 @@ class JsonDao implements FishBaseDao
 	@Override
 	public void saveTrip(Trip trip)
 	{
+		requireNonNull(trip, "trip cannot be null");
+		checkPhotoIntegrity(trip);
+
 		boolean tripChanged = isTripChanged(trip);
 		boolean specimensChanged = isSpecimensChanged(trip);
 		boolean photosChanged = isPhotosChanged(trip);
@@ -366,6 +375,21 @@ class JsonDao implements FishBaseDao
 			writePhotos();
 			trip.getPhotos().forEach(Photo::markPersisted);
 		}
+	}
+
+	private void checkPhotoIntegrity(Trip trip)
+	{
+		trip.getPhotos()
+				.stream()
+				.map(p -> photos.get(p.getId()))
+				.filter(p -> p != null)
+				.filter(p -> !p.getTripId().equals(trip.getId()))
+				.map(p -> trips.get(p.getTripId()))
+				.findAny()
+				.ifPresent(t ->
+				{
+					throw new IllegalArgumentException("Photo is already contained in another trip: " + t.getLabel());
+				});
 	}
 
 	private boolean isTripChanged(Trip trip)

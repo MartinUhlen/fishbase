@@ -36,6 +36,7 @@ import java.util.NavigableSet;
 import java.util.Optional;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -61,7 +62,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Slider;
-import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.ContextMenuEvent;
@@ -74,15 +74,16 @@ import javafx.util.Duration;
 import javafx.util.StringConverter;
 import se.martinuhlen.fishbase.domain.Specimen;
 import se.martinuhlen.fishbase.domain.Trip;
-import se.martinuhlen.fishbase.drive.photo.FishingPhoto;
-import se.martinuhlen.fishbase.drive.photo.Photo;
+import se.martinuhlen.fishbase.google.photos.FishingPhoto;
+import se.martinuhlen.fishbase.google.photos.GooglePhoto;
+import se.martinuhlen.fishbase.javafx.controls.DatePicker;
 import se.martinuhlen.fishbase.utils.Cursor;
 
 public class ThumbnailPane extends BorderPane
 {
 	public static ThumbnailPane forTimeline(Function<String, Trip> tripLoader)
 	{
-		Function<Photo, String> tooltipFunction = photo ->
+		Function<GooglePhoto, String> tooltipFunction = photo ->
 		{
             FishingPhoto p = (FishingPhoto) photo;
             Trip trip = tripLoader.apply(p.getTripId());
@@ -98,7 +99,7 @@ public class ThumbnailPane extends BorderPane
 
 	public static ThumbnailPane forTrip(Supplier<Stream<Specimen>> specimens)
 	{
-		Function<Photo, String> tooltipFunction = photo ->
+		Function<GooglePhoto, String> tooltipFunction = photo ->
 		{
             FishingPhoto p = (FishingPhoto) photo;
             return specimens.get()
@@ -109,28 +110,32 @@ public class ThumbnailPane extends BorderPane
 		return new ThumbnailPane(true, true, false, tooltipFunction);
 	}
 
-	public static ThumbnailPane forAdding(String initialSearch, Function<String, Collection<Photo>> searcher)
+	public static ThumbnailPane forAdding(LocalDate initialFrom, LocalDate initialTo, BiFunction<LocalDate, LocalDate, Collection<GooglePhoto>> searcher)
 	{
-		ThumbnailPane pane = new ThumbnailPane(true, false, false, null);
-		TextField searchField = new TextField();
+		ThumbnailPane pane = new ThumbnailPane(true, true, false, null);
+		DatePicker fromPicker = new DatePicker();
+		DatePicker toPicker = new DatePicker();
+		fromPicker.setPrefWidth(125);
+		toPicker.setPrefWidth(fromPicker.getPrefWidth());
 		ProgressIndicator progress = new ProgressIndicator();
 		progress.setVisible(false);
 		progress.managedProperty().bind(progress.visibleProperty());
-		progress.maxHeightProperty().bind(searchField.heightProperty());
+		progress.maxHeightProperty().bind(fromPicker.heightProperty());
 		progress.maxWidthProperty().bind(progress.maxHeightProperty());
 
-		Service<Collection<Photo>> service = new Service<>()
+		Service<Collection<GooglePhoto>> service = new Service<>()
 		{
 			@Override
-			protected Task<Collection<Photo>> createTask()
+			protected Task<Collection<GooglePhoto>> createTask()
 			{
-				String searchText = searchField.getText();
+				LocalDate from = fromPicker.getValue();
+				LocalDate to = toPicker.getValue();
 				return new Task<>()
 				{
 					@Override
-					protected Collection<Photo> call() throws Exception
+					protected Collection<GooglePhoto> call() throws Exception
 					{
-						return searcher.apply(searchText);
+						return searcher.apply(from, to);
 					}
 				};
 			}
@@ -150,10 +155,12 @@ public class ThumbnailPane extends BorderPane
 		pane.photos.addListener((Observable obs) -> infoLabel.setText("Found " + pane.photos.size() + " photos"));
 
 		Timeline timeline = new Timeline(new KeyFrame(Duration.millis(250), e -> service.restart()));
-		searchField.textProperty().addListener(obs -> timeline.playFromStart());
-		searchField.setText(initialSearch);
+		fromPicker.valueProperty().addListener((obs, oldValue, newValue) -> timeline.playFromStart());
+		toPicker.valueProperty().addListener((obs, oldValue, newValue) -> timeline.playFromStart());
+		fromPicker.setValue(initialFrom);
+		toPicker.setValue(initialTo);
 
-		pane.setTop(new FlowPane(10, 10, searchField, infoLabel, progress));
+		pane.setTop(new FlowPane(10, 10, fromPicker, new Label(" - "), toPicker, infoLabel, progress));
 		return pane;
 	}
 
@@ -162,26 +169,26 @@ public class ThumbnailPane extends BorderPane
 	private final ThumbnailLoader imageLoader;
 	private final boolean thumbnailsAreSelectable;
 	private final Comparator<LocalDateTime> photoTimeComparator;
-	private final Comparator<Photo> photoComparator;
+	private final Comparator<GooglePhoto> photoComparator;
 
-	private final ObservableSet<Photo> photos;
-	private final ObservableSet<Photo> unmodifiablePhotos;
+	private final ObservableSet<GooglePhoto> photos;
+	private final ObservableSet<GooglePhoto> unmodifiablePhotos;
 
-	private final ObservableSet<Photo> selectedPhotos = observableSet();
-	private final ObservableSet<Photo> unmodifiableSelectedPhotos = unmodifiableObservableSet(selectedPhotos);
+	private final ObservableSet<GooglePhoto> selectedPhotos = observableSet();
+	private final ObservableSet<GooglePhoto> unmodifiableSelectedPhotos = unmodifiableObservableSet(selectedPhotos);
 	private ReadOnlyBooleanProperty hasSelectedPhotos;
 
 	private final EventHandler<MouseEvent> slideshowHandler = SlideshowStage.openOnClick(this::createCursor);
 
 	private EventHandler<? super ContextMenuEvent> contextMenuHandler;
-	private Function<Photo, String> tooltipFunction;
+	private Function<GooglePhoto, String> tooltipFunction;
 
-	private ThumbnailPane(boolean thumbnailsAreSelectable, boolean ascendingOrder, boolean showDateSlider, Function<Photo, String> tooltipFunction)
+	private ThumbnailPane(boolean thumbnailsAreSelectable, boolean ascendingOrder, boolean showDateSlider, Function<GooglePhoto, String> tooltipFunction)
 	{
 		this.thumbnailsAreSelectable = thumbnailsAreSelectable;
 		this.tooltipFunction = tooltipFunction;
 		photoTimeComparator = ascendingOrder ? naturalOrder() : reverseOrder();
-		photoComparator = comparing(Photo::getTime, photoTimeComparator).thenComparing(Photo::getId); // For the rare event that two photos has exactly the same time
+		photoComparator = comparing(GooglePhoto::getTime, photoTimeComparator).thenComparing(GooglePhoto::getId); // For the rare event that two photos has exactly the same time
 		photos = observableSet(new TreeSet<>(photoComparator));
 		unmodifiablePhotos = unmodifiableObservableSet(photos);
 		photoPane = new FlowPane();
@@ -241,7 +248,7 @@ public class ThumbnailPane extends BorderPane
 			if (!photos.isEmpty())
 			{
 				LongSummaryStatistics stats = photos.stream()
-					.map(Photo::getTime)
+					.map(GooglePhoto::getTime)
 					.map(LocalDateTime::toLocalDate)
 					.mapToLong(LocalDate::toEpochDay)
 					.summaryStatistics();
@@ -316,7 +323,7 @@ public class ThumbnailPane extends BorderPane
 	 * 
 	 * @return photo comparator
 	 */
-	public Comparator<Photo> getPhotoComparator()
+	public Comparator<GooglePhoto> getPhotoComparator()
 	{
 	    return photoComparator;
 	}
@@ -326,11 +333,11 @@ public class ThumbnailPane extends BorderPane
 	 * 
 	 * @param photos to add
 	 */
-	public void addPhotos(Collection<? extends Photo> photos)
+	public void addPhotos(Collection<? extends GooglePhoto> photos)
 	{
         requireNonNull(photos, "photos cannot be null");
 
-        NavigableSet<Photo> sortedPhotos = new TreeSet<>(photoComparator);
+        NavigableSet<GooglePhoto> sortedPhotos = new TreeSet<>(photoComparator);
         sortedPhotos.addAll(photos);
         sortedPhotos.removeAll(this.photos);
         this.photos.addAll(photos);
@@ -338,8 +345,8 @@ public class ThumbnailPane extends BorderPane
         while (!sortedPhotos.isEmpty())
         {
             Optional<Thumbnail> insertionThumbnail = streamThumbnails().filter(t -> photoComparator.compare(t.photo, sortedPhotos.first()) > 0).findFirst();
-            List<Photo> photosToAdd = new ArrayList<>(photos.size());
-            Iterator<Photo> iterator = sortedPhotos.iterator();
+            List<GooglePhoto> photosToAdd = new ArrayList<>(photos.size());
+            Iterator<GooglePhoto> iterator = sortedPhotos.iterator();
             while(iterator.hasNext() && (!insertionThumbnail.isPresent() || photoComparator.compare(insertionThumbnail.get().photo, sortedPhotos.first()) > 0))
             {
                 photosToAdd.add(iterator.next());
@@ -351,7 +358,7 @@ public class ThumbnailPane extends BorderPane
         runLater(() -> imageLoader.loadVisibleThumbnails());
 	}
 
-	public void setPhotos(Collection<? extends Photo> photos)
+	public void setPhotos(Collection<? extends GooglePhoto> photos)
 	{
 		requireNonNull(photos, "photos cannot be null");
 		this.photos.clear();
@@ -361,28 +368,12 @@ public class ThumbnailPane extends BorderPane
 		addThumbnails(0, this.photos);
 	}
 
-	public void updatePhoto(Photo oldPhoto, Photo newPhoto)
-	{
-		if (!oldPhoto.getId().equals(newPhoto.getId()))
-		{
-			throw new IllegalArgumentException("New photo must have equal ID to old photo");
-		}
-		Thumbnail thumbnail = streamThumbnails()
-				.filter(t -> t.getPhoto().equals(oldPhoto))
-				.findAny()
-				.orElseThrow(() -> new IllegalArgumentException("Old photo not found"));
-
-		thumbnail.setPhoto(newPhoto);
-		photos.remove(oldPhoto);
-		photos.add(newPhoto);
-	}
-
-	ObservableSet<Photo> getPhotos()
+	ObservableSet<GooglePhoto> getPhotos()
 	{
 		return unmodifiablePhotos;
 	}
 
-	ObservableSet<Photo> getSelectedPhotos()
+	ObservableSet<GooglePhoto> getSelectedPhotos()
 	{
 		return unmodifiableSelectedPhotos;
 	}
@@ -403,12 +394,12 @@ public class ThumbnailPane extends BorderPane
 		removePhotos(new HashSet<>(selectedPhotos));
 	}
 
-	void removePhoto(Photo photo)
+	void removePhoto(GooglePhoto photo)
 	{
 		removePhotos(singleton(photo));
 	}
 
-	void removePhotos(Collection<Photo> photosToRemove)
+	void removePhotos(Collection<GooglePhoto> photosToRemove)
 	{
 		Collection<Thumbnail> thumbnailsToRemove = streamThumbnails()
 				.filter(t -> photosToRemove.contains(t.getPhoto()))
@@ -420,7 +411,7 @@ public class ThumbnailPane extends BorderPane
 		setThumbnailsType();
 	}
 
-	private void addThumbnails(int index, Collection<? extends Photo> photosToAdd)
+	private void addThumbnails(int index, Collection<? extends GooglePhoto> photosToAdd)
 	{
 		List<Thumbnail> thumbnails = photosToAdd.stream().map(this::createThumbnail).collect(toList());
 		photoPane.getChildren().addAll(index, thumbnails);
@@ -428,7 +419,7 @@ public class ThumbnailPane extends BorderPane
 		setThumbnailsType();
 	}
 
-	private Thumbnail createThumbnail(Photo photo)
+	private Thumbnail createThumbnail(GooglePhoto photo)
 	{
 		Thumbnail thumbnail = new Thumbnail(photo,
 				s -> onPhotoSelected(photo, s),
@@ -476,7 +467,7 @@ public class ThumbnailPane extends BorderPane
 		streamThumbnails(date).forEach(t -> t.select(selected));
 	}
 
-	private void onPhotoSelected(Photo photo, boolean selected)
+	private void onPhotoSelected(GooglePhoto photo, boolean selected)
 	{
 		List<Thumbnail> thumbnails = streamThumbnails(photo.getTime().toLocalDate()).collect(toList());
 		boolean allSelected = thumbnails.stream().allMatch(t -> t.isSelected());
@@ -506,9 +497,9 @@ public class ThumbnailPane extends BorderPane
 				.map(Thumbnail.class::cast);
 	}
 
-    private Cursor<Photo> createCursor(HasPhoto hasPhoto)
+    private Cursor<GooglePhoto> createCursor(HasPhoto hasPhoto)
     {
-        List<Photo> photoList = new ArrayList<>(photos);
+        List<GooglePhoto> photoList = new ArrayList<>(photos);
         int index = photoList.indexOf(hasPhoto.getPhoto());
         return Cursor.of(photoList, index);
     }
@@ -530,7 +521,7 @@ public class ThumbnailPane extends BorderPane
 	 * 
 	 * @param tooltipFunction photo tooltip function or {@code null} for no tooltips
 	 */
-	public void setTooltipFunction(Function<Photo, String> tooltipFunction)
+	public void setTooltipFunction(Function<GooglePhoto, String> tooltipFunction)
 	{
 	    this.tooltipFunction = tooltipFunction;
 	}
@@ -550,12 +541,12 @@ public class ThumbnailPane extends BorderPane
 		private final Consumer<Boolean> onImageSelection;
 		private final Consumer<Boolean> onDaySelection;
 
-		private Photo photo;
+		private GooglePhoto photo;
 		private ThumbnailType type;
 		private boolean imageLoaded;
 		private boolean selectDaySilently;
 
-		Thumbnail(Photo p, Consumer<Boolean> onImageSelection, Consumer<Boolean> onDaySelection)
+		Thumbnail(GooglePhoto p, Consumer<Boolean> onImageSelection, Consumer<Boolean> onDaySelection)
 		{
 			this.onImageSelection = onImageSelection;
 			this.onDaySelection = onDaySelection;
@@ -589,18 +580,18 @@ public class ThumbnailPane extends BorderPane
 		{
 			if (!imageLoaded)
 			{
-				new ImageViewLoader(imageView, photo.getThumbnail().getStream()).start();
+				new ImageViewLoader(imageView, () -> photo.getThumbnail().getStream()).start();
 				imageLoaded = true;
 			}
 		}
 
 		@Override
-		public Photo getPhoto()
+		public GooglePhoto getPhoto()
 		{
 			return photo;
 		}
 
-		void setPhoto(Photo photo)
+		void setPhoto(GooglePhoto photo)
 		{
 			this.photo = photo;
 			footer.setText(photo.getTime().format(DATE_TIME_FORMAT));

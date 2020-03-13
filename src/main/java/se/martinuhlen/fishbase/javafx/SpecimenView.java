@@ -5,6 +5,7 @@ import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.reducing;
+import static java.util.stream.Collectors.toList;
 import static javafx.beans.binding.Bindings.createStringBinding;
 import static javafx.geometry.Pos.BOTTOM_RIGHT;
 import static org.controlsfx.control.textfield.TextFields.createClearableTextField;
@@ -34,12 +35,12 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import se.martinuhlen.fishbase.dao.FishBaseDao;
+import se.martinuhlen.fishbase.domain.Photo;
 import se.martinuhlen.fishbase.domain.Specie;
 import se.martinuhlen.fishbase.domain.Specimen;
-import se.martinuhlen.fishbase.drive.photo.FishingPhoto;
-import se.martinuhlen.fishbase.drive.photo.Photo;
-import se.martinuhlen.fishbase.drive.photo.PhotoService;
 import se.martinuhlen.fishbase.filter.SpecimenTextPredicate;
+import se.martinuhlen.fishbase.google.photos.FishingPhoto;
+import se.martinuhlen.fishbase.google.photos.PhotoService;
 import se.martinuhlen.fishbase.javafx.data.SpecimenWrapper;
 import se.martinuhlen.fishbase.javafx.photo.SlideshowPane;
 import se.martinuhlen.fishbase.utils.Cursor;
@@ -169,10 +170,11 @@ class SpecimenView extends AbstractTableView<SpecimenWrapper, Specimen>
     {
         rowsToDelete.forEach(specimen ->
 	    {
-	        photoService.getSpecimenPhotos(specimen.getTripId(), specimen.getId())
-	                .stream()
-	                .map(photo -> photo.withoutSpecimen(specimen.getId()))
-	                .forEach(photo -> photoService.savePhoto(photo));
+	    	throw new UnsupportedOperationException("Not yet implemented");
+//	        photoService.getSpecimenPhotos(specimen.getTripId(), specimen.getId())
+//	                .stream()
+//	                .map(photo -> photo.withoutSpecimen(specimen.getId()))
+//	                .forEach(photo -> photoService.savePhoto(photo));
 	    });
     }
 
@@ -194,10 +196,19 @@ class SpecimenView extends AbstractTableView<SpecimenWrapper, Specimen>
 					}
 					else
 					{
+//						Specimen specimen = selectedItem.getWrapee();
+//						List<FishingPhoto> photos = photoService.getSpecimenPhotos(specimen.getTripId(), specimen.getId());
+//						photos.sort(comparing(FishingPhoto::isStarred).reversed().thenComparing(Photo::getTime));
+//						return photos;
+
 						Specimen specimen = selectedItem.getWrapee();
-						List<FishingPhoto> photos = photoService.getSpecimenPhotos(specimen.getTripId(), specimen.getId());
-						photos.sort(comparing(FishingPhoto::isStarred).reversed().thenComparing(Photo::getTime));
-						return photos;
+						List<Photo> photos = dao.getTrip(specimen.getTripId())
+								.getPhotos()
+								.stream()
+								.filter(p -> p.getSpecimens().contains(specimen.getId()))
+								.sorted(comparing(Photo::isStarred).reversed().thenComparing(Photo::getTime))
+								.collect(toList());
+						return photoService.load(photos);
 					}
 				}
 			};

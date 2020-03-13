@@ -12,6 +12,7 @@ import static javafx.scene.media.MediaPlayer.Status.STOPPED;
 import static javafx.util.Duration.UNKNOWN;
 import static javafx.util.Duration.ZERO;
 import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.util.Set;
 
@@ -22,18 +23,26 @@ import javafx.scene.control.Slider;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.scene.media.MediaPlayer.Status;
 import javafx.scene.media.MediaView;
 import javafx.util.Duration;
 
+/*
+ * FIXME Video does not work, need additional codecs?
+ * 
+ * sudo apt-get dist-upgrade
+ * sudo apt-get install ubuntu-restricted-extras
+ */
 class VideoPane extends BorderPane
 {
 	private final MediaView mediaView;
 	private final Button playButton;
 	private final Slider timeSlider;
 	private final Label playTime;
+	private final Label error;
 
 	VideoPane()
 	{
@@ -85,8 +94,15 @@ class VideoPane extends BorderPane
 		playTime = new Label();
 		mediaBar.getChildren().add(playTime);
 
+		error = new Label();
+		error.setVisible(false);
+		error.setAlignment(CENTER);
+		HBox errorBox = new HBox(error);
+		errorBox.setAlignment(CENTER);
+		errorBox.setVisible(false);
+
 		enableControls();
-		setBottom(mediaBar);
+		setBottom(new VBox(mediaBar, errorBox));
 	}
 
 	void setVideo(Media media, boolean autoPlay)
@@ -94,10 +110,17 @@ class VideoPane extends BorderPane
 		disposeCurrentVideo();
 		if (media != null)
 		{
-			setPlayer(new MediaPlayer(media), autoPlay);
+			try
+			{
+				setPlayer(new MediaPlayer(media), autoPlay);
+				enableControls();
+				updateTime();
+			}
+			catch (Exception e)
+			{
+				showError(e.getMessage());
+			}
 		}
-		enableControls();
-		updateTime();
 	}
 
 	void disposeCurrentVideo()
@@ -121,13 +144,24 @@ class VideoPane extends BorderPane
 			updateTime();
 			enableControls();
 			playButton.setText(getStatus() == PLAYING ? "||" : ">");
+			System.err.println("STATUS: " + player.getStatus());
 		});
 
+		showError("");
+		player.setOnError(() -> showError(player.getError().getMessage()));
+		
 		player.setOnEndOfMedia(() ->
 		{
 			player.seek(player.getStartTime());
 			player.pause();
 		});
+	}
+
+	private void showError(String text)
+	{
+		error.setText(text);
+		error.setVisible(isNotBlank(text));
+		error.getParent().setVisible(error.isVisible());
 	}
 
 	private void updateTime()
@@ -172,7 +206,7 @@ class VideoPane extends BorderPane
 	{
 		return getPlayer() == null
 				? DISPOSED
-				: defaultIfNull(getPlayer().getStatus(), DISPOSED);
+				: defaultIfNull(getPlayer().getStatus(), DISPOSED); // FIXME Status is null = evaluates to DISPOSED
 	}
 
 	private Duration getCurrentTime()

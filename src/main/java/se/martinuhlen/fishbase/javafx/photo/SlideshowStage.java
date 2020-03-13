@@ -15,7 +15,7 @@ import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
-import se.martinuhlen.fishbase.drive.photo.Photo;
+import se.martinuhlen.fishbase.google.photos.GooglePhoto;
 import se.martinuhlen.fishbase.utils.Cursor;
 
 /**
@@ -35,7 +35,7 @@ class SlideshowStage
      * @param callback accepts the clicked photo and returns cursor over all photos
      * @return mouse clicked handler
      */
-    static EventHandler<MouseEvent> openOnClick(Function<HasPhoto, Cursor<Photo>> callback)
+    static EventHandler<MouseEvent> openOnClick(Function<HasPhoto, Cursor<GooglePhoto>> callback) // FIXME Function -> Supplier?
     {
         return new EventHandler<>()
         {
@@ -67,7 +67,7 @@ class SlideshowStage
                     slideshowStage.setHeight(screenSize.getHeight() * 0.90);
                 }
                 HasPhoto source = (HasPhoto) event.getSource();
-                Cursor<Photo> cursor = callback.apply(source);
+                Cursor<GooglePhoto> cursor = callback.apply(source);
                 slideshow.setPhotos(cursor);
                 slideshowStage.show();
                 slideshowStage.requestFocus();

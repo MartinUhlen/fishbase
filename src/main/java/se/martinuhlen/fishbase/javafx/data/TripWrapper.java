@@ -1,14 +1,11 @@
 package se.martinuhlen.fishbase.javafx.data;
 
-import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static javafx.collections.FXCollections.observableArrayList;
 import static se.martinuhlen.fishbase.domain.Trip.EMPTY_TRIP;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -19,12 +16,11 @@ import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.property.Property;
 import javafx.beans.value.ObservableValue;
-import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener.Change;
 import javafx.collections.ObservableList;
+import se.martinuhlen.fishbase.domain.Photo;
 import se.martinuhlen.fishbase.domain.Specimen;
 import se.martinuhlen.fishbase.domain.Trip;
-import se.martinuhlen.fishbase.drive.photo.FishingPhoto;
 
 public class TripWrapper extends Wrapper<Trip>
 {
@@ -44,13 +40,6 @@ public class TripWrapper extends Wrapper<Trip>
 				endDate().setValue(startDate().getValue());
 			}
 		});
-	}
-
-	@Override
-	public void setWrapee(Trip wrapee)
-	{
-		super.setWrapee(wrapee);
-		setInitialPhotos(emptyList());
 	}
 
 	public ObservableValue<String> id()
@@ -125,14 +114,15 @@ public class TripWrapper extends Wrapper<Trip>
     private void removeSpecimensFromPhotos(List<? extends SpecimenWrapper> removedSpecimens)
     {
         Set<String> removedSpecimenIds = removedSpecimens.stream().map(sw -> sw.getWrapee().getId()).collect(toSet());
-        List<FishingPhoto> photosWithoutSpecimens = photos()
+        List<Photo> photosWithoutSpecimens = photos()
+        		.getValue()
                 .stream()
-                .map(photo -> photo.withoutSpecimens(removedSpecimenIds))
+                .map(photo -> photo.removeSpecimens(removedSpecimenIds))
                 .collect(toList());
 
-        if (!photos().equals(photosWithoutSpecimens))
+        if (!photos().getValue().equals(photosWithoutSpecimens))
         {
-            photos().setAll(photosWithoutSpecimens);
+            photos().setValue(photosWithoutSpecimens);
         }
     }
 
@@ -155,67 +145,9 @@ public class TripWrapper extends Wrapper<Trip>
         return newWrapper;
 	}
 
-	private List<FishingPhoto> initialPhotos = emptyList();
-	private ObservableList<FishingPhoto> currentPhotos;
-	public ObservableList<FishingPhoto> photos()
+	public Property<List<Photo>> photos()
 	{
-		if (currentPhotos == null)
-		{
-			currentPhotos = FXCollections.observableArrayList();
-			currentPhotos.addListener((Observable obs) -> notifyListeners());
-		}
-		return currentPhotos;
-	}
-
-	public void setInitialPhotos(Collection<FishingPhoto> photos)
-	{
-		initialPhotos = new ArrayList<>(photos);
-		photos().setAll(photos);
-	}
-
-	public Set<FishingPhoto> getAddedPhotos()
-	{
-		Set<FishingPhoto> modified = getModifiedPhotos();
-		return photos().stream()
-				.filter(p -> !initialPhotos.contains(p))
-				.filter(p -> !modified.contains(p))
-				.collect(toSet());
-	}
-
-	public Set<FishingPhoto> getRemovedPhotos()
-	{
-		Set<String> currentIds = idsOf(photos());
-		return initialPhotos.stream()
-				.filter(p -> !currentIds.contains(p.getId()))
-				.collect(toSet());
-	}
-
-	public Set<FishingPhoto> getModifiedPhotos()
-	{
-		Set<String> initialIds = idsOf(initialPhotos);
-		return photos().stream()
-				.filter(p -> initialIds.contains(p.getId()))
-				.filter(p -> !initialPhotos.contains(p))
-				.collect(toSet());
-	}
-
-	private Set<String> idsOf(Collection<FishingPhoto> photos)
-	{
-		return photos.stream().map(FishingPhoto::getId).collect(toSet());
-	}
-
-	@Override
-	public boolean hasChanges()
-	{
-		return super.hasChanges()
-			|| hasPhotoChanges();
-
-	}
-
-	public boolean hasPhotoChanges()
-	{
-		return initialPhotos.size() != photos().size()
-			|| !initialPhotos.containsAll(photos());
+		return getProperty("photos", Trip::getPhotos, Trip::withPhotos);
 	}
 
 	public boolean isEmpty()

@@ -45,10 +45,10 @@ import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import se.martinuhlen.fishbase.dao.FishBaseDao;
-import se.martinuhlen.fishbase.drive.photo.PhotoService;
 import se.martinuhlen.fishbase.google.GoogleServiceFactory;
 import se.martinuhlen.fishbase.google.drive.DrivePersistence;
 import se.martinuhlen.fishbase.google.drive.DriveService;
+import se.martinuhlen.fishbase.google.photos.PhotoService;
 import se.martinuhlen.fishbase.javafx.action.Action;
 import se.martinuhlen.fishbase.javafx.action.ReplaceableAction;
 import se.martinuhlen.fishbase.javafx.utils.Images;
@@ -107,7 +107,7 @@ public class FishBaseApplication extends Application
 	public void start(Stage stage) throws Exception
 	{
 	    this.stage = stage;
-		photoService = PhotoService.create(GoogleServiceFactory.get().createDrive());
+		photoService = PhotoService.create(GoogleServiceFactory.get().createPhotosLibraryClient());
 		driveService = new DriveService(GoogleServiceFactory.get().createDrive());
 		drivePersistence = new DrivePersistence(driveService);
 		dao = FishBaseDao.create(drivePersistence);
@@ -243,19 +243,27 @@ public class FishBaseApplication extends Application
 
 	private <V extends View> V openTab(Class<V> typeOfView)
 	{
-		Optional<Entry<Tab, View>> tabWithView = tabToView
-				.entrySet()
-				.stream()
-				.filter(e -> typeOfView.isInstance(e.getValue()))
-				.findAny();
-
-		tabWithView.ifPresentOrElse(
-				e -> selectTab(e.getKey()),
-				() -> addTab(typeOfView));
-
-		@SuppressWarnings("unchecked")
-		V view = (V) selectedView();
-		return view;
+		try
+		{
+			Optional<Entry<Tab, View>> tabWithView = tabToView
+					.entrySet()
+					.stream()
+					.filter(e -> typeOfView.isInstance(e.getValue()))
+					.findAny();
+	
+			tabWithView.ifPresentOrElse(
+					e -> selectTab(e.getKey()),
+					() -> addTab(typeOfView));
+	
+			@SuppressWarnings("unchecked")
+			V view = (V) selectedView();
+			return view;
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+			System.err.println();
+			throw e;
+		}
 	}
 
     private <V extends View> void addTab(Class<V> typeOfView)

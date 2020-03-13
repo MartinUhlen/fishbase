@@ -1,9 +1,11 @@
 package se.martinuhlen.fishbase.domain;
 
+import static java.time.temporal.ChronoUnit.SECONDS;
 import static java.util.Set.copyOf;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -21,11 +23,11 @@ public class Photo extends Domain<Photo> // FIXME Rename to Media? And a media c
 	    return new Builder(id, false);
 	}
 
-	private Photo(String id, boolean persisted, String tripId, Set<String> specimenIds, String fileName, LocalDateTime time, boolean starred)
+	private Photo(String id, boolean persisted, String tripId, Set<String> specimens, String fileName, LocalDateTime time, boolean starred)
 	{
 		super(id, persisted);
 		this.tripId = requireNonBlank(tripId, "tripId cannot be blank");
-		this.specimenIds = copyOf(requireNonNull(specimenIds, "specimenIds cannot be blank"));
+		this.specimens = copyOf(requireNonNull(specimens, "specimens cannot be blank"));
 		this.fileName = requireNonBlank(fileName, "fileName cannot be blank");
 		this.time = requireNonNull(time, "time cannot be null");
 		this.starred = starred;
@@ -37,11 +39,47 @@ public class Photo extends Domain<Photo> // FIXME Rename to Media? And a media c
 		return tripId;
 	}
 
-	private final Set<String> specimenIds;
-	public Set<String> getSpecimenIds()
+	private final Set<String> specimens;
+	public Set<String> getSpecimens()
 	{
-		return specimenIds;
+		return specimens;
 	}
+
+	public Photo addSpecimen(String specimenId)
+	{
+		requireNonNull(specimenId, "specimenId can't be null");
+		if (specimens.contains(specimenId))
+		{
+			return this;
+		}
+		else
+		{
+        	HashSet<String> newspecimens = new HashSet<>(this.specimens);
+        	newspecimens.add(specimenId);
+        	return new Photo(getId(), isPersisted(), tripId, newspecimens, fileName, time, starred);
+		}
+	}
+
+	public Photo removeSpecimen(String specimenId)
+	{
+		requireNonNull(specimenId, "specimenId cannot be null");
+		return removeSpecimens(Set.of(specimenId));
+	}
+
+    public Photo removeSpecimens(Collection<String> specimens)
+    {
+    	requireNonNull(specimens, "specimens cannot be null");
+        if (!specimens.stream().anyMatch(id -> this.specimens.contains(id)))
+        {
+            return this;
+        }
+        else
+        {
+        	HashSet<String> newSpecimens = new HashSet<>(this.specimens);
+        	newSpecimens.removeAll(specimens);
+        	return new Photo(getId(), isPersisted(), tripId, newSpecimens, fileName, time, starred);
+        }
+    }
 
 	private final String fileName;
 	public String getFileName()
@@ -64,7 +102,7 @@ public class Photo extends Domain<Photo> // FIXME Rename to Media? And a media c
 	{
 		return starred == this.starred
 				? this
-				: new Photo(getId(), isPersisted(), tripId, specimenIds, fileName, time, starred);
+				: new Photo(getId(), isPersisted(), tripId, specimens, fileName, time, starred);
 	}
 
 	@Override
@@ -82,7 +120,7 @@ public class Photo extends Domain<Photo> // FIXME Rename to Media? And a media c
 	@Override
 	public Photo copy()
 	{
-		return new Photo(getId(), isPersisted(), tripId, specimenIds, fileName, time, starred);
+		return new Photo(getId(), isPersisted(), tripId, specimens, fileName, time, starred);
 	}
 
 	@Override
@@ -90,9 +128,9 @@ public class Photo extends Domain<Photo> // FIXME Rename to Media? And a media c
 	{
 		return new EqualsBuilder()
 				.append(this.tripId, that.tripId)
-				.append(this.specimenIds, that.specimenIds)
+				.append(this.specimens, that.specimens)
 				.append(this.fileName, that.fileName)
-				.append(this.time, that.time)
+				.append(this.time.truncatedTo(SECONDS), that.time.truncatedTo(SECONDS))
 				.append(this.starred, that.starred)
 				.isEquals();
 	}
@@ -100,7 +138,7 @@ public class Photo extends Domain<Photo> // FIXME Rename to Media? And a media c
 	private static class Builder extends Domain.Builder<Photo> implements TripBuilder, SpeciemensBuilder, FileNameBuilder, TimeBuilder, StarredBuilder
 	{
 		private String tripId = "";
-		private Set<String> specimenIds = Set.of();
+		private Set<String> specimens = Set.of();
 		private String fileName = "";
 		private LocalDateTime time;
 
@@ -117,9 +155,9 @@ public class Photo extends Domain<Photo> // FIXME Rename to Media? And a media c
 		}
 
 		@Override
-		public FileNameBuilder specimenIds(Collection<String> specimenIds)
+		public FileNameBuilder specimens(Collection<String> specimens)
 		{
-			this.specimenIds = Set.copyOf(specimenIds);
+			this.specimens = Set.copyOf(specimens);
 			return this;
 		}
 
@@ -140,7 +178,7 @@ public class Photo extends Domain<Photo> // FIXME Rename to Media? And a media c
 		@Override
 		public Photo starred(boolean starred)
 		{
-			return new Photo(id, persisted, tripId, specimenIds, fileName, time, starred);
+			return new Photo(id, persisted, tripId, specimens, fileName, time, starred);
 		}
 	}
 
@@ -151,7 +189,7 @@ public class Photo extends Domain<Photo> // FIXME Rename to Media? And a media c
 
 	public interface SpeciemensBuilder
 	{
-		FileNameBuilder specimenIds(Collection<String> specimenIds);
+		FileNameBuilder specimens(Collection<String> specimens);
 	}
 
 	public interface FileNameBuilder

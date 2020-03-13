@@ -5,18 +5,16 @@ import static java.util.stream.Collectors.toList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static se.martinuhlen.fishbase.domain.TestData.newPhoto;
 import static se.martinuhlen.fishbase.domain.TestData.trip1;
 import static se.martinuhlen.fishbase.domain.TestData.trip2;
 import static se.martinuhlen.fishbase.domain.Trip.EMPTY_TRIP;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -26,8 +24,6 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import se.martinuhlen.fishbase.domain.Specimen;
 import se.martinuhlen.fishbase.domain.Trip;
-import se.martinuhlen.fishbase.drive.photo.FishingPhoto;
-import se.martinuhlen.fishbase.drive.photo.Photo;
 
 /**
  * Unit tests of {@link TripWrapper}.
@@ -141,150 +137,34 @@ public class TripWrapperTest extends WrapperTestCase<Trip, TripWrapper>
 	@Test
 	public void removeSpecimenWhenContainedInPhoto()
 	{
-		Specimen specimen0 = Specimen.asNew(wrapper.id().getValue());
-		Specimen specimen1 = Specimen.asNew(wrapper.id().getValue());
-		Specimen specimen2 = Specimen.asNew(wrapper.id().getValue());
+		String tripId = wrapper.id().getValue();
+		Specimen specimen0 = Specimen.asNew(tripId);
+		Specimen specimen1 = Specimen.asNew(tripId);
+		Specimen specimen2 = Specimen.asNew(tripId);
 		wrapper.specimens().setValue(asList(specimen0, specimen1, specimen2));
-		wrapper.photos().setAll(photo("0"), photo("1").withSpecimen(specimen1.getId()), photo("2").withSpecimen(specimen2.getId()));
+		wrapper.photos().setValue(List.of(
+				newPhoto("1", tripId).addSpecimen(specimen1.getId()),
+				newPhoto("2", tripId).addSpecimen(specimen2.getId())));
 
 		wrapper.specimenWrappers().remove(1);
 
 		assertEquals(asList(specimen0, specimen2), wrapper.specimens().getValue());
-		assertEquals(asList(photo("0"), photo("1"), photo("2").withSpecimen(specimen2.getId())), wrapper.photos());
+		assertEquals(List.of(newPhoto("1", tripId), newPhoto("2", tripId).addSpecimen(specimen2.getId())), wrapper.photos().getValue());
 	}
 
 	@Test
 	public void removeSpecimenWhenNotContainedInPhoto()
 	{
-		Specimen specimen0 = Specimen.asNew(wrapper.id().getValue());
-		Specimen specimen1 = Specimen.asNew(wrapper.id().getValue());
-		Specimen specimen2 = Specimen.asNew(wrapper.id().getValue());
+		String tripId = wrapper.id().getValue();
+		Specimen specimen0 = Specimen.asNew(tripId);
+		Specimen specimen1 = Specimen.asNew(tripId);
+		Specimen specimen2 = Specimen.asNew(tripId);
 		wrapper.specimens().setValue(asList(specimen0, specimen1, specimen2));
-		wrapper.photos().setAll(photo("0"), photo("1"));
+		wrapper.photos().setValue(List.of(newPhoto("1", tripId), newPhoto("2", tripId)));
 
 		wrapper.specimenWrappers().remove(1);
 
 		assertEquals(asList(specimen0, specimen2), wrapper.specimens().getValue());
-		assertEquals(asList(photo("0"), photo("1")), wrapper.photos());
-	}
-
-	@Test
-	public void photos()
-	{
-		ObservableList<FishingPhoto> photos = wrapper.photos();
-
-		wrapper.setInitialPhotos(List.of(photo("1"), photo("2")));
-		assertEquals(List.of(photo("1"), photo("2")), photos);
-		assertFalse(wrapper.hasChanges());
-		assertFalse(wrapper.hasPhotoChanges());
-		verify(listener, times(1)).invalidated(wrapper);
-
-		photos.setAll(photo("2"));
-		assertTrue(wrapper.hasChanges());
-		assertTrue(wrapper.hasPhotoChanges());
-		verify(listener, times(2)).invalidated(wrapper);
-	}
-
-	@Test
-	public void addFirstPhotos()
-	{
-		wrapper.photos().setAll(List.of(photo("1"), photo("2")));
-		assertEquals(Set.of(photo("1"), photo("2")), wrapper.getAddedPhotos());
-		assertTrue(wrapper.hasChanges());
-		assertTrue(wrapper.hasPhotoChanges());
-	}
-
-	@Test
-	public void addOnePhotoToExisting()
-	{
-		wrapper.setInitialPhotos(List.of(photo("1"), photo("2")));
-		wrapper.photos().add(photo("3"));
-		assertEquals(Set.of(photo("3")), wrapper.getAddedPhotos());
-	}
-
-	@Test
-	public void addTwoPhotosToExisting()
-	{
-		wrapper.setInitialPhotos(List.of(photo("1"), photo("2")));
-		wrapper.photos().setAll(List.of(photo("1"), photo("2"), photo("3"), photo("4")));
-		assertEquals(Set.of(photo("3"), photo("4")), wrapper.getAddedPhotos());
-	}
-
-	@Test
-	public void removeOnePhoto()
-	{
-		wrapper.setInitialPhotos(List.of(photo("1"), photo("2"), photo("3")));
-		wrapper.photos().remove(photo("2"));
-		assertEquals(Set.of(photo("2")), wrapper.getRemovedPhotos());
-		assertTrue(wrapper.hasChanges());
-		assertTrue(wrapper.hasPhotoChanges());
-	}
-
-	@Test
-	public void removeTwoPhotos()
-	{
-		wrapper.setInitialPhotos(List.of(photo("1"), photo("2"), photo("3")));
-		wrapper.photos().setAll(photo("2"));
-		assertEquals(Set.of(photo("1"), photo("3")), wrapper.getRemovedPhotos());
-	}
-
-	@Test
-	public void removeAllPhotos()
-	{
-		wrapper.setInitialPhotos(List.of(photo("1"), photo("2")));
-		wrapper.photos().clear();
-		assertEquals(Set.of(photo("1"), photo("2")), wrapper.getRemovedPhotos());
-	}
-
-	@Test
-	public void modifyOnePhoto()
-	{
-		wrapper.setInitialPhotos(List.of(photo("1"), photo("2"), photo("3")));
-		wrapper.photos().set(1, photo("2").withSpecimen("x"));
-		assertEquals(Set.of(photo("2").withSpecimen("x")), wrapper.getModifiedPhotos());
-		assertTrue(wrapper.hasChanges());
-		assertTrue(wrapper.hasPhotoChanges());
-	}
-
-	@Test
-	public void modifyTwoPhotos()
-	{
-		wrapper.setInitialPhotos(List.of(photo("1"), photo("2"), photo("3")));
-		wrapper.photos().set(0, photo("1").withSpecimen("x"));
-		wrapper.photos().set(2, photo("3").withSpecimen("y"));
-		assertEquals(Set.of(photo("1").withSpecimen("x"), photo("3").withSpecimen("y")), wrapper.getModifiedPhotos());
-	}
-
-	@Test
-	public void addAndModifyAndRemovePhotos()
-	{
-		wrapper.setInitialPhotos(List.of(photo("unchanged"), photo("before-modification"), photo("removed")));
-
-		wrapper.photos().add(photo("added"));
-		wrapper.photos().set(1, photo("before-modification").withSpecimen("modified"));
-		wrapper.photos().remove(2);
-
-		assertEquals(Set.of(photo("added")), wrapper.getAddedPhotos());
-		assertEquals(Set.of(photo("before-modification").withSpecimen("modified")), wrapper.getModifiedPhotos());
-		assertEquals(Set.of(photo("removed")), wrapper.getRemovedPhotos());
-	}
-
-	@Test
-	public void rearrangePhotoOrder()
-	{
-		wrapper.setInitialPhotos(List.of(photo("1"), photo("2"), photo("3")));
-		wrapper.photos().setAll(List.of(photo("2"), photo("1"), photo("3")));
-		assertFalse(wrapper.hasChanges());
-		assertFalse(wrapper.hasPhotoChanges());
-		assertTrue(wrapper.getAddedPhotos().isEmpty());
-		assertTrue(wrapper.getRemovedPhotos().isEmpty());
-		assertTrue(wrapper.getModifiedPhotos().isEmpty());
-	}
-
-	private FishingPhoto photo(String id)
-	{
-		Photo photo = mock(Photo.class);
-		when(photo.getId()).thenReturn(id);
-		return new FishingPhoto(photo, wrapper.id().getValue());
+		assertEquals(List.of(newPhoto("1", tripId), newPhoto("2", tripId)), wrapper.photos().getValue());
 	}
 }

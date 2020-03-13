@@ -23,8 +23,8 @@ import javafx.scene.control.ProgressIndicator;
 import javafx.scene.layout.StackPane;
 import javafx.util.Duration;
 import se.martinuhlen.fishbase.dao.FishBaseDao;
-import se.martinuhlen.fishbase.drive.photo.FishingPhoto;
-import se.martinuhlen.fishbase.drive.photo.PhotoService;
+import se.martinuhlen.fishbase.google.photos.FishingPhoto;
+import se.martinuhlen.fishbase.google.photos.PhotoService;
 import se.martinuhlen.fishbase.javafx.action.Action;
 import se.martinuhlen.fishbase.javafx.action.RunnableAction;
 import se.martinuhlen.fishbase.javafx.photo.HasPhoto;
@@ -112,7 +112,7 @@ class PhotoView implements View
                 @Override
                 protected List<FishingPhoto> call() throws Exception
                 {
-                    List<FishingPhoto> photos = service.getFishingPhotos();
+                	List<FishingPhoto> photos = service.load(dao.getPhotos());
                     photos.sort(thumbnailPane.getPhotoComparator());
                     return photos;
                 }

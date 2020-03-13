@@ -1,6 +1,7 @@
 package se.martinuhlen.fishbase.javafx.photo;
 
 import java.io.InputStream;
+import java.util.function.Supplier;
 
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -20,21 +21,9 @@ class ImageViewLoader extends ImageLoader
      * @param view whose image to load
      * @param inputStream to read the image from
      */
-    ImageViewLoader(ImageView view, InputStream inputStream)
+    ImageViewLoader(ImageView view, Supplier<InputStream> inputStream)
     {
         super(inputStream, false);
-        this.view = view;
-    }
-
-    /**
-     * Creates a new loader instance.
-     * 
-     * @param view whose image to load
-     * @param url to read the image from
-     */
-    ImageViewLoader(ImageView view, String url)
-    {
-        super(url, false);
         this.view = view;
     }
 

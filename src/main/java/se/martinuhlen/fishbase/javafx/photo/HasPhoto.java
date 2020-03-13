@@ -1,8 +1,8 @@
 package se.martinuhlen.fishbase.javafx.photo;
 
-import se.martinuhlen.fishbase.drive.photo.Photo;
+import se.martinuhlen.fishbase.google.photos.GooglePhoto;
 
 public interface HasPhoto
 {
-	Photo getPhoto();
+	GooglePhoto getPhoto();
 }

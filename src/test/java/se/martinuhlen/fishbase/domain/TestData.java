@@ -148,7 +148,7 @@ public class TestData
 	{
 		return Photo.asNew(id)
 				.tripId(tripId)
-				.specimenIds(emptySet())
+				.specimens(emptySet())
 				.fileName("SomeFile.png")
 				.time(LocalDateTime.now())
 				.starred(false);
@@ -158,7 +158,7 @@ public class TestData
 	{
 		return Photo.asPersisted("#photo1InTrip1")
 				.tripId("#trip1")
-				.specimenIds(Set.of())
+				.specimens(Set.of())
 				.fileName("SomePhoto.jpg")
 				.time(LocalDateTime.parse("2014-09-20T08:37"))
 				.starred(false);
@@ -168,7 +168,7 @@ public class TestData
 	{
 		return Photo.asPersisted("#photo2InTrip1")
 				.tripId("#trip1")
-				.specimenIds(Set.of("#bream5120"))
+				.specimens(Set.of("#bream5120"))
 				.fileName("BreamPhoto.jpg")
 				.time(LocalDateTime.parse("2014-09-20T14:30"))
 				.starred(true);
@@ -178,7 +178,7 @@ public class TestData
 	{
 		return Photo.asPersisted("#photo1InTrip2")
 				.tripId("#trip2")
-				.specimenIds(Set.of("#tench3540"))
+				.specimens(Set.of("#tench3540"))
 				.fileName("TenchPhoto.jpg")
 				.time(parse("2015-07-04T09:38"))
 				.starred(false);

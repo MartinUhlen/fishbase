@@ -36,15 +36,22 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.stage.Screen;
 import se.martinuhlen.fishbase.domain.Specimen;
-import se.martinuhlen.fishbase.drive.photo.FishingPhoto;
-import se.martinuhlen.fishbase.drive.photo.Photo;
-import se.martinuhlen.fishbase.drive.photo.PhotoService;
+import se.martinuhlen.fishbase.domain.Trip;
+import se.martinuhlen.fishbase.google.photos.FishingPhoto;
+import se.martinuhlen.fishbase.google.photos.GooglePhoto;
+import se.martinuhlen.fishbase.google.photos.PhotoService;
 import se.martinuhlen.fishbase.utils.Cursor;
 
+/**
+ * A pane where photos of a {@link Trip} is managed.
+ *
+ * @author Martin
+ */
 public class PhotoPane extends BorderPane
 {
 	private final PhotoService service;
-	private final ObservableValue<LocalDate> addStartDate;
+	private final ObservableValue<LocalDate> startDate;
+	private final ObservableValue<LocalDate> endDate;
 	private final ObservableValue<String> tripId;
 	private final ObservableValue<List<Specimen>> specimens;
 	private final ObservableList<FishingPhoto> fishingPhotos;
@@ -59,11 +66,12 @@ public class PhotoPane extends BorderPane
 	private final AtomicBoolean syncing = new AtomicBoolean(false);
 
 	public PhotoPane(
-			PhotoService service, ObservableValue<LocalDate> addStartDate, ObservableValue<String> tripId,
-			ObservableValue<List<Specimen>> specimens, ObservableList<FishingPhoto> fishingPhotos)
+			PhotoService service, ObservableValue<LocalDate> startDate, ObservableValue<LocalDate> endDate,
+			ObservableValue<String> tripId, ObservableValue<List<Specimen>> specimens, ObservableList<FishingPhoto> fishingPhotos)
 	{
 		this.service= service;
-		this.addStartDate = addStartDate;
+		this.startDate = startDate;
+		this.endDate = endDate;
 		this.tripId = tripId;
 		this.specimens = specimens;
 		this.fishingPhotos = fishingPhotos;
@@ -114,6 +122,7 @@ public class PhotoPane extends BorderPane
 		setCenter(thumbnailPane);
 	}
 
+	// FIXME Such sophisticated sync is not needed anymore when FishingPhoto(Impl) is mutable?
 	private void initPhotoSync()
 	{
 		fishingPhotos.addListener((Observable obs) ->
@@ -149,15 +158,15 @@ public class PhotoPane extends BorderPane
 
     private void addPhotos()
 	{
-		ThumbnailPane pane = ThumbnailPane.forAdding(addStartDate.getValue().toString(), str -> service.searchPhotos(str));
+		ThumbnailPane pane = ThumbnailPane.forAdding(startDate.getValue(), endDate.getValue(), (from, to) -> service.search(from, to));
 		DialogPane dialogPane = new DialogPane();
 		dialogPane.getButtonTypes().setAll(CANCEL, OK);
 		dialogPane.setContent(pane);
 		dialogPane.setPrefWidth(Region.USE_COMPUTED_SIZE);
-		SetChangeListener<Photo> listener = (Change<? extends Photo> change) ->
+		SetChangeListener<GooglePhoto> listener = (Change<? extends GooglePhoto> change) ->
 		{
 			Button button = (Button) dialogPane.lookupButton(OK);
-			ObservableSet<Photo> photos = pane.getSelectedPhotos();
+			ObservableSet<GooglePhoto> photos = pane.getSelectedPhotos();
 			button.setDisable(photos.isEmpty());
 			button.setText("Add " + (photos.isEmpty() ? "" : photos.size() + " ") + (photos.size() == 1 ? "photo" : "photos"));
 			setButtonUniformSize(button, false);
@@ -180,7 +189,7 @@ public class PhotoPane extends BorderPane
 			{
 				List<FishingPhoto> newPhotos = pane.getSelectedPhotos()
 						.stream()
-						.map(p -> new FishingPhoto(p, tripId.getValue()))
+						.map(photo -> service.create(photo, tripId.getValue()))
 						.collect(toList());
 				thumbnailPane.addPhotos(newPhotos);
 			});
@@ -254,10 +263,9 @@ public class PhotoPane extends BorderPane
 
         private void toggle()
         {
-            FishingPhoto oldPhoto = getPhoto();
-            FishingPhoto newPhoto = oldPhoto.asStarred(!oldPhoto.isStarred());
-            updatePhoto(oldPhoto, newPhoto);
-            updateIcon();
+        	FishingPhoto photo = getPhoto();
+        	photo.setStarred(!photo.isStarred());
+        	updateIcon();
         }
 
         private void updateIcon()
@@ -294,23 +302,16 @@ public class PhotoPane extends BorderPane
 
 		private void toggle()
 		{
-			FishingPhoto oldPhoto = getPhoto();
-			FishingPhoto newPhoto = isSelected()
-					? oldPhoto.withSpecimen(specimen.getId())
-					: oldPhoto.withoutSpecimen(specimen.getId());
-
-			updatePhoto(oldPhoto, newPhoto);
+			if (isSelected())
+			{
+				getPhoto().addSpecimen(specimen.getId());
+			}
+			else
+			{
+				getPhoto().removeSpecimen(specimen.getId());
+			}
 		}
 	}
-
-    private void updatePhoto(FishingPhoto oldPhoto, FishingPhoto newPhoto)
-    {
-        syncing.set(true);
-        int index = fishingPhotos.indexOf(oldPhoto);
-        fishingPhotos.set(index, newPhoto);
-        thumbnailPane.updatePhoto(oldPhoto, newPhoto);
-        syncing.set(false);
-    }
 
 	private interface PhotoMenuItem
 	{

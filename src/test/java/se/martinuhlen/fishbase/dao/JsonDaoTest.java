@@ -6,6 +6,7 @@ import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.never;
@@ -480,6 +481,27 @@ public class JsonDaoTest
 
 		assertTripsEquals(trips);
 		assertSpecimensEquals(specimens);
+	}
+
+	@Test
+	public void cannotAddPhotoOnDuplicateTrip()
+	{
+		Trip trip1 = newTrip();
+		dao.saveTrip(trip1.withPhotos(List.of(newPhoto("thePhotoId", trip1.getId()))));
+
+		Runnable asserter = () ->
+		{
+			assertNotNull(dao.getPhoto("thePhotoId"));
+			assertThrows(RuntimeException.class, () ->
+			{
+				Trip trip2 = newTrip();
+				dao.saveTrip(trip2.withPhotos(List.of(newPhoto("thePhotoId", trip2.getId()))));
+			});
+		};
+
+		asserter.run();		
+		createDao();
+		asserter.run();
 	}
 
 	@Test
