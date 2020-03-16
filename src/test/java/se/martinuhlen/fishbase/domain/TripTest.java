@@ -16,6 +16,8 @@ import static se.martinuhlen.fishbase.domain.TestData.trip1;
 import static se.martinuhlen.fishbase.domain.TestData.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
@@ -105,6 +107,20 @@ public class TripTest
 	}
 
 	@Test
+	public void phtotosAreSorted()
+	{
+		Trip trip = TestData.newTrip();
+		Photo photo1 = TestData.newPhoto("photo#1", trip.getId(), LocalDateTime.parse("2020-03-16T20:41"));
+		Photo photo2 = TestData.newPhoto("photo#2", trip.getId(), LocalDateTime.parse("2020-03-16T21:42"));
+		Photo photo3 = TestData.newPhoto("photo#3", trip.getId(), LocalDateTime.parse("2020-03-16T22:43"));
+		Photo photo4 = TestData.newPhoto("photo#4", trip.getId(), LocalDateTime.parse("2020-03-17T00:57"));
+
+		trip = trip.withPhotos(Set.of(photo2, photo4, photo1, photo3));
+
+		assertEquals(List.of(photo1, photo2, photo3, photo4), trip.getPhotos(), "Expect specimens, re-sorted");
+	}
+
+	@Test
 	public void hasSpecimens()
 	{
 	    assertTrue(trip2().hasSpecimens());
@@ -127,5 +143,6 @@ public class TripTest
         assertThrows(IllegalArgumentException.class, () -> t.withEndDate(null));
         assertThrows(IllegalArgumentException.class, () -> t.withText(null));
         assertThrows(IllegalArgumentException.class, () -> t.withSpecimens(null));
+        assertThrows(IllegalArgumentException.class, () -> t.withPhotos(null));
     }
 }

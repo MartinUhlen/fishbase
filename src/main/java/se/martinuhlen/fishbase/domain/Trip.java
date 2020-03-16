@@ -78,7 +78,12 @@ public final class Trip extends Domain<Trip>
     	requireNonNull(photos, "photos cannot be null");
     	photos.forEach(photo -> requireNonNull(photo, "photo cannot be null"));
     	photos.forEach(photo -> checkArgument(id.equals(photo.getTripId()), "Photo#tripId must be equal to Trip#id"));
-    	return List.copyOf(photos);
+    	return photos
+    			.stream()
+    			.peek(photo -> requireNonNull(photo, "photo cannot be null"))
+    			.peek(photo -> checkArgument(id.equals(photo.getTripId()), "Photo#tripId must be equal to Trip#id"))
+    			.sorted(comparing(Photo::getTime))
+    			.collect(toUnmodifiableList());
 	}
 
 	//@formatter:off

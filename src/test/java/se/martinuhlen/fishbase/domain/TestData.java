@@ -146,11 +146,16 @@ public class TestData
 
 	public static Photo newPhoto(String id, String tripId)
 	{
+		return newPhoto(id, tripId, LocalDateTime.now());
+	}
+
+	public static Photo newPhoto(String id, String tripId, LocalDateTime time)
+	{
 		return Photo.asNew(id)
 				.tripId(tripId)
 				.specimens(emptySet())
 				.fileName("SomeFile.png")
-				.time(LocalDateTime.now())
+				.time(time)
 				.starred(false);
 	}
 
