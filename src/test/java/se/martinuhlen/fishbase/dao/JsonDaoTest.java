@@ -91,7 +91,7 @@ public class JsonDaoTest
 	@Test
 	public void getAllPhotos()
 	{
-		assertEquals(Set.of(photo1InTrip1(), photo1InTrip2(), photo2InTrip1()), Set.copyOf(dao.getPhotos()));
+		assertEquals(List.of(photo1InTrip2(), photo2InTrip1(), photo1InTrip1()), dao.getPhotos());
 	}
 
 	@Test

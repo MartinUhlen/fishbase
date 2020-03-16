@@ -140,6 +140,7 @@ class JsonDao implements FishBaseDao
         return species.values().stream();
     }
 
+    @Override
     public Photo getPhoto(String id)
     {
     	Photo photo = photos.get(id);
@@ -153,7 +154,11 @@ class JsonDao implements FishBaseDao
     @Override
     public List<Photo> getPhotos()
     {
-    	return photos.values().stream().collect(toList());
+    	return photos
+    			.values()
+    			.stream()
+    			.sorted(comparing(Photo::getTime).reversed())
+    			.collect(toList());
     }
 
     @Override
