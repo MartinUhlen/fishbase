@@ -40,7 +40,6 @@ class LocalPhotoData implements PhotoData
 		}
 		else
 		{
-			// FIXME Start download in separate thread?
 			return remote.get().getUrl();
 		}
 	}

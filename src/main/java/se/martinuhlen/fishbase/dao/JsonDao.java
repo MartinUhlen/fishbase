@@ -311,11 +311,6 @@ class JsonDao implements FishBaseDao
 	@Override
 	public List<Trip> getTrips()
 	{
-		getPhotos()
-				.stream()
-				.filter(p -> !p.getFileName().toLowerCase().endsWith("jpg") && !p.getFileName().toLowerCase().endsWith("png"))
-				.forEach(System.err::println);
-
 		return streamTrips()
 				.sorted(comparing(Trip::getStartDate).reversed().thenComparing(Trip::getDescription))
 				.collect(toList());

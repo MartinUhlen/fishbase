@@ -206,7 +206,7 @@ class VideoPane extends BorderPane
 	{
 		return getPlayer() == null
 				? DISPOSED
-				: defaultIfNull(getPlayer().getStatus(), DISPOSED); // FIXME Status is null = evaluates to DISPOSED
+				: defaultIfNull(getPlayer().getStatus(), DISPOSED);
 	}
 
 	private Duration getCurrentTime()

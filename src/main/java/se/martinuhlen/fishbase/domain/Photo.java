@@ -11,7 +11,7 @@ import java.util.stream.Stream;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 
-public class Photo extends Domain<Photo> // FIXME Rename to Media? And a media can either be a photo or a video.
+public class Photo extends Domain<Photo>
 {
 	public static TripBuilder asPersisted(String id)
 	{
