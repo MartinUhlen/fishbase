@@ -7,12 +7,11 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.function.Supplier;
 
 /**
@@ -22,8 +21,10 @@ import java.util.function.Supplier;
  */
 class LocalPhotoData implements PhotoData
 {
+	private static final URL PHOTO_NOT_FOUND = LocalPhotoData.class.getResource("/images/PhotoNotFound.png");
+
 	private File localFile;
-	private Supplier<PhotoData> remote;	// FIXME What if photo is removed from Google Photos but remains in FishBase?
+	private Supplier<PhotoData> remote;
 
 	LocalPhotoData(File localFile, Supplier<PhotoData> remote)
 	{
@@ -53,7 +54,49 @@ class LocalPhotoData implements PhotoData
 		}
 		else
 		{
-			return new DownloadingInputStream();
+			return new RemoteOrNotFoundInputStream();
+		}
+	}
+
+	/**
+	 * Input stream for the remote photo, or fallback to "photo not found".
+	 * 
+	 * @author Martin
+	 */
+	private class RemoteOrNotFoundInputStream extends InputStream
+	{
+		private InputStream inputStream;
+
+		@Override
+		public int read() throws IOException
+		{
+			if (inputStream == null)
+			{
+				createInputStream();
+			}
+			return inputStream.read();
+		}
+
+		private void createInputStream() throws IOException
+		{
+			try
+			{
+				inputStream = new DownloadingInputStream(remote.get().getStream());
+			}
+			catch (Exception e)
+			{
+				inputStream = PHOTO_NOT_FOUND.openStream();
+			}
+		}
+
+		@Override
+		public void close() throws IOException
+		{
+			if (inputStream != null)
+			{
+				inputStream.close();
+				inputStream = null;
+			}
 		}
 	}
 
@@ -64,43 +107,41 @@ class LocalPhotoData implements PhotoData
 	 */
 	private class DownloadingInputStream extends InputStream
 	{
-		private InputStream remoteStream;
+		private final InputStream remoteStream;
 	    private OutputStream localStream;
 	    private File tempFile;
 	    private boolean closed;
 
-	    @Override
+	    DownloadingInputStream(InputStream remoteStream) throws IOException
+	    {
+			this.remoteStream = remoteStream;
+			String tempFileName = localFile.getName() + "." + randomUUID() + ".temp";
+			tempFile = new File(localFile.getParentFile(), tempFileName);
+			tempFile.deleteOnExit();
+			localStream = new BufferedOutputStream(new FileOutputStream(tempFile));
+		}
+
+		@Override
 	    public int read() throws IOException
 	    {
 	        if (closed)
 	        {
 	            return -1;
 	        }
-	        return readImpl();
-	    }
-
-	    private int readImpl() throws IOException, MalformedURLException, FileNotFoundException
-	    {
-	        if (remoteStream == null)
-	        {
-	            String tempFileName = localFile.getName() + "." + randomUUID() + ".temp";
-	            tempFile = new File(localFile.getParentFile(), tempFileName);
-	            tempFile.deleteOnExit();
-	            localStream = new BufferedOutputStream(new FileOutputStream(tempFile));
-	            remoteStream = remote.get().getStream();
-	        }
-
-	        int read = remoteStream.read();
-	        if (read != -1)
-	        {
-	            localStream.write(read);
-	        }
 	        else
 	        {
-	            close();
-	            tempFile.renameTo(localFile);
+		        int read = remoteStream.read();
+		        if (read != -1)
+		        {
+		            localStream.write(read);
+		        }
+		        else
+		        {
+		            close();
+		            tempFile.renameTo(localFile);
+		        }
+		        return read;	        	
 	        }
-	        return read;
 	    }
 
 	    @Override
@@ -110,9 +151,9 @@ class LocalPhotoData implements PhotoData
 	        {
 	            closed = true;
 	            super.close();
-	            if (remoteStream != null)
+	            remoteStream.close();
+	            if (localStream != null)
 	            {
-	                remoteStream.close();
 	                localStream.close();
 	            }
 	        }
