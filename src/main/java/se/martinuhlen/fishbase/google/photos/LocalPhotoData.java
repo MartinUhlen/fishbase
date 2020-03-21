@@ -41,7 +41,14 @@ class LocalPhotoData implements PhotoData
 		}
 		else
 		{
-			return remote.get().getUrl();
+			try
+			{
+				return remote.get().getUrl();
+			}
+			catch (Exception e)
+			{
+				return PHOTO_NOT_FOUND.toExternalForm();
+			}
 		}
 	}
 
@@ -57,7 +64,7 @@ class LocalPhotoData implements PhotoData
 			return new RemoteOrNotFoundInputStream();
 		}
 	}
-
+	
 	/**
 	 * Input stream for the remote photo, or fallback to "photo not found".
 	 * 
