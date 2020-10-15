@@ -2,6 +2,7 @@ package se.martinuhlen.fishbase.javafx.data;
 
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toUnmodifiableSet;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -15,6 +16,8 @@ import static se.martinuhlen.fishbase.domain.Trip.EMPTY_TRIP;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -22,6 +25,7 @@ import org.mockito.Mockito;
 import javafx.beans.InvalidationListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
+import se.martinuhlen.fishbase.domain.Photo;
 import se.martinuhlen.fishbase.domain.Specimen;
 import se.martinuhlen.fishbase.domain.Trip;
 
@@ -166,5 +170,30 @@ public class TripWrapperTest extends WrapperTestCase<Trip, TripWrapper>
 
 		assertEquals(asList(specimen0, specimen2), wrapper.specimens().getValue());
 		assertEquals(List.of(newPhoto("1", tripId), newPhoto("2", tripId)), wrapper.photos().getValue());
+	}
+
+	@Test
+	public void photos()
+	{
+		Trip trip = trip1().withPhotos(Set.of());
+		wrapper.setWrapee(trip);
+		assertEquals(Set.of(), wrapper.getAddedPhotos());
+		assertEquals(Set.of(), wrapper.getRemovedPhotos());
+
+		wrapper.photos().setValue(List.of(newPhoto("photo#1", trip.getId()), newPhoto("photo#2", trip.getId()), newPhoto("photo#3", trip.getId())));
+		assertEquals(Set.of("photo#1", "photo#2", "photo#3"), wrapper.getAddedPhotos().stream().map(Photo::getId).collect(toUnmodifiableSet()));
+		assertEquals(Set.of(), wrapper.getRemovedPhotos());
+
+		wrapper.setWrapee(wrapper.getWrapee());
+		assertEquals(Set.of(), wrapper.getAddedPhotos());
+		assertEquals(Set.of(), wrapper.getRemovedPhotos());
+
+		wrapper.photos().setValue(List.of(newPhoto("photo#2", trip.getId()), newPhoto("photo#4", trip.getId()), newPhoto("photo#5", trip.getId())));
+		assertEquals(Set.of("photo#4", "photo#5"), wrapper.getAddedPhotos().stream().map(Photo::getId).collect(toUnmodifiableSet()));
+		assertEquals(Set.of("photo#1", "photo#3"), wrapper.getRemovedPhotos().stream().map(Photo::getId).collect(toUnmodifiableSet()));
+
+		wrapper.setWrapee(wrapper.getWrapee());
+		assertEquals(Set.of(), wrapper.getAddedPhotos());
+		assertEquals(Set.of(), wrapper.getRemovedPhotos());
 	}
 }

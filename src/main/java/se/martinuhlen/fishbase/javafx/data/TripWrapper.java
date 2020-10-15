@@ -1,11 +1,14 @@
 package se.martinuhlen.fishbase.javafx.data;
 
+import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
+import static java.util.stream.Collectors.toUnmodifiableSet;
 import static javafx.collections.FXCollections.observableArrayList;
 import static se.martinuhlen.fishbase.domain.Trip.EMPTY_TRIP;
 
 import java.time.LocalDate;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -40,6 +43,11 @@ public class TripWrapper extends Wrapper<Trip>
 				endDate().setValue(startDate().getValue());
 			}
 		});
+	}
+
+	public boolean isEmpty()
+	{
+		return getWrapee() == EMPTY_TRIP;
 	}
 
 	public ObservableValue<String> id()
@@ -150,8 +158,23 @@ public class TripWrapper extends Wrapper<Trip>
 		return getProperty("photos", Trip::getPhotos, Trip::withPhotos);
 	}
 
-	public boolean isEmpty()
+	public Set<Photo> getAddedPhotos()
 	{
-		return getWrapee() == EMPTY_TRIP;
+		Set<String> initialIds = initialWrapee.getPhotos().stream().map(Photo::getId).collect(toUnmodifiableSet());
+		return currentWrapee
+				.getPhotos()
+				.stream()
+				.filter(photo -> !initialIds.contains(photo.getId()))
+				.collect(toCollection(LinkedHashSet::new));
+	}
+
+	public Set<Photo> getRemovedPhotos()
+	{
+		Set<String> currentIds = currentWrapee.getPhotos().stream().map(Photo::getId).collect(toUnmodifiableSet());
+		return initialWrapee
+				.getPhotos()
+				.stream()
+				.filter(photo -> !currentIds.contains(photo.getId()))
+				.collect(toCollection(LinkedHashSet::new));
 	}
 }

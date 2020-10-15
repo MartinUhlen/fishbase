@@ -6,8 +6,11 @@ import static java.util.Comparator.comparing;
 import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.StreamSupport.stream;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.StreamSupport;
 
@@ -15,6 +18,7 @@ import com.google.photos.library.v1.PhotosLibraryClient;
 import com.google.photos.library.v1.proto.DateFilter;
 import com.google.photos.library.v1.proto.Filters;
 import com.google.photos.library.v1.proto.SearchMediaItemsRequest;
+import com.google.photos.types.proto.Album;
 import com.google.photos.types.proto.DateRange;
 import com.google.photos.types.proto.MediaItem;
 import com.google.type.Date;
@@ -97,6 +101,62 @@ class PhotoServiceImpl implements PhotoService
 				.starred(false);
 
 		return new FishingPhotoImpl(domain, () -> photo);
+	}
+
+	@Override
+	public void addToAlbum(Collection<String> photoIds)
+	{
+		requireNonNull(photoIds, "photoIds cannot be null");
+		if (photoIds.isEmpty())
+		{
+			return;
+		}
+		try
+		{
+			// FIXME This doesn't work, because album and/or photos are not created by FishBase.
+			// https://issuetracker.google.com/issues/109505022
+			// https://issuetracker.google.com/issues/132274769
+			client.batchAddMediaItemsToAlbum(getAlbumId(), new ArrayList<>(photoIds));
+		}
+		catch (Throwable t)
+		{
+			t.printStackTrace();
+		}
+	}
+
+	private String getAlbumId()
+	{
+		Iterable<Album> albums = client.listAlbums().iterateAll();
+		return stream(albums.spliterator(), false)
+				.filter(album -> album.getTitle().equals("FishBase"))
+				.map(album -> album.getId())
+				.findFirst()
+				.orElseGet(() -> createAlbum());
+	}
+
+	private String createAlbum()
+	{
+		return client.createAlbum("FishBase").getId();
+	}
+
+	@Override
+	public void removeFromAlbum(Collection<String> photoIds)
+	{
+		requireNonNull(photoIds, "photoIds cannot be null");
+		LOGGER.log("#removeFromAlbum not (yet) implemented... sleeping some, just for fun...");
+		sleep(photoIds.size() * 250);
+	}
+
+	private void sleep(long millis)
+	{
+		try
+		{
+			Thread.sleep(millis);
+		}
+		catch (InterruptedException e)
+		{
+			e.printStackTrace();
+		}
 	}
 
 	private void log(String message)

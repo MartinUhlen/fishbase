@@ -2,6 +2,7 @@ package se.martinuhlen.fishbase.javafx;
 
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
 import static javafx.application.Platform.runLater;
 import static javafx.collections.FXCollections.observableArrayList;
 import static javafx.geometry.Orientation.VERTICAL;
@@ -18,6 +19,7 @@ import static se.martinuhlen.fishbase.domain.Trip.EMPTY_TRIP;
 import static se.martinuhlen.fishbase.domain.Trip.TEXT_IS_MANDATORY;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
@@ -360,8 +362,37 @@ class TripView implements View
 		else
 		{
 			dao.saveTrip(trip);
-			refresh();
+			savePhotos(wrapper.getAddedPhotos(), wrapper.getRemovedPhotos(), () -> refresh());
 		}
+	}
+
+	private void savePhotos(Collection<Photo> added, Collection<Photo> removed, Runnable postAction)
+	{
+		new ProgressDisplayer(getContent().getScene().getWindow(), new Service<Void>()
+		{
+			@Override
+			protected Task<Void> createTask()
+			{
+				return new Task<Void>()
+				{
+					private final int photoCount = added.size() + removed.size();
+					private final int totalWork = (int) (photoCount * 1.5);
+
+					@Override
+					protected Void call() throws Exception
+					{
+						updateTitle("Adding photos to album.");
+						updateProgress(added.size(), totalWork);
+						photoService.addToAlbum(added.stream().map(Photo::getId).collect(toList()));
+
+						updateTitle("Removing photos from album");
+						updateProgress(photoCount, totalWork);
+						photoService.removeFromAlbum(removed.stream().map(Photo::getId).collect(toList()));
+						return null;
+					}
+				};
+			}
+		}).startAndThen(postAction);
 	}
 
 	@Override
@@ -384,8 +415,12 @@ class TripView implements View
 
 	private void deleteImpl()
 	{
+		List<Photo> photos = wrapper.photos().getValue();
 		dao.deleteTrip(wrapper.getWrapee());
-		wrapper.setWrapee(EMPTY_TRIP);
-		refresh();
+		savePhotos(List.of(), photos, () ->
+		{
+			wrapper.setWrapee(EMPTY_TRIP);
+			refresh();
+		});
 	}
 }

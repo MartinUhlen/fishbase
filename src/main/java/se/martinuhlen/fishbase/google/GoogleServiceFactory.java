@@ -32,7 +32,8 @@ public class GoogleServiceFactory
 	private static final java.io.File LOCAL_FOLDER = new java.io.File(System.getProperty("user.home"), "." + APPLICATION_NAME.toLowerCase());
 
 	private static final List<String> REQUIRED_SCOPES = List.of(
-			"https://www.googleapis.com/auth/photoslibrary.readonly",
+			//"https://www.googleapis.com/auth/photoslibrary.readonly",
+			"https://www.googleapis.com/auth/photoslibrary",
 			DriveScopes.DRIVE,
 			DriveScopes.DRIVE_FILE,
 			DriveScopes.DRIVE_PHOTOS_READONLY);	// FIXME Redundant?
