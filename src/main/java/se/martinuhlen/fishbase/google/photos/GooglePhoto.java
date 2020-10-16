@@ -3,7 +3,7 @@ package se.martinuhlen.fishbase.google.photos;
 import java.time.LocalDateTime;
 
 /**
- * A photo from in "Google Photos".
+ * A photo in "Google Photos".
  * 
  * @author Martin
  */

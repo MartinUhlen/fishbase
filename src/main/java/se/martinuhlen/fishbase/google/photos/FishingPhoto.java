@@ -8,7 +8,7 @@ import se.martinuhlen.fishbase.domain.Specimen;
 import se.martinuhlen.fishbase.domain.Trip;
 
 /**
- * A photo taken during a fishing {@link Trip trip}.
+ * A {@link GooglePhoto photo} taken during a fishing {@link Trip trip}.
  * 
  * @author Martin
  */

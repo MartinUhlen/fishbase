@@ -26,6 +26,11 @@ import com.google.type.Date;
 import se.martinuhlen.fishbase.domain.Photo;
 import se.martinuhlen.fishbase.utils.Logger;
 
+/**
+ * Default implementation of {@link PhotoService}.
+ * 
+ * @author martin
+ */
 class PhotoServiceImpl implements PhotoService
 {
 	private static final Logger LOGGER = Logger.getLogger(PhotoServiceImpl.class);

@@ -7,7 +7,12 @@ import java.time.ZoneId;
 import com.google.photos.types.proto.MediaItem;
 import com.google.protobuf.Timestamp;
 
-public final class GooglePhotoImpl implements GooglePhoto
+/**
+ * Default implementation of {@link GooglePhoto}.
+ * 
+ * @author martin
+ */
+final class GooglePhotoImpl implements GooglePhoto
 {
 	private final MediaItem item;
 
