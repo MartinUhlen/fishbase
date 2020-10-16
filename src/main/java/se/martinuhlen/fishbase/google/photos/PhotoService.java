@@ -1,6 +1,7 @@
 package se.martinuhlen.fishbase.google.photos;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 
 import com.google.photos.library.v1.PhotosLibraryClient;
@@ -42,7 +43,21 @@ public interface PhotoService
 	FishingPhoto create(GooglePhoto photo, String tripId);
 
 	/**
-	 * Creates a new {@link PhotoService}.
+	 * Adds photos to the album containing all {@link FishingPhoto fishing photos}.
+	 *
+	 * @param photoIds a collection of IDs identifying the photos to add
+	 */
+	void addToAlbum(Collection<String> photoIds);
+
+	/**
+	 * Removes photos from the album containing all {@link FishingPhoto fishing photos}.
+	 *
+	 * @param photoIds a collection of IDs identifying the photos to remove
+	 */
+	void removeFromAlbum(Collection<String> photoIds);
+
+	/**
+   * Creates a new {@link PhotoService}.
 	 * 
 	 * @param client used by the service
 	 * @return new photo service

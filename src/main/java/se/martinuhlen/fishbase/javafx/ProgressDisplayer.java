@@ -1,11 +1,11 @@
 package se.martinuhlen.fishbase.javafx;
 
+import static javafx.concurrent.Worker.State.RUNNING;
 import static javafx.stage.Modality.WINDOW_MODAL;
 import static javafx.stage.StageStyle.UTILITY;
 
 import javafx.beans.Observable;
 import javafx.concurrent.Service;
-import javafx.concurrent.Worker.State;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
@@ -37,12 +37,17 @@ class ProgressDisplayer
 		stage.setScene(new Scene(new VBox(message, progress)));
 	}
 
+	void start()
+	{
+		startAndThen(() -> {});
+	}
+
 	void startAndThen(Runnable postAction)
 	{
 		service.start();
 		service.stateProperty().addListener((Observable obs) ->
 		{
-			if (service.getState().compareTo(State.RUNNING) <= 0)
+			if (service.getState().compareTo(RUNNING) <= 0)
 			{
 				stage.show();
 				stage.requestFocus();
