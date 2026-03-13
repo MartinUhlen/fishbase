@@ -10,7 +10,7 @@ import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -72,7 +72,7 @@ public abstract class WrapperTestCase<D extends Domain<D>, W extends Wrapper<D>>
 
 			reset(listener, invalidationListener, changeListener);
 			property.setValue(property.getValue());
-			verifyZeroInteractions(listener, invalidationListener, changeListener);
+			verifyNoInteractions(listener, invalidationListener, changeListener);
 		});
 
 		SimpleObjectProperty<P> prop = new SimpleObjectProperty<>(values[0]);

@@ -14,7 +14,7 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static se.martinuhlen.fishbase.domain.AutoCompleteField.BAIT;
 import static se.martinuhlen.fishbase.domain.AutoCompleteField.LOCATION;
 import static se.martinuhlen.fishbase.domain.AutoCompleteField.METHOD;
@@ -169,7 +169,7 @@ public class JsonDaoTest
 	{
         reset(persistence);
         dao.saveSpecies(emptyList());
-        verifyZeroInteractions(persistence);
+        verifyNoInteractions(persistence);
 	}
 
 	@Test
@@ -208,7 +208,7 @@ public class JsonDaoTest
     {
         reset(persistence);
         dao.saveSpecimens(emptyList());
-        verifyZeroInteractions(persistence);
+        verifyNoInteractions(persistence);
     }
 
     @Test
@@ -260,7 +260,7 @@ public class JsonDaoTest
     {
         reset(persistence);
         dao.deleteSpecimens(emptyList());
-        verifyZeroInteractions(persistence);
+        verifyNoInteractions(persistence);
     }
 
 	@Test

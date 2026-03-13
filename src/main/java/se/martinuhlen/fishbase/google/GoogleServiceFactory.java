@@ -3,6 +3,7 @@ package se.martinuhlen.fishbase.google;
 import static se.martinuhlen.fishbase.utils.Constants.APPLICATION_NAME;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.UncheckedIOException;
@@ -17,7 +18,7 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.gax.core.FixedCredentialsProvider;
 import com.google.api.services.drive.Drive;
@@ -53,7 +54,7 @@ public class GoogleServiceFactory
 	{
 		HttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
 		FileDataStoreFactory dataStoreFactory = new FileDataStoreFactory(LOCAL_FOLDER);
-		JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
+		JsonFactory jsonFactory = GsonFactory.getDefaultInstance();
 		GoogleClientSecrets clientSecrets = readClientSecrets(jsonFactory);
 
 		GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(httpTransport, jsonFactory, clientSecrets, REQUIRED_SCOPES)
@@ -70,7 +71,12 @@ public class GoogleServiceFactory
 
 	private static GoogleClientSecrets readClientSecrets(JsonFactory jsonFactory) throws IOException
 	{
-		try (Reader reader = new InputStreamReader(GoogleServiceFactory.class.getResourceAsStream("/ClientSecrets.json")))
+		InputStream stream = GoogleServiceFactory.class.getResourceAsStream("/ClientSecrets.json");
+		if (stream == null)
+		{
+			throw new IllegalStateException("ClientSecrets.json is missing from the classpath. Please add it to src/main/resources.");
+		}
+		try (Reader reader = new InputStreamReader(stream))
 		{
 			return GoogleClientSecrets.load(jsonFactory, reader);
 		}
