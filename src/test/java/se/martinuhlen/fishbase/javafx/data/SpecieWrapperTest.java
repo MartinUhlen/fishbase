@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static se.martinuhlen.fishbase.domain.TestData.bream;
 import static se.martinuhlen.fishbase.domain.TestData.newSpecie;
 import static se.martinuhlen.fishbase.domain.TestData.tench;
@@ -84,9 +84,9 @@ public class SpecieWrapperTest extends WrapperTestCase<Specie, SpecieWrapper>
 		wrapper.removeAllListeners();
 
 		property.setValue("Test");
-		verifyZeroInteractions(listener, invalidationListener, changeListener);
+		verifyNoInteractions(listener, invalidationListener, changeListener);
 
 		wrapper.setWrapee(newSpecie());
-		verifyZeroInteractions(listener, invalidationListener, changeListener);
+		verifyNoInteractions(listener, invalidationListener, changeListener);
 	}
 }

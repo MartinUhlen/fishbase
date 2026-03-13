@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd D:/Projects/Martin/fishbase && ./mvnw.cmd package 2>&1 | tail -50)",
+      "Bash(java -version 2>&1)",
+      "WebSearch",
+      "WebFetch(domain:mvnrepository.com)",
+      "Bash(cd D:/Projects/Martin/fishbase && ./mvnw.cmd package 2>&1 | tail -20)",
+      "Bash(cd D:/Projects/Martin/fishbase && ./mvnw.cmd versions:display-dependency-updates versions:display-plugin-updates 2>&1 | grep -E \"\\\\->\" | sort -u)",
+      "Bash(cd D:/Projects/Martin/fishbase && ./mvnw.cmd versions:display-dependency-updates -DallowMajorUpdates=false 2>&1 | grep -E \"\\\\->\" | sort -u)",
+      "Bash(cd D:/Projects/Martin/fishbase && ./mvnw.cmd package 2>&1 | tail -10)",
+      "Bash(cd D:/Projects/Martin/fishbase && ./mvnw.cmd compile 2>&1 | tail -10)",
+      "Bash(cd D:/Projects/Martin/fishbase && ./mvnw.cmd compile -pl . 2>&1 | tail -10)",
+      "Bash(cd D:/Projects/Martin/fishbase && ./mvnw.cmd clean compile 2>&1 | tail -10)"
+    ]
+  }
+}
