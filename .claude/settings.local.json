@@ -11,7 +11,10 @@
       "Bash(cd D:/Projects/Martin/fishbase && ./mvnw.cmd package 2>&1 | tail -10)",
       "Bash(cd D:/Projects/Martin/fishbase && ./mvnw.cmd compile 2>&1 | tail -10)",
       "Bash(cd D:/Projects/Martin/fishbase && ./mvnw.cmd compile -pl . 2>&1 | tail -10)",
-      "Bash(cd D:/Projects/Martin/fishbase && ./mvnw.cmd clean compile 2>&1 | tail -10)"
+      "Bash(cd D:/Projects/Martin/fishbase && ./mvnw.cmd clean compile 2>&1 | tail -10)",
+      "Bash(cd D:/Projects/Martin/fishbase && ./mvnw.cmd package -DskipTests 2>&1 | tail -10)",
+      "Bash(cd D:/Projects/Martin/fishbase && ./mvnw.cmd package -DskipTests 2>&1 | tail -5)",
+      "WebFetch(domain:developers.google.com)"
     ]
   }
 }

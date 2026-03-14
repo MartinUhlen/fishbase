@@ -52,9 +52,17 @@ class PhotoServiceImpl implements PhotoService
 	private GooglePhoto getPhoto(String id)
 	{
 		log("Starting downloading photo " + id);
-		MediaItem item = client.getMediaItem(id);
-		log("Finished downloading photo " + id);
-		return new GooglePhotoImpl(item);
+		try
+		{
+			MediaItem item = client.getMediaItem(id);
+			log("Finished downloading photo " + id);
+			return new GooglePhotoImpl(item);
+		}
+		catch (Exception e)
+		{
+			log("Failed to download photo " + id + ": " + e);
+			throw e;
+		}
 	}
 
 	@Override

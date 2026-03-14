@@ -14,13 +14,16 @@ import java.io.OutputStream;
 import java.net.URL;
 import java.util.function.Supplier;
 
+import se.martinuhlen.fishbase.utils.Logger;
+
 /**
  * {@link PhotoData} implementation of locally stored data.
- * 
+ *
  * @author Martin
  */
 class LocalPhotoData implements PhotoData
 {
+	private static final Logger LOGGER = Logger.getLogger(LocalPhotoData.class);
 	private static final URL PHOTO_NOT_FOUND = LocalPhotoData.class.getResource("/images/PhotoNotFound.png");
 
 	private File localFile;
@@ -47,6 +50,7 @@ class LocalPhotoData implements PhotoData
 			}
 			catch (Exception e)
 			{
+				LOGGER.log("Failed to get remote photo URL: " + e);
 				return PHOTO_NOT_FOUND.toExternalForm();
 			}
 		}
@@ -92,6 +96,7 @@ class LocalPhotoData implements PhotoData
 			}
 			catch (Exception e)
 			{
+				LOGGER.log("Failed to get remote photo stream: " + e);
 				inputStream = PHOTO_NOT_FOUND.openStream();
 			}
 		}

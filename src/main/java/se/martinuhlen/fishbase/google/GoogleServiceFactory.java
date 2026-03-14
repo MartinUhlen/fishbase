@@ -2,14 +2,6 @@ package se.martinuhlen.fishbase.google;
 
 import static se.martinuhlen.fishbase.utils.Constants.APPLICATION_NAME;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.UncheckedIOException;
-import java.security.GeneralSecurityException;
-import java.util.List;
-
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
 import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
@@ -27,16 +19,23 @@ import com.google.auth.oauth2.UserCredentials;
 import com.google.photos.library.v1.PhotosLibraryClient;
 import com.google.photos.library.v1.PhotosLibrarySettings;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.UncheckedIOException;
+import java.security.GeneralSecurityException;
+import java.util.List;
+import java.util.stream.Stream;
+
 public class GoogleServiceFactory
 {
 	private static final String USER_ID = "user";
 	private static final java.io.File LOCAL_FOLDER = new java.io.File(System.getProperty("user.home"), "." + APPLICATION_NAME.toLowerCase());
 
-	private static final List<String> REQUIRED_SCOPES = List.of(
-			"https://www.googleapis.com/auth/photoslibrary.readonly",
-			DriveScopes.DRIVE,
-			DriveScopes.DRIVE_FILE,
-			DriveScopes.DRIVE_PHOTOS_READONLY);	// FIXME Redundant?
+	private static final List<String> REQUIRED_SCOPES = Stream.concat(
+	        Stream.of("https://www.googleapis.com/auth/photoslibrary.readonly"),
+	        DriveScopes.all().stream()).toList();
 
 	public static GoogleServiceFactory get()
 	{
@@ -49,7 +48,7 @@ public class GoogleServiceFactory
 			throw new RuntimeException(e);
 		}
 	}
-	
+
 	private static GoogleServiceFactory getImpl() throws GeneralSecurityException, IOException
 	{
 		HttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
