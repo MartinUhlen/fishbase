@@ -4,6 +4,7 @@ import java.util.List;
 
 import se.martinuhlen.fishbase.domain.Photo;
 import se.martinuhlen.fishbase.domain.Trip;
+import se.martinuhlen.fishbase.google.drive.DriveService;
 
 /**
  * A service to work against Google Photos API.
@@ -41,11 +42,12 @@ public interface PhotoService
 	/**
 	 * Creates a new {@link PhotoService}.
 	 *
-	 * @param pickerClient used by the service
+	 * @param pickerClient to let user pick photos
+	 * @param driveService to upload picked photos
 	 * @return new photo service
 	 */
-	public static PhotoService create(PickerClient pickerClient)
+	public static PhotoService create(PickerClient pickerClient, DriveService driveService)
 	{
-		return new PhotoServiceImpl(pickerClient);
+		return new PhotoServiceImpl(pickerClient, driveService);
 	}
 }

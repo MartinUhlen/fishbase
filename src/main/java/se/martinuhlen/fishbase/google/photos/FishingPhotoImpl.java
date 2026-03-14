@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import se.martinuhlen.fishbase.domain.Photo;
@@ -65,21 +66,18 @@ class FishingPhotoImpl implements FishingPhoto
 	@Override
 	public PhotoData getThumbnail()
 	{
-		return new LocalPhotoData(getLocalFile("_thumb"), () -> googlePhoto.get().getThumbnail());
+	    return getPhotoData(getThumbnailFileName(), GooglePhoto::getThumbnail);
 	}
 
 	@Override
 	public PhotoData getContent()
 	{
-		return new LocalPhotoData(getLocalFile(""), () -> googlePhoto.get().getContent());
+	    return getPhotoData(getContentFileName(), GooglePhoto::getContent);
 	}
 
-	private File getLocalFile(String suffix)
-	{
-        String fileName = getName().replace(":", "");
-        String extension = getExtension(fileName);
-        fileName = fileName.replace("." + extension, "_" + getId() + suffix + "." + extension);
-        return new java.io.File(CACHE_DIR, fileName);
+	private PhotoData getPhotoData(String fileName, Function<GooglePhoto, PhotoData> remote) {
+	    File localFile = new File(CACHE_DIR, fileName);
+	    return new LocalPhotoData(localFile, () -> remote.apply(googlePhoto.get()));
 	}
 
 	@Override

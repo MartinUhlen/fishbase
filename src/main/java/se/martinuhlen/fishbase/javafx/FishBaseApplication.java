@@ -107,8 +107,8 @@ public class FishBaseApplication extends Application
 	public void start(Stage stage) throws Exception
 	{
 	    this.stage = stage;
-		photoService = PhotoService.create(GoogleServiceFactory.get().createPickerClient());
-		driveService = new DriveService(GoogleServiceFactory.get().createDrive());
+	    driveService = new DriveService(GoogleServiceFactory.get().createDrive());
+		photoService = PhotoService.create(GoogleServiceFactory.get().createPickerClient(), driveService);
 		drivePersistence = new DrivePersistence(driveService);
 		dao = FishBaseDao.create(drivePersistence);
 
@@ -250,11 +250,11 @@ public class FishBaseApplication extends Application
 					.stream()
 					.filter(e -> typeOfView.isInstance(e.getValue()))
 					.findAny();
-	
+
 			tabWithView.ifPresentOrElse(
 					e -> selectTab(e.getKey()),
 					() -> addTab(typeOfView));
-	
+
 			@SuppressWarnings("unchecked")
 			V view = (V) selectedView();
 			return view;

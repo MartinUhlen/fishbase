@@ -10,6 +10,7 @@ import java.net.URI;
 import java.util.List;
 
 import se.martinuhlen.fishbase.domain.Photo;
+import se.martinuhlen.fishbase.google.drive.DriveService;
 import se.martinuhlen.fishbase.google.photos.PickerClient.PickerSession;
 import se.martinuhlen.fishbase.utils.Logger;
 
@@ -24,10 +25,12 @@ class PhotoServiceImpl implements PhotoService
 	private static final long TIMEOUT_MS = 30L * 60L * 1000L; // 30 minutes
 
 	private final PickerClient pickerClient;
+    private final DriveService driveService;
 
-	PhotoServiceImpl(PickerClient pickerClient)
+	PhotoServiceImpl(PickerClient pickerClient, DriveService driveService)
 	{
 		this.pickerClient = pickerClient;
+        this.driveService = driveService;
 	}
 
 	@Override
@@ -109,6 +112,9 @@ class PhotoServiceImpl implements PhotoService
 				.fileName(photo.getName())
 				.time(photo.getTime())
 				.starred(false);
+
+		driveService.upload(photo.getContentFileName(), photo.getContent().getStream());
+		driveService.upload(photo.getThumbnailFileName(), photo.getThumbnail().getStream());
 
 		return new FishingPhotoImpl(domain, () -> photo);
 	}
