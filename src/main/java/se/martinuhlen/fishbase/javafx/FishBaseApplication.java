@@ -107,7 +107,7 @@ public class FishBaseApplication extends Application
 	public void start(Stage stage) throws Exception
 	{
 	    this.stage = stage;
-		photoService = PhotoService.create(GoogleServiceFactory.get().createPhotosLibraryClient());
+		photoService = PhotoService.create(GoogleServiceFactory.get().createPickerClient());
 		driveService = new DriveService(GoogleServiceFactory.get().createDrive());
 		drivePersistence = new DrivePersistence(driveService);
 		dao = FishBaseDao.create(drivePersistence);

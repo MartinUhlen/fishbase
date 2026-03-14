@@ -14,7 +14,9 @@
       "Bash(cd D:/Projects/Martin/fishbase && ./mvnw.cmd clean compile 2>&1 | tail -10)",
       "Bash(cd D:/Projects/Martin/fishbase && ./mvnw.cmd package -DskipTests 2>&1 | tail -10)",
       "Bash(cd D:/Projects/Martin/fishbase && ./mvnw.cmd package -DskipTests 2>&1 | tail -5)",
-      "WebFetch(domain:developers.google.com)"
+      "WebFetch(domain:developers.google.com)",
+      "Bash(cd D:/Projects/Martin/fishbase && ./mvnw.cmd package -DskipTests 2>&1)",
+      "Bash(cd D:/Projects/Martin/fishbase && ./mvnw.cmd test 2>&1 | tail -20)"
     ]
   }
 }

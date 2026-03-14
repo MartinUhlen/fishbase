@@ -1,41 +1,33 @@
 package se.martinuhlen.fishbase.google.photos;
 
-import static com.google.common.base.Suppliers.memoizeWithExpiration;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
-import static java.util.Comparator.comparing;
 import static java.util.Objects.requireNonNull;
-import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.stream.Collectors.toList;
 
-import java.time.LocalDate;
+import java.awt.Desktop;
+import java.net.URI;
 import java.util.List;
-import java.util.stream.StreamSupport;
-
-import com.google.photos.library.v1.PhotosLibraryClient;
-import com.google.photos.library.v1.proto.DateFilter;
-import com.google.photos.library.v1.proto.Filters;
-import com.google.photos.library.v1.proto.SearchMediaItemsRequest;
-import com.google.photos.types.proto.DateRange;
-import com.google.photos.types.proto.MediaItem;
-import com.google.type.Date;
 
 import se.martinuhlen.fishbase.domain.Photo;
+import se.martinuhlen.fishbase.google.photos.PickerClient.PickerSession;
 import se.martinuhlen.fishbase.utils.Logger;
 
 /**
  * Default implementation of {@link PhotoService}.
- * 
+ *
  * @author martin
  */
 class PhotoServiceImpl implements PhotoService
 {
 	private static final Logger LOGGER = Logger.getLogger(PhotoServiceImpl.class);
-	
-	private PhotosLibraryClient client;
+	private static final long TIMEOUT_MS = 30L * 60L * 1000L; // 30 minutes
 
-	PhotoServiceImpl(PhotosLibraryClient client)
+	private final PickerClient pickerClient;
+
+	PhotoServiceImpl(PickerClient pickerClient)
 	{
-		this.client = client;
+		this.pickerClient = pickerClient;
 	}
 
 	@Override
@@ -45,58 +37,67 @@ class PhotoServiceImpl implements PhotoService
 		log("Loading " + photos.size() + " photos");
 		return photos
 				.stream()
-				.map(photo -> new FishingPhotoImpl(photo, memoizeWithExpiration(() -> getPhoto(photo.getId()), 10, MINUTES)))
+				.map(photo -> new FishingPhotoImpl(photo, () -> { throw new IllegalStateException("Photo not in local cache"); }))
 				.collect(toList());
-	}
-
-	private GooglePhoto getPhoto(String id)
-	{
-		log("Starting downloading photo " + id);
-		try
-		{
-			MediaItem item = client.getMediaItem(id);
-			log("Finished downloading photo " + id);
-			return new GooglePhotoImpl(item);
-		}
-		catch (Exception e)
-		{
-			log("Failed to download photo " + id + ": " + e);
-			throw e;
-		}
 	}
 
 	@Override
-	public List<GooglePhoto> search(LocalDate from, LocalDate to)
+	public List<GooglePhoto> pick()
 	{
-		requireNonNull(from, "from cannot be null");
-		requireNonNull(to, "to cannot be null");
+		try
+		{
+			log("Creating picker session");
+			PickerSession session = pickerClient.createSession();
+			log("Picker session created: " + session.id() + ", opening browser at " + session.pickerUri());
 
-		log("Searching photos " + from + " - " + to);
-		Iterable<MediaItem> items = client.searchMediaItems(SearchMediaItemsRequest.newBuilder()
-				.setPageSize(100)
-				.setFilters(Filters.newBuilder()
-						.setDateFilter(DateFilter.newBuilder()
-								.addRanges(DateRange.newBuilder()
-										.setStartDate(toDate(from))
-										.setEndDate(toDate(to)).build())
-								.build())
-						.build())
-				.build())
-		.iterateAll();
+			Desktop.getDesktop().browse(URI.create(session.pickerUri()));
 
-		return StreamSupport.stream(items.spliterator(), false)
-				.map(GooglePhotoImpl::new)
-				.sorted(comparing(GooglePhoto::getTime))
-				.collect(toList());
-	}
+			long pollIntervalMs = session.pollIntervalMs();
+			long deadline = System.currentTimeMillis() + TIMEOUT_MS;
 
-	private Date toDate(LocalDate date)
-	{
-		return Date.newBuilder()
-				.setYear(date.getYear())
-				.setMonth(date.getMonthValue())
-				.setDay(date.getDayOfMonth())
-				.build();
+			while (System.currentTimeMillis() < deadline)
+			{
+				Thread.sleep(pollIntervalMs);
+				log("Polling picker session " + session.id());
+				if (pickerClient.isSelectionDone(session.id()))
+				{
+					log("Selection done, listing media items");
+					List<PickerGooglePhoto> items = pickerClient.listMediaItems(session.id());
+					log("Got " + items.size() + " media items");
+					try
+					{
+						pickerClient.deleteSession(session.id());
+						log("Picker session deleted");
+					}
+					catch (Exception e)
+					{
+						log("Failed to delete picker session: " + e);
+					}
+					return List.copyOf(items);
+				}
+			}
+			log("Picker session timed out after 30 minutes");
+			try
+			{
+				pickerClient.deleteSession(session.id());
+			}
+			catch (Exception e)
+			{
+				log("Failed to delete timed-out picker session: " + e);
+			}
+			return emptyList();
+		}
+		catch (InterruptedException e)
+		{
+			Thread.currentThread().interrupt();
+			log("Picker interrupted");
+			return emptyList();
+		}
+		catch (Exception e)
+		{
+			log("Picker failed: " + e);
+			throw new RuntimeException("Failed to pick photos", e);
+		}
 	}
 
 	@Override

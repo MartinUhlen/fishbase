@@ -8,6 +8,7 @@ import static javafx.scene.control.ButtonType.OK;
 import static se.martinuhlen.fishbase.javafx.utils.Images.getImageView16;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -17,6 +18,8 @@ import javafx.collections.ObservableList;
 import javafx.collections.ObservableSet;
 import javafx.collections.SetChangeListener;
 import javafx.collections.SetChangeListener.Change;
+import javafx.concurrent.Service;
+import javafx.concurrent.Task;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -28,12 +31,14 @@ import javafx.scene.control.DialogPane;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 import javafx.stage.Screen;
 import se.martinuhlen.fishbase.domain.Specimen;
 import se.martinuhlen.fishbase.domain.Trip;
@@ -158,36 +163,95 @@ public class PhotoPane extends BorderPane
 
     private void addPhotos()
 	{
-		ThumbnailPane pane = ThumbnailPane.forAdding(startDate.getValue(), endDate.getValue(), (from, to) -> service.search(from, to));
-		DialogPane dialogPane = new DialogPane();
-		dialogPane.getButtonTypes().setAll(CANCEL, OK);
-		dialogPane.setContent(pane);
-		dialogPane.setPrefWidth(Region.USE_COMPUTED_SIZE);
+		// Step 1 — Waiting dialog: open browser + show progress while user picks in Google Photos
+		Service<List<GooglePhoto>> pickService = new Service<>()
+		{
+			@Override
+			protected Task<List<GooglePhoto>> createTask()
+			{
+				return new Task<>()
+				{
+					@Override
+					protected List<GooglePhoto> call() throws Exception
+					{
+						return service.pick();
+					}
+				};
+			}
+		};
+
+		DialogPane waitingPane = new DialogPane();
+		waitingPane.getButtonTypes().setAll(CANCEL);
+		Label waitLabel = new Label("Select photos in the Google Photos browser window that just opened.");
+		ProgressIndicator waitProgress = new ProgressIndicator();
+		waitingPane.setContent(new VBox(10, waitLabel, waitProgress));
+
+		Dialog<ButtonType> waitDialog = new Dialog<>();
+		waitDialog.setTitle("Add photos");
+		waitDialog.setDialogPane(waitingPane);
+		waitDialog.setResizable(false);
+
+		pickService.setOnSucceeded(e ->
+		{
+			waitDialog.setResult(ButtonType.OK);
+			waitDialog.close();
+		});
+		pickService.setOnFailed(e ->
+		{
+			waitDialog.setResult(ButtonType.CANCEL);
+			waitDialog.close();
+		});
+
+		pickService.start();
+		waitDialog.showAndWait();
+
+		// If user cancelled, or pick failed/was interrupted, do nothing
+		if (waitDialog.getResult() != ButtonType.OK)
+		{
+			pickService.cancel();
+			return;
+		}
+
+		List<GooglePhoto> pickedPhotos = pickService.getValue();
+		if (pickedPhotos == null || pickedPhotos.isEmpty())
+		{
+			return;
+		}
+
+		// Step 2 — Review dialog: show picked photos and let user confirm
+		ThumbnailPane reviewPane = ThumbnailPane.forPicked(pickedPhotos);
+
+		DialogPane reviewDialogPane = new DialogPane();
+		reviewDialogPane.getButtonTypes().setAll(CANCEL, OK);
+		reviewDialogPane.setContent(reviewPane);
+		reviewDialogPane.setPrefWidth(Region.USE_COMPUTED_SIZE);
+
 		SetChangeListener<GooglePhoto> listener = (Change<? extends GooglePhoto> change) ->
 		{
-			Button button = (Button) dialogPane.lookupButton(OK);
-			ObservableSet<GooglePhoto> photos = pane.getSelectedPhotos();
+			Button button = (Button) reviewDialogPane.lookupButton(OK);
+			ObservableSet<GooglePhoto> photos = reviewPane.getSelectedPhotos();
 			button.setDisable(photos.isEmpty());
 			button.setText("Add " + (photos.isEmpty() ? "" : photos.size() + " ") + (photos.size() == 1 ? "photo" : "photos"));
 			setButtonUniformSize(button, false);
 		};
-		pane.getSelectedPhotos().addListener(listener);
+		reviewPane.getSelectedPhotos().addListener(listener);
 		listener.onChanged(null);
 
-		Dialog<ButtonType> dialog = new Dialog<>();
-		dialog.setTitle("Add photos");
-		dialog.setDialogPane(dialogPane);
-		dialog.setResizable(true);
-        Rectangle2D screenSize = Screen.getPrimary().getBounds();
-        dialog.setWidth(screenSize.getWidth() * 0.90);
-        dialog.setHeight(screenSize.getHeight() * 0.90);
-        dialogPane.setPrefWidth(dialog.getWidth());
-        dialogPane.setPrefHeight(dialog.getHeight());
-		dialog.showAndWait()
+		Dialog<ButtonType> reviewDialog = new Dialog<>();
+		reviewDialog.setTitle("Add photos");
+		reviewDialog.setDialogPane(reviewDialogPane);
+		reviewDialog.setResizable(true);
+		Rectangle2D screenSize = Screen.getPrimary().getBounds();
+		reviewDialog.setWidth(screenSize.getWidth() * 0.90);
+		reviewDialog.setHeight(screenSize.getHeight() * 0.90);
+		reviewDialogPane.setPrefWidth(reviewDialog.getWidth());
+		reviewDialogPane.setPrefHeight(reviewDialog.getHeight());
+
+		reviewDialog.showAndWait()
 			.filter(b -> b == OK)
 			.ifPresent(b ->
 			{
-				List<FishingPhoto> newPhotos = pane.getSelectedPhotos()
+				List<FishingPhoto> newPhotos = reviewPane.getSelectedPhotos()
 						.stream()
 						.map(photo -> service.create(photo, tripId.getValue()))
 						.collect(toList());

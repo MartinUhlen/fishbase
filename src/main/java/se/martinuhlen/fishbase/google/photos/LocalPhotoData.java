@@ -38,21 +38,26 @@ class LocalPhotoData implements PhotoData
 	@Override
 	public String getUrl()
 	{
+		if (!localFile.exists())
+		{
+			try
+			{
+				InputStream stream = getStream();
+				stream.transferTo(OutputStream.nullOutputStream());
+				stream.close();
+			}
+			catch (Exception e)
+			{
+				LOGGER.log("Failed to download remote photo for URL: " + e);
+			}
+		}
 		if (localFile.exists())
 		{
 			return get(() -> localFile.toURI().toURL().toExternalForm());
 		}
 		else
 		{
-			try
-			{
-				return remote.get().getUrl();
-			}
-			catch (Exception e)
-			{
-				LOGGER.log("Failed to get remote photo URL: " + e);
-				return PHOTO_NOT_FOUND.toExternalForm();
-			}
+			return PHOTO_NOT_FOUND.toExternalForm();
 		}
 	}
 
