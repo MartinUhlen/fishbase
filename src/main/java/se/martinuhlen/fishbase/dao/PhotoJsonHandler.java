@@ -15,33 +15,33 @@ import se.martinuhlen.fishbase.domain.Photo;
 
 class PhotoJsonHandler extends JsonHandler<Photo>
 {
-	PhotoJsonHandler(Persistence persistence)
-	{
-		super(Photo.class, persistence);
-	}
+    PhotoJsonHandler(Persistence persistence)
+    {
+        super(Photo.class, persistence);
+    }
 
-	@Override
-	public JsonElement serialize(Photo photo, Type typeOfSrc, JsonSerializationContext context)
-	{
-		JsonObject json = new JsonObject();
-		json.addProperty("id", photo.getId());
-		json.addProperty("trip", photo.getTripId());
-		json.add("specimens", serializeArray(photo.getSpecimens(), identity()));
-		json.addProperty("fileName", photo.getFileName());
-		json.addProperty("time", photo.getTime().toString());
-		json.addProperty("starred", photo.isStarred());
-		return json;
-	}
+    @Override
+    public JsonElement serialize(Photo photo, Type typeOfSrc, JsonSerializationContext context)
+    {
+        JsonObject json = new JsonObject();
+        json.addProperty("id", photo.getId());
+        json.addProperty("trip", photo.getTripId());
+        json.add("specimens", serializeArray(photo.getSpecimens(), identity()));
+        json.addProperty("fileName", photo.getFileName());
+        json.addProperty("time", photo.getTime().toString());
+        json.addProperty("starred", photo.isStarred());
+        return json;
+    }
 
-	@Override
-	public Photo deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException
-	{
-		JsonObject obj = json.getAsJsonObject();
-		return Photo.asPersisted(obj.get("id").getAsString())
-				.tripId(obj.get("trip").getAsString())
-				.specimens(deserializeArray(obj, "specimens", identity()))
-				.fileName(obj.get("fileName").getAsString())
-				.time(parse(obj.get("time").getAsString()))
-				.starred(obj.get("starred").getAsBoolean());
-	}
+    @Override
+    public Photo deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException
+    {
+        JsonObject obj = json.getAsJsonObject();
+        return Photo.asPersisted(obj.get("id").getAsString())
+                .tripId(obj.get("trip").getAsString())
+                .specimens(deserializeArray(obj, "specimens", identity()))
+                .fileName(obj.get("fileName").getAsString())
+                .time(parse(obj.get("time").getAsString()))
+                .starred(obj.get("starred").getAsBoolean());
+    }
 }

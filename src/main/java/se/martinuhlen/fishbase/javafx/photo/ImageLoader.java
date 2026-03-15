@@ -41,7 +41,7 @@ class ImageLoader extends Service<Image> implements Supplier<Image>
             @Override
             protected Image call() throws Exception
             {
-            	return new Image(requireNonNull(inputStream.get(), "inputStream cannott be null"));
+                return new Image(requireNonNull(inputStream.get(), "inputStream cannott be null"));
             }
         };
     }

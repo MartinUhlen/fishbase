@@ -17,21 +17,21 @@ public class DatePicker extends javafx.scene.control.DatePicker
     /**
      * Creates a new date picker.
      */
-	public DatePicker()
-	{
-		super();
-		setConverter(dateConverter());
-		focusedProperty().addListener(obs -> setValue(getConverter().fromString(getEditor().getText())));  // Workaround value not commited on focus lost
-	}
+    public DatePicker()
+    {
+        super();
+        setConverter(dateConverter());
+        focusedProperty().addListener(obs -> setValue(getConverter().fromString(getEditor().getText())));  // Workaround value not commited on focus lost
+    }
 
     /**
      * Creates a new date picker.
      * 
      * @param property this picker should be bound to
      */
-	public DatePicker(Property<LocalDate> property)
-	{
-		this();
-		valueProperty().bindBidirectional(property);
-	}
+    public DatePicker(Property<LocalDate> property)
+    {
+        this();
+        valueProperty().bindBidirectional(property);
+    }
 }

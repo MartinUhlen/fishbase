@@ -24,98 +24,98 @@ import se.martinuhlen.fishbase.domain.Trip;
 
 public class TripWrapper extends Wrapper<Trip>
 {
-	public TripWrapper()
-	{
-		super(EMPTY_TRIP);
-		semiBindEndDateToStartDate();
-		initSpecimenSync();
-	}
+    public TripWrapper()
+    {
+        super(EMPTY_TRIP);
+        semiBindEndDateToStartDate();
+        initSpecimenSync();
+    }
 
-	private void semiBindEndDateToStartDate()
-	{
-		startDate().addListener(obs ->
-		{
-			if (!isSettingWrapee)
-			{
-				endDate().setValue(startDate().getValue());
-			}
-		});
-	}
+    private void semiBindEndDateToStartDate()
+    {
+        startDate().addListener(obs ->
+        {
+            if (!isSettingWrapee)
+            {
+                endDate().setValue(startDate().getValue());
+            }
+        });
+    }
 
-	public ObservableValue<String> id()
-	{
-		return getProperty("id", Trip::getId);
-	}
+    public ObservableValue<String> id()
+    {
+        return getProperty("id", Trip::getId);
+    }
 
-	public Property<String> description()
-	{
-		return getProperty("description", Trip::getDescription, Trip::withDescription);
-	}
+    public Property<String> description()
+    {
+        return getProperty("description", Trip::getDescription, Trip::withDescription);
+    }
 
-	public Property<LocalDate> startDate()
-	{
-		return getProperty("startDate", Trip::getStartDate, Trip::withStartDate);
-	}
+    public Property<LocalDate> startDate()
+    {
+        return getProperty("startDate", Trip::getStartDate, Trip::withStartDate);
+    }
 
-	public Property<LocalDate> endDate()
-	{
-		return getProperty("endDate", Trip::getEndDate, Trip::withEndDate);
-	}
+    public Property<LocalDate> endDate()
+    {
+        return getProperty("endDate", Trip::getEndDate, Trip::withEndDate);
+    }
 
-	public Property<String> text()
-	{
-		return getProperty("text", Trip::getText, Trip::withText);
-	}
+    public Property<String> text()
+    {
+        return getProperty("text", Trip::getText, Trip::withText);
+    }
 
-	public Property<List<Specimen>> specimens()
-	{
-		return getProperty("specimens", Trip::getSpecimens, Trip::withSpecimens);
-	}
+    public Property<List<Specimen>> specimens()
+    {
+        return getProperty("specimens", Trip::getSpecimens, Trip::withSpecimens);
+    }
 
-	private final ObservableList<SpecimenWrapper> specimenWrappers = observableArrayList();
-	public ObservableList<SpecimenWrapper> specimenWrappers()
-	{
-		return specimenWrappers;
-	}
+    private final ObservableList<SpecimenWrapper> specimenWrappers = observableArrayList();
+    public ObservableList<SpecimenWrapper> specimenWrappers()
+    {
+        return specimenWrappers;
+    }
 
-	private void initSpecimenSync()
-	{
-		Property<List<Specimen>> property = specimens();
-		AtomicBoolean syncing = new AtomicBoolean(false);
+    private void initSpecimenSync()
+    {
+        Property<List<Specimen>> property = specimens();
+        AtomicBoolean syncing = new AtomicBoolean(false);
 
-		Runnable listToPropertyAction = () -> property.setValue(specimenWrappers.stream().map(SpecimenWrapper::getWrapee).collect(toList()));
-		InvalidationListener listToPropertyListener = (Observable obs) -> sync(syncing, listToPropertyAction);
-		specimenWrappers.addListener(listToPropertyListener);
-		specimenWrappers.addListener((Change<? extends SpecimenWrapper> change) ->
-		{
-			while(change.next())
-			{
-				change.getAddedSubList().forEach(s -> s.addListener(listToPropertyListener));
-				change.getRemoved().forEach(s -> s.removeAllListeners());
-			}
-		});
-		specimenWrappers.addListener((Change<? extends SpecimenWrapper> change) ->
-		{
-		    if (!syncing.get())
-		    {
-		        while(change.next())
-		        {
-		            removeSpecimensFromPhotos(change.getRemoved());
-		        }
-		    }
-		});
-		property.addListener(obs -> sync(syncing, () ->
-		{
-			List<SpecimenWrapper> wrappers = property.getValue().stream().map(s -> new SpecimenWrapper(s)).collect(toList());
+        Runnable listToPropertyAction = () -> property.setValue(specimenWrappers.stream().map(SpecimenWrapper::getWrapee).collect(toList()));
+        InvalidationListener listToPropertyListener = (Observable obs) -> sync(syncing, listToPropertyAction);
+        specimenWrappers.addListener(listToPropertyListener);
+        specimenWrappers.addListener((Change<? extends SpecimenWrapper> change) ->
+        {
+            while(change.next())
+            {
+                change.getAddedSubList().forEach(s -> s.addListener(listToPropertyListener));
+                change.getRemoved().forEach(s -> s.removeAllListeners());
+            }
+        });
+        specimenWrappers.addListener((Change<? extends SpecimenWrapper> change) ->
+        {
+            if (!syncing.get())
+            {
+                while(change.next())
+                {
+                    removeSpecimensFromPhotos(change.getRemoved());
+                }
+            }
+        });
+        property.addListener(obs -> sync(syncing, () ->
+        {
+            List<SpecimenWrapper> wrappers = property.getValue().stream().map(s -> new SpecimenWrapper(s)).collect(toList());
             specimenWrappers.setAll(wrappers);
-		}));
-	}
+        }));
+    }
 
     private void removeSpecimensFromPhotos(List<? extends SpecimenWrapper> removedSpecimens)
     {
         Set<String> removedSpecimenIds = removedSpecimens.stream().map(sw -> sw.getWrapee().getId()).collect(toSet());
         List<Photo> photosWithoutSpecimens = photos()
-        		.getValue()
+                .getValue()
                 .stream()
                 .map(photo -> photo.removeSpecimens(removedSpecimenIds))
                 .collect(toList());
@@ -127,31 +127,31 @@ public class TripWrapper extends Wrapper<Trip>
     }
 
     private void sync(AtomicBoolean syncing, Runnable action)
-	{
-		if (!syncing.get())
-		{
-			syncing.set(true);
-			action.run();
-			syncing.set(false);
-		}
-	}
+    {
+        if (!syncing.get())
+        {
+            syncing.set(true);
+            action.run();
+            syncing.set(false);
+        }
+    }
 
     @VisibleForTesting
-	SpecimenWrapper addSpecimen()
-	{
+    SpecimenWrapper addSpecimen()
+    {
         Specimen newSpecimen = Specimen.asNew(getWrapee().getId());
         SpecimenWrapper newWrapper = new SpecimenWrapper(newSpecimen);
         specimenWrappers().add(newWrapper);
         return newWrapper;
-	}
+    }
 
-	public Property<List<Photo>> photos()
-	{
-		return getProperty("photos", Trip::getPhotos, Trip::withPhotos);
-	}
+    public Property<List<Photo>> photos()
+    {
+        return getProperty("photos", Trip::getPhotos, Trip::withPhotos);
+    }
 
-	public boolean isEmpty()
-	{
-		return getWrapee() == EMPTY_TRIP;
-	}
+    public boolean isEmpty()
+    {
+        return getWrapee() == EMPTY_TRIP;
+    }
 }

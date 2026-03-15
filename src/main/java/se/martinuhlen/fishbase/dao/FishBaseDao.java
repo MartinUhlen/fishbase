@@ -18,52 +18,52 @@ import se.martinuhlen.fishbase.domain.Trip;
 
 public interface FishBaseDao
 {
-	public static FishBaseDao create(Persistence persistence)
-	{
-	    CompletableFuture<JsonDao> futureDao = supplyAsync(() -> new JsonDao(persistence));
-	    return (FishBaseDao) newProxyInstance(currentThread().getContextClassLoader(), new Class<?>[] {FishBaseDao.class}, (proxy, method, args) ->
-	    {
-	        JsonDao dao = futureDao.get();
-	        try
-	        {
-	        	return method.invoke(dao, args);
-	        }
-	        catch (InvocationTargetException e)
-	        {
-	        	throw e.getCause();
-	        }
-	    });
-	}
+    public static FishBaseDao create(Persistence persistence)
+    {
+        CompletableFuture<JsonDao> futureDao = supplyAsync(() -> new JsonDao(persistence));
+        return (FishBaseDao) newProxyInstance(currentThread().getContextClassLoader(), new Class<?>[] {FishBaseDao.class}, (proxy, method, args) ->
+        {
+            JsonDao dao = futureDao.get();
+            try
+            {
+                return method.invoke(dao, args);
+            }
+            catch (InvocationTargetException e)
+            {
+                throw e.getCause();
+            }
+        });
+    }
 
-	Photo getPhoto(String id);
+    Photo getPhoto(String id);
 
-	List<Photo> getPhotos(); // FIXME In which order?
+    List<Photo> getPhotos(); // FIXME In which order?
 
-	Specie getSpecie(String id);
+    Specie getSpecie(String id);
 
-	List<Specie> getSpecies();
+    List<Specie> getSpecies();
 
-	void saveSpecies(Collection<Specie> species);
+    void saveSpecies(Collection<Specie> species);
 
-	boolean isSpecieDeletable(Specie specie);
+    boolean isSpecieDeletable(Specie specie);
 
-	void deleteSpecies(Collection<Specie> species);
+    void deleteSpecies(Collection<Specie> species);
 
-	Specimen getSpecimen(String id);
-	
-	List<Specimen> getSpecimens();
+    Specimen getSpecimen(String id);
+    
+    List<Specimen> getSpecimens();
 
-	void saveSpecimens(Collection<Specimen> specimens);
+    void saveSpecimens(Collection<Specimen> specimens);
 
-	void deleteSpecimens(Collection<Specimen> specimens);
+    void deleteSpecimens(Collection<Specimen> specimens);
 
-	List<Trip> getTrips();
+    List<Trip> getTrips();
 
-	Trip getTrip(String id);
+    Trip getTrip(String id);
 
-	void saveTrip(Trip trip);
+    void saveTrip(Trip trip);
 
-	void deleteTrip(Trip trip);
+    void deleteTrip(Trip trip);
 
-	SortedSet<String> getAutoCompletions(AutoCompleteField field);
+    SortedSet<String> getAutoCompletions(AutoCompleteField field);
 }

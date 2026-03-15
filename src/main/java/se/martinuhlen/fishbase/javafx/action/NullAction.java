@@ -6,22 +6,22 @@ import javafx.event.ActionEvent;
 
 public final class NullAction implements Action
 {
-	public static final NullAction NULL_ACTION = new NullAction();
+    public static final NullAction NULL_ACTION = new NullAction();
 
-	private NullAction()
-	{
-	}
+    private NullAction()
+    {
+    }
 
-	private final SimpleBooleanProperty enabledProperty = new SimpleBooleanProperty(false);
+    private final SimpleBooleanProperty enabledProperty = new SimpleBooleanProperty(false);
 
-	@Override
-	public ReadOnlyBooleanProperty enabledProperty()
-	{
-		return enabledProperty;
-	}
+    @Override
+    public ReadOnlyBooleanProperty enabledProperty()
+    {
+        return enabledProperty;
+    }
 
-	@Override
-	public void handle(ActionEvent arg0)
-	{
-	}
+    @Override
+    public void handle(ActionEvent arg0)
+    {
+    }
 }

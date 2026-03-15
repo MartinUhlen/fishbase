@@ -32,27 +32,27 @@ import se.martinuhlen.fishbase.javafx.photo.ThumbnailPane;
 
 class PhotoView implements View
 {
-	private final ReadOnlyStringProperty titleProperty = new ReadOnlyStringWrapper("Photos").getReadOnlyProperty();
-	private final RunnableAction refreshAction = new RunnableAction(true, () -> refresh());
+    private final ReadOnlyStringProperty titleProperty = new ReadOnlyStringWrapper("Photos").getReadOnlyProperty();
+    private final RunnableAction refreshAction = new RunnableAction(true, () -> refresh());
 
-	private final PhotoService service;
-	private final FishBaseDao dao;
-	private final Consumer<String> tripOpener;
-	private final StackPane stackPane;
-	private final ThumbnailPane thumbnailPane;
-	private final ProgressIndicator progressIndicator;
-	private final PhotoLoader photoLoader;
+    private final PhotoService service;
+    private final FishBaseDao dao;
+    private final Consumer<String> tripOpener;
+    private final StackPane stackPane;
+    private final ThumbnailPane thumbnailPane;
+    private final ProgressIndicator progressIndicator;
+    private final PhotoLoader photoLoader;
 
-	PhotoView(PhotoService service, FishBaseDao dao, Consumer<String> tripOpener)
-	{
-		this.service = service;
+    PhotoView(PhotoService service, FishBaseDao dao, Consumer<String> tripOpener)
+    {
+        this.service = service;
         this.dao = dao;
         this.tripOpener = tripOpener;
-		this.thumbnailPane = createThumbnailPane();
-		this.progressIndicator = new ProgressIndicator();
-		this.stackPane = new StackPane(thumbnailPane, progressIndicator);
-		this.photoLoader = new PhotoLoader();
-	}
+        this.thumbnailPane = createThumbnailPane();
+        this.progressIndicator = new ProgressIndicator();
+        this.stackPane = new StackPane(thumbnailPane, progressIndicator);
+        this.photoLoader = new PhotoLoader();
+    }
 
     private ThumbnailPane createThumbnailPane()
     {
@@ -70,36 +70,36 @@ class PhotoView implements View
         return pane;
     }
 
-	@Override
-	public Node getContent()
-	{
-	    progressIndicator.prefHeightProperty().bind(stackPane.heightProperty().multiply(0.3));
-	    progressIndicator.prefWidthProperty().bind(progressIndicator.heightProperty());
-	    progressIndicator.setMaxSize(USE_PREF_SIZE, USE_PREF_SIZE);
-		return stackPane;
-	}
+    @Override
+    public Node getContent()
+    {
+        progressIndicator.prefHeightProperty().bind(stackPane.heightProperty().multiply(0.3));
+        progressIndicator.prefWidthProperty().bind(progressIndicator.heightProperty());
+        progressIndicator.setMaxSize(USE_PREF_SIZE, USE_PREF_SIZE);
+        return stackPane;
+    }
 
-	@Override
-	public Action refreshAction()
-	{
-		return refreshAction;
-	}
+    @Override
+    public Action refreshAction()
+    {
+        return refreshAction;
+    }
 
-	private void refresh()
-	{
-	    photoLoader.restart();
-	}
+    private void refresh()
+    {
+        photoLoader.restart();
+    }
 
-	@Override
-	public ReadOnlyStringProperty titleProperty()
-	{
-		return titleProperty;
-	}
+    @Override
+    public ReadOnlyStringProperty titleProperty()
+    {
+        return titleProperty;
+    }
 
-	private class PhotoLoader extends Service<List<FishingPhoto>>
-	{
-	    private final Timeline batchTimeline = new Timeline(new KeyFrame(Duration.millis(100), e -> addNextBatchOfPhotos()));
-	    private List<FishingPhoto> loadedPhotos = emptyList();
+    private class PhotoLoader extends Service<List<FishingPhoto>>
+    {
+        private final Timeline batchTimeline = new Timeline(new KeyFrame(Duration.millis(100), e -> addNextBatchOfPhotos()));
+        private List<FishingPhoto> loadedPhotos = emptyList();
 
         @Override
         protected Task<List<FishingPhoto>> createTask()
@@ -112,7 +112,7 @@ class PhotoView implements View
                 @Override
                 protected List<FishingPhoto> call() throws Exception
                 {
-                	List<FishingPhoto> photos = service.load(dao.getPhotos());
+                    List<FishingPhoto> photos = service.load(dao.getPhotos());
                     photos.sort(thumbnailPane.getPhotoComparator());
                     return photos;
                 }
@@ -138,5 +138,5 @@ class PhotoView implements View
                 batchTimeline.playFromStart();
             }
         }
-	}
+    }
 }

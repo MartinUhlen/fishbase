@@ -12,29 +12,29 @@ import se.martinuhlen.fishbase.domain.Specie;
 
 class SpecieJsonHandler extends JsonHandler<Specie>
 {
-	SpecieJsonHandler(Persistence persistence)
-	{
-		super(Specie.class, persistence);
-	}
+    SpecieJsonHandler(Persistence persistence)
+    {
+        super(Specie.class, persistence);
+    }
 
-	@Override
-	public JsonElement serialize(Specie specie, Type typeOfSrc, JsonSerializationContext context)
-	{
-		JsonObject json = new JsonObject();
-		json.addProperty("id", specie.getId());
-		json.addProperty("name", specie.getName());
-		json.addProperty("regWeight", specie.getRegWeight());
-		json.addProperty("freshWater", specie.isFreshWater());;
-		return json;
-	}
+    @Override
+    public JsonElement serialize(Specie specie, Type typeOfSrc, JsonSerializationContext context)
+    {
+        JsonObject json = new JsonObject();
+        json.addProperty("id", specie.getId());
+        json.addProperty("name", specie.getName());
+        json.addProperty("regWeight", specie.getRegWeight());
+        json.addProperty("freshWater", specie.isFreshWater());;
+        return json;
+    }
 
-	@Override
-	public Specie deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException
-	{
-		JsonObject obj = json.getAsJsonObject();
-		return Specie.asPersisted(obj.get("id").getAsString())
-				.name(obj.get("name").getAsString())
-				.regWeight(obj.get("regWeight").getAsInt())
-				.freshWater(obj.get("freshWater").getAsBoolean());
-	}
+    @Override
+    public Specie deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException
+    {
+        JsonObject obj = json.getAsJsonObject();
+        return Specie.asPersisted(obj.get("id").getAsString())
+                .name(obj.get("name").getAsString())
+                .regWeight(obj.get("regWeight").getAsInt())
+                .freshWater(obj.get("freshWater").getAsBoolean());
+    }
 }

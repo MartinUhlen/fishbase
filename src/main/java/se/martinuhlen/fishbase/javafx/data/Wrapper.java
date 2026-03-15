@@ -29,226 +29,226 @@ import com.google.common.flogger.FluentLogger;
  */
 public abstract class Wrapper<D extends Domain<D>> implements Observable
 {
-	private static final FluentLogger LOG = FluentLogger.forEnclosingClass();
-	private final Map<String, ReadableProperty<?>> properties;
-	private final List<InvalidationListener> listeners;
+    private static final FluentLogger LOG = FluentLogger.forEnclosingClass();
+    private final Map<String, ReadableProperty<?>> properties;
+    private final List<InvalidationListener> listeners;
 
-	protected D initialWrapee;
-	protected D currentWrapee;
-	protected boolean isSettingWrapee;
+    protected D initialWrapee;
+    protected D currentWrapee;
+    protected boolean isSettingWrapee;
 
-	Wrapper(D wrapee)
-	{
-		this.properties = new HashMap<>();
-		this.listeners = new LinkedList<>();
-		setWrapee(wrapee);
-	}
+    Wrapper(D wrapee)
+    {
+        this.properties = new HashMap<>();
+        this.listeners = new LinkedList<>();
+        setWrapee(wrapee);
+    }
 
-	Wrapper(D wrapee, InvalidationListener listener)
-	{
-		this(wrapee);
-		addListener(listener);
-	}
+    Wrapper(D wrapee, InvalidationListener listener)
+    {
+        this(wrapee);
+        addListener(listener);
+    }
 
-	public boolean hasChanges()
-	{
-		// TODO Unit tests
-		// TODO Add hasChangesProperty() and bind to saveAction?
-		return !currentWrapee.equals(initialWrapee);
-	}
+    public boolean hasChanges()
+    {
+        // TODO Unit tests
+        // TODO Add hasChangesProperty() and bind to saveAction?
+        return !currentWrapee.equals(initialWrapee);
+    }
 
-	public void setWrapee(D wrapee)
-	{
-		requireNonNull(wrapee, "wrapee can't be null");
-		this.initialWrapee = wrapee.copy();
-		this.currentWrapee = wrapee;
-		isSettingWrapee = true;
-		properties.values().forEach(p -> p.notifyListeners());
-		isSettingWrapee = false;
-		notifyListeners();
-	}
+    public void setWrapee(D wrapee)
+    {
+        requireNonNull(wrapee, "wrapee can't be null");
+        this.initialWrapee = wrapee.copy();
+        this.currentWrapee = wrapee;
+        isSettingWrapee = true;
+        properties.values().forEach(p -> p.notifyListeners());
+        isSettingWrapee = false;
+        notifyListeners();
+    }
 
-	public D getWrapee()
-	{
-		return currentWrapee;
-	}
+    public D getWrapee()
+    {
+        return currentWrapee;
+    }
 
-	@Override
-	public void addListener(InvalidationListener listener)
-	{
-		listeners.add(requireNonNull(listener, "listener can't be null"));
-	}
+    @Override
+    public void addListener(InvalidationListener listener)
+    {
+        listeners.add(requireNonNull(listener, "listener can't be null"));
+    }
 
-	@Override
-	public void removeListener(InvalidationListener listener)
-	{
-		listeners.remove(listener);
-	}
+    @Override
+    public void removeListener(InvalidationListener listener)
+    {
+        listeners.remove(listener);
+    }
 
-	public void removeAllListeners()
-	{
-		listeners.clear();
-		properties.values().forEach(p -> p.removeAllListeners());
-	}
+    public void removeAllListeners()
+    {
+        listeners.clear();
+        properties.values().forEach(p -> p.removeAllListeners());
+    }
 
-	<V> ReadOnlyProperty<V> getProperty(String name, Function<D, V> getter, Observable... dependencies)
-	{
-		ReadableProperty<V> property = getProperty(name, () -> new ReadableProperty<>(name, getter));
-		asList(dependencies).forEach(dep -> dep.addListener(obs -> property.notifyListeners()));
-		return property;
-	}
+    <V> ReadOnlyProperty<V> getProperty(String name, Function<D, V> getter, Observable... dependencies)
+    {
+        ReadableProperty<V> property = getProperty(name, () -> new ReadableProperty<>(name, getter));
+        asList(dependencies).forEach(dep -> dep.addListener(obs -> property.notifyListeners()));
+        return property;
+    }
 
-	<V> Property<V> getProperty(String name, Function<D, V> getter, BiFunction<D, V, D> wither)
-	{
-		return getProperty(name, () -> new WritableProperty<>(name, getter, wither));
-	}
+    <V> Property<V> getProperty(String name, Function<D, V> getter, BiFunction<D, V, D> wither)
+    {
+        return getProperty(name, () -> new WritableProperty<>(name, getter, wither));
+    }
 
-	@SuppressWarnings("unchecked")
-	private <P extends ReadableProperty<?>> P getProperty(String name, Supplier<P> creator)
-	{
-		return (P) properties.computeIfAbsent(name, n ->
-		{
-			P property = creator.get();
-			property.addListener(obs -> notifyListeners());
-			return property;
-		});
-	}
+    @SuppressWarnings("unchecked")
+    private <P extends ReadableProperty<?>> P getProperty(String name, Supplier<P> creator)
+    {
+        return (P) properties.computeIfAbsent(name, n ->
+        {
+            P property = creator.get();
+            property.addListener(obs -> notifyListeners());
+            return property;
+        });
+    }
 
-	protected void notifyListeners()
-	{
-		if (!isSettingWrapee)
-		{
-			listeners.forEach(l -> l.invalidated(this));
-		}
-	}
+    protected void notifyListeners()
+    {
+        if (!isSettingWrapee)
+        {
+            listeners.forEach(l -> l.invalidated(this));
+        }
+    }
 
-	private class ReadableProperty<V> implements ReadOnlyProperty<V>
-	{
-		private final List<InvalidationListener> invalidationListeners = new LinkedList<>();
-		private final List<ChangeListener<? super V>> changeListeners = new LinkedList<>();
+    private class ReadableProperty<V> implements ReadOnlyProperty<V>
+    {
+        private final List<InvalidationListener> invalidationListeners = new LinkedList<>();
+        private final List<ChangeListener<? super V>> changeListeners = new LinkedList<>();
 
-		final String name;
-		final Function<D, V> getter;
+        final String name;
+        final Function<D, V> getter;
 
-		ReadableProperty(String name, Function<D, V> getter)
-		{
-			this.name = name;
-			this.getter = getter;
-		}
+        ReadableProperty(String name, Function<D, V> getter)
+        {
+            this.name = name;
+            this.getter = getter;
+        }
 
-		@Override
-		public void addListener(InvalidationListener listener)
-		{
-			requireNonNull(listener);
-			invalidationListeners.add(listener);
-		}
+        @Override
+        public void addListener(InvalidationListener listener)
+        {
+            requireNonNull(listener);
+            invalidationListeners.add(listener);
+        }
 
-		@Override
-		public void removeListener(InvalidationListener listener)
-		{
-			requireNonNull(listener);
-			invalidationListeners.remove(listener);
-		}
+        @Override
+        public void removeListener(InvalidationListener listener)
+        {
+            requireNonNull(listener);
+            invalidationListeners.remove(listener);
+        }
 
-		@Override
-		public void addListener(ChangeListener<? super V> listener)
-		{
-			requireNonNull(listener);
-			changeListeners.add(listener);
-		}
+        @Override
+        public void addListener(ChangeListener<? super V> listener)
+        {
+            requireNonNull(listener);
+            changeListeners.add(listener);
+        }
 
-		@Override
-		public void removeListener(ChangeListener<? super V> listener)
-		{
-			requireNonNull(listener);
-			changeListeners.remove(listener);
-		}
+        @Override
+        public void removeListener(ChangeListener<? super V> listener)
+        {
+            requireNonNull(listener);
+            changeListeners.remove(listener);
+        }
 
-		void removeAllListeners()
-		{
-			invalidationListeners.clear();
-			changeListeners.clear();
-		}
+        void removeAllListeners()
+        {
+            invalidationListeners.clear();
+            changeListeners.clear();
+        }
 
-		@Override
-		public V getValue()
-		{
-			return getter.apply(currentWrapee);
-		}
+        @Override
+        public V getValue()
+        {
+            return getter.apply(currentWrapee);
+        }
 
-		void notifyListeners()
-		{
-			notifyListeners(null, getValue());
-		}
+        void notifyListeners()
+        {
+            notifyListeners(null, getValue());
+        }
 
-		void notifyListeners(V oldValue, V newValue)
-		{
-			invalidationListeners.forEach(l -> l.invalidated(this));
-			changeListeners.forEach(l -> l.changed(this, oldValue, newValue));
-		}
+        void notifyListeners(V oldValue, V newValue)
+        {
+            invalidationListeners.forEach(l -> l.invalidated(this));
+            changeListeners.forEach(l -> l.changed(this, oldValue, newValue));
+        }
 
-		@Override
-		public Object getBean()
-		{
-			return Wrapper.this;
-		}
+        @Override
+        public Object getBean()
+        {
+            return Wrapper.this;
+        }
 
-		@Override
-		public String getName()
-		{
-			return name;
-		}
-	}
+        @Override
+        public String getName()
+        {
+            return name;
+        }
+    }
 
-	private class WritableProperty<V> extends ReadableProperty<V> implements Property<V>
-	{
+    private class WritableProperty<V> extends ReadableProperty<V> implements Property<V>
+    {
         private final BiFunction<D, V, D> wither;
 
-		WritableProperty(String name, Function<D, V> getter, BiFunction<D, V, D> wither)
-		{
-			super(name, getter);
+        WritableProperty(String name, Function<D, V> getter, BiFunction<D, V, D> wither)
+        {
+            super(name, getter);
             this.wither = wither;
-		}
+        }
 
-		@Override
-		public void setValue(V value)
-		{
-			V oldValue = getValue();
-			if (!Objects.equals(oldValue, value))
-			{
-				LOG.atFine().log("Changing '%s' from '%s' to '%s'", name, oldValue, value);
-				currentWrapee = wither.apply(currentWrapee, value);
-				notifyListeners(oldValue, value);
-			}
-		}
+        @Override
+        public void setValue(V value)
+        {
+            V oldValue = getValue();
+            if (!Objects.equals(oldValue, value))
+            {
+                LOG.atFine().log("Changing '%s' from '%s' to '%s'", name, oldValue, value);
+                currentWrapee = wither.apply(currentWrapee, value);
+                notifyListeners(oldValue, value);
+            }
+        }
 
-		@Override
-		public void bindBidirectional(Property<V> property)
-		{
-			Bindings.bindBidirectional(this, property);
-		}
+        @Override
+        public void bindBidirectional(Property<V> property)
+        {
+            Bindings.bindBidirectional(this, property);
+        }
 
-		@Override
-		public void unbindBidirectional(Property<V> property)
-		{
-			Bindings.unbindBidirectional(this, property);
-		}
+        @Override
+        public void unbindBidirectional(Property<V> property)
+        {
+            Bindings.unbindBidirectional(this, property);
+        }
 
-		@Override
-		public void bind(ObservableValue<? extends V> value)
-		{
-			throw new UnsupportedOperationException("Uni-directional binding is not supported by " + getClass().getName());
-		}
+        @Override
+        public void bind(ObservableValue<? extends V> value)
+        {
+            throw new UnsupportedOperationException("Uni-directional binding is not supported by " + getClass().getName());
+        }
 
-		@Override
-		public void unbind()
-		{
-		}
+        @Override
+        public void unbind()
+        {
+        }
 
-		@Override
-		public boolean isBound()
-		{
-			return false;
-		}
-	}
+        @Override
+        public boolean isBound()
+        {
+            return false;
+        }
+    }
 }

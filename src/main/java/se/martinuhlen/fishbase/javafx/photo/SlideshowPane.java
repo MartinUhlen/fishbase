@@ -30,35 +30,35 @@ import se.martinuhlen.fishbase.utils.Cursor;
 
 public class SlideshowPane extends BorderPane
 {
-	private static final Supplier<Image> NULL_SUPPLIER = () -> null;
+    private static final Supplier<Image> NULL_SUPPLIER = () -> null;
 
     private final ImageView imageView;
-	private Supplier<Image> previousImage;
-	private Supplier<Image> nextImage;
-	private ImageViewLoader loader;
+    private Supplier<Image> previousImage;
+    private Supplier<Image> nextImage;
+    private ImageViewLoader loader;
 
-	private final VideoPane videoPane;
+    private final VideoPane videoPane;
 
-	private final Label statusLabel;
-	private final Button firstButton;
-	private final Button previousButton;
-	private final Button nextButton;
-	private final Button lastButton;
-	private final VBox bottomBox;
+    private final Label statusLabel;
+    private final Button firstButton;
+    private final Button previousButton;
+    private final Button nextButton;
+    private final Button lastButton;
+    private final VBox bottomBox;
 
-	private Cursor<GooglePhoto> photos;
-	private ImageSize buttonSize;
+    private Cursor<GooglePhoto> photos;
+    private ImageSize buttonSize;
 
-	private ObservableValue<? extends Number> fitWidthValue;
-	private ObservableValue<? extends Number> fitHeightValue;
+    private ObservableValue<? extends Number> fitWidthValue;
+    private ObservableValue<? extends Number> fitHeightValue;
 
-	/**
-	 * Creates a new slideshow pane.
-	 * 
-	 * @param openStageOnClick {@code true} to open a new slideshow in a modal stage when this slideshow is clicked
-	 */
-	public SlideshowPane(boolean openStageOnClick)
-	{
+    /**
+     * Creates a new slideshow pane.
+     * 
+     * @param openStageOnClick {@code true} to open a new slideshow in a modal stage when this slideshow is clicked
+     */
+    public SlideshowPane(boolean openStageOnClick)
+    {
         imageView = new ImageView();
         imageView.setPreserveRatio(true);
         imageView.setSmooth(true);
@@ -85,125 +85,125 @@ public class SlideshowPane extends BorderPane
         {
             imageView.setOnMouseClicked(SlideshowStage.openOnClick(hasPhoto -> photos.copy()));
         }
-	}
+    }
 
-	/**
-	 * Creates a new slideshow pane, passing {@code true} to {@link SlideshowPane#SlideshowPane(boolean)}.
-	 */
-	public SlideshowPane()
-	{
-	    this(true);
-	}
+    /**
+     * Creates a new slideshow pane, passing {@code true} to {@link SlideshowPane#SlideshowPane(boolean)}.
+     */
+    public SlideshowPane()
+    {
+        this(true);
+    }
 
-	public void setButtonSize(ImageSize size)
-	{
-		this.buttonSize = size;
-		setButtonIcons();
-	}
+    public void setButtonSize(ImageSize size)
+    {
+        this.buttonSize = size;
+        setButtonIcons();
+    }
 
-	private void setButtonIcons()
-	{
-		ImageSize size = buttonSize != null ? buttonSize : (getHeight() < 600 ? SIZE_16 : SIZE_32);
-		firstButton.setGraphic(getImage("navigate_beginning.png", size));
-		previousButton.setGraphic(getImage("navigate_left.png", size));
-		nextButton.setGraphic(getImage("navigate_right.png", size));
-		lastButton.setGraphic(getImage("navigate_end.png", size));
-	}
+    private void setButtonIcons()
+    {
+        ImageSize size = buttonSize != null ? buttonSize : (getHeight() < 600 ? SIZE_16 : SIZE_32);
+        firstButton.setGraphic(getImage("navigate_beginning.png", size));
+        previousButton.setGraphic(getImage("navigate_left.png", size));
+        nextButton.setGraphic(getImage("navigate_right.png", size));
+        lastButton.setGraphic(getImage("navigate_end.png", size));
+    }
 
-	private Node getImage(String name, ImageSize size)
-	{
-		return Images.getImageView(name, size);
-	}
+    private Node getImage(String name, ImageSize size)
+    {
+        return Images.getImageView(name, size);
+    }
 
-	private Button button(String tooltip, Runnable action)
-	{
-		Button button = new Button();
-		button.setTooltip(new Tooltip(tooltip));
-		button.setDisable(true);
-		button.onActionProperty().set(e -> action.run());
-		return button;
-	}
+    private Button button(String tooltip, Runnable action)
+    {
+        Button button = new Button();
+        button.setTooltip(new Tooltip(tooltip));
+        button.setDisable(true);
+        button.onActionProperty().set(e -> action.run());
+        return button;
+    }
 
-	public void setPhotos(Cursor<GooglePhoto> photos)
-	{
-		this.photos = requireNonNull(photos);
+    public void setPhotos(Cursor<GooglePhoto> photos)
+    {
+        this.photos = requireNonNull(photos);
         previousImage = NULL_SUPPLIER;
         nextImage = NULL_SUPPLIER;
         imageView.setImage(null);
         videoPane.disposeCurrentVideo();
 
-		if (photos.hasCurrent())
-		{
-			showPhoto(photos.current(), NULL_SUPPLIER);
-			preloadPrevious();
-			preloadNext();
-		}
-		else
-		{
-			setCenter(null);
-			updateState(null);
-		}
-	}
+        if (photos.hasCurrent())
+        {
+            showPhoto(photos.current(), NULL_SUPPLIER);
+            preloadPrevious();
+            preloadNext();
+        }
+        else
+        {
+            setCenter(null);
+            updateState(null);
+        }
+    }
 
-	private void showFirstPhoto()
-	{
-		previousImage = NULL_SUPPLIER;
-		showPhoto(photos.first(), NULL_SUPPLIER);
-		preloadNext();
-	}
+    private void showFirstPhoto()
+    {
+        previousImage = NULL_SUPPLIER;
+        showPhoto(photos.first(), NULL_SUPPLIER);
+        preloadNext();
+    }
 
-	private void showPreviousPhoto()
-	{
-		nextImage = currentImage();
-		showPhoto(photos.previous(), previousImage);
-		preloadPrevious();
-	}
+    private void showPreviousPhoto()
+    {
+        nextImage = currentImage();
+        showPhoto(photos.previous(), previousImage);
+        preloadPrevious();
+    }
 
-	private void showNextPhoto()
-	{
-		previousImage = currentImage();
-		showPhoto(photos.next(), nextImage);
-		preloadNext();
-	}
+    private void showNextPhoto()
+    {
+        previousImage = currentImage();
+        showPhoto(photos.next(), nextImage);
+        preloadNext();
+    }
 
-	private Supplier<Image> currentImage()
-	{
-	    if (photos.current().isVideo())
-	    {
-	        return NULL_SUPPLIER;
-	    }
-	    else
-	    {
-	        return ofNullable(imageView.getImage())
-	                .map(img -> (Supplier<Image>) () -> img)
-	                .orElseGet(() -> new ImageLoader(() -> photos.current().getContent().getStream(), true));
-	    }
-	}
+    private Supplier<Image> currentImage()
+    {
+        if (photos.current().isVideo())
+        {
+            return NULL_SUPPLIER;
+        }
+        else
+        {
+            return ofNullable(imageView.getImage())
+                    .map(img -> (Supplier<Image>) () -> img)
+                    .orElseGet(() -> new ImageLoader(() -> photos.current().getContent().getStream(), true));
+        }
+    }
 
-	private void showLastPhoto()
-	{
-		nextImage = NULL_SUPPLIER;
-		showPhoto(photos.last(), NULL_SUPPLIER);
-		preloadPrevious();
-	}
+    private void showLastPhoto()
+    {
+        nextImage = NULL_SUPPLIER;
+        showPhoto(photos.last(), NULL_SUPPLIER);
+        preloadPrevious();
+    }
 
-	private void preloadPrevious()
-	{
-		previousImage = NULL_SUPPLIER;
-		if (photos.hasPrevious())
-		{
-			previousImage = preload(photos.peekPrevious());
-		}
-	}
+    private void preloadPrevious()
+    {
+        previousImage = NULL_SUPPLIER;
+        if (photos.hasPrevious())
+        {
+            previousImage = preload(photos.peekPrevious());
+        }
+    }
 
-	private void preloadNext()
-	{
-		nextImage = NULL_SUPPLIER;
-		if (photos.hasNext())
-		{
-			nextImage = preload(photos.peekNext());
-		}
-	}
+    private void preloadNext()
+    {
+        nextImage = NULL_SUPPLIER;
+        if (photos.hasNext())
+        {
+            nextImage = preload(photos.peekNext());
+        }
+    }
 
     private Supplier<Image> preload(GooglePhoto photo)
     {
@@ -217,19 +217,19 @@ public class SlideshowPane extends BorderPane
         }
     }
 
-	private void showPhoto(GooglePhoto photo, Supplier<Image> supplier)
-	{
-		if (photo.isVideo())
-		{
-			showVideo(photo);
-		}
-		else
-		{
-			videoPane.disposeCurrentVideo();
-			showImage(photo, supplier);
-		}
-		updateState(photo);
-	}
+    private void showPhoto(GooglePhoto photo, Supplier<Image> supplier)
+    {
+        if (photo.isVideo())
+        {
+            showVideo(photo);
+        }
+        else
+        {
+            videoPane.disposeCurrentVideo();
+            showImage(photo, supplier);
+        }
+        updateState(photo);
+    }
 
     private void showVideo(GooglePhoto photo)
     {
@@ -261,15 +261,15 @@ public class SlideshowPane extends BorderPane
         }.start();        
     }
 
-	private void showImage(GooglePhoto photo, Supplier<Image> supplier)
-	{
-		setCenter(imageView);
-		imageView.setImage(null);
-		ofNullable(supplier.get())
-		        .ifPresentOrElse(
-		                img -> imageView.setImage(img),
-		                () -> loadImage(photo));
-	}
+    private void showImage(GooglePhoto photo, Supplier<Image> supplier)
+    {
+        setCenter(imageView);
+        imageView.setImage(null);
+        ofNullable(supplier.get())
+                .ifPresentOrElse(
+                        img -> imageView.setImage(img),
+                        () -> loadImage(photo));
+    }
 
     private void loadImage(GooglePhoto photo)
     {
@@ -281,80 +281,80 @@ public class SlideshowPane extends BorderPane
         loader.start();
     }
 
-	private void updateState(GooglePhoto photo)
-	{
-		statusLabel.setText(photo == null ? "" : getStatusText(photo));
-		firstButton.setDisable(photos.isFirst() || photos.isEmpty());
-		previousButton.setDisable(!photos.hasPrevious());
-		nextButton.setDisable(!photos.hasNext());
-		lastButton.setDisable(photos.isLast() || photos.isEmpty());
-	}
+    private void updateState(GooglePhoto photo)
+    {
+        statusLabel.setText(photo == null ? "" : getStatusText(photo));
+        firstButton.setDisable(photos.isFirst() || photos.isEmpty());
+        previousButton.setDisable(!photos.hasPrevious());
+        nextButton.setDisable(!photos.hasNext());
+        lastButton.setDisable(photos.isLast() || photos.isEmpty());
+    }
 
-	private String getStatusText(GooglePhoto photo)
-	{
-		return String.format("%s (%s/%s)",
-				photo.getName(),
-				(photos.currentIndex() + 1), photos.size());
-	}
+    private String getStatusText(GooglePhoto photo)
+    {
+        return String.format("%s (%s/%s)",
+                photo.getName(),
+                (photos.currentIndex() + 1), photos.size());
+    }
 
-	/**
-	 * Binds the size of this slideshow to fit within the bounds of given observable values.
-	 *
-	 * @param fitWidthValue maximum width to fit within
-	 * @param fitHeightValue maximum height to fit within
-	 */
-	public void bindSizeToFitWithin(ObservableValue<? extends Number> fitWidthValue, ObservableValue<? extends Number> fitHeightValue)
-	{
-		this.fitWidthValue = fitWidthValue;
-		this.fitHeightValue = fitHeightValue;
-		imageView.fitWidthProperty().unbind();
-		imageView.fitHeightProperty().unbind();
-		minWidthProperty().unbind();
-		minHeightProperty().unbind();
-		prefWidthProperty().unbind();
-		prefHeightProperty().unbind();
-		maxWidthProperty().unbind();
-		maxHeightProperty().unbind();
-		setMinWidth(USE_PREF_SIZE);
-		setMinHeight(USE_PREF_SIZE);
-		setMaxWidth(USE_PREF_SIZE);
-		setMaxHeight(USE_PREF_SIZE);
+    /**
+     * Binds the size of this slideshow to fit within the bounds of given observable values.
+     *
+     * @param fitWidthValue maximum width to fit within
+     * @param fitHeightValue maximum height to fit within
+     */
+    public void bindSizeToFitWithin(ObservableValue<? extends Number> fitWidthValue, ObservableValue<? extends Number> fitHeightValue)
+    {
+        this.fitWidthValue = fitWidthValue;
+        this.fitHeightValue = fitHeightValue;
+        imageView.fitWidthProperty().unbind();
+        imageView.fitHeightProperty().unbind();
+        minWidthProperty().unbind();
+        minHeightProperty().unbind();
+        prefWidthProperty().unbind();
+        prefHeightProperty().unbind();
+        maxWidthProperty().unbind();
+        maxHeightProperty().unbind();
+        setMinWidth(USE_PREF_SIZE);
+        setMinHeight(USE_PREF_SIZE);
+        setMaxWidth(USE_PREF_SIZE);
+        setMaxHeight(USE_PREF_SIZE);
 
-		InvalidationListener listener = obs -> fitSize();
-		fitWidthValue.addListener(listener);
-		fitHeightValue.addListener(listener);
-		imageView.imageProperty().addListener(listener);
-	}
+        InvalidationListener listener = obs -> fitSize();
+        fitWidthValue.addListener(listener);
+        fitHeightValue.addListener(listener);
+        imageView.imageProperty().addListener(listener);
+    }
 
-	private void fitSize()
-	{
-		Image image = imageView.getImage();
-		if (image == null)
-		{
-			return;
-		}
+    private void fitSize()
+    {
+        Image image = imageView.getImage();
+        if (image == null)
+        {
+            return;
+        }
 
-		double imageWidth = image.getWidth();
-		double imageHeight = image.getHeight();
-		if (imageWidth <= 0 || imageHeight <= 0)
-		{
-			return;
-		}
+        double imageWidth = image.getWidth();
+        double imageHeight = image.getHeight();
+        if (imageWidth <= 0 || imageHeight <= 0)
+        {
+            return;
+        }
 
-		double maxWidth = fitWidthValue.getValue().doubleValue();
-		double maxHeight = fitHeightValue.getValue().doubleValue();
-		double ratio = imageWidth / imageHeight;
-		double minLength = min(maxWidth, maxHeight);
-		double width = minLength * ratio;
-		double height = minLength;
-		setPrefWidth(width);
-		setPrefHeight(height + bottomBox.getHeight());
-		imageView.setFitWidth(width); // FIXME Needed with ResizableImageView?
-		imageView.setFitHeight(0);    // FIXME Needed with ResizableImageView?
-	}
+        double maxWidth = fitWidthValue.getValue().doubleValue();
+        double maxHeight = fitHeightValue.getValue().doubleValue();
+        double ratio = imageWidth / imageHeight;
+        double minLength = min(maxWidth, maxHeight);
+        double width = minLength * ratio;
+        double height = minLength;
+        setPrefWidth(width);
+        setPrefHeight(height + bottomBox.getHeight());
+        imageView.setFitWidth(width); // FIXME Needed with ResizableImageView?
+        imageView.setFitHeight(0);    // FIXME Needed with ResizableImageView?
+    }
 
-	private class ImageView extends ResizableImageView implements HasPhoto
-	{
+    private class ImageView extends ResizableImageView implements HasPhoto
+    {
         @Override
         public GooglePhoto getPhoto()
         {

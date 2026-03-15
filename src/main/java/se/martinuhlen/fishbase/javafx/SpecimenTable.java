@@ -52,8 +52,8 @@ import se.martinuhlen.fishbase.javafx.data.SpecimenWrapper;
 class SpecimenTable extends TableView<SpecimenWrapper>
 {
     private final ObservableList<SpecimenWrapper> specimens;
-	private final Supplier<Collection<Specie>> specieSupplier;
-	private final Function<AutoCompleteField, SortedSet<String>> autoCompleter;
+    private final Supplier<Collection<Specie>> specieSupplier;
+    private final Function<AutoCompleteField, SortedSet<String>> autoCompleter;
     private final Supplier<Trip> tripSupplier;
     private final Consumer<String> tripOpener;
 
@@ -75,22 +75,22 @@ class SpecimenTable extends TableView<SpecimenWrapper>
         this(specimens, specimens, species, autoCompleter, tripSupplier, null);
     }
 
-	@SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked")
     SpecimenTable(FilteredList<SpecimenWrapper> filteredSpecimens, Supplier<Collection<Specie>> species, Function<AutoCompleteField, SortedSet<String>> autoCompleter, Consumer<String> tripOpener)
-	{
-	    this((ObservableList<SpecimenWrapper>) filteredSpecimens.getSource(), filteredSpecimens, species, autoCompleter, null, tripOpener);
-	}
+    {
+        this((ObservableList<SpecimenWrapper>) filteredSpecimens.getSource(), filteredSpecimens, species, autoCompleter, null, tripOpener);
+    }
 
     private ContextMenu createContextMenu()
     {
-	    List<MenuItem> items = new ArrayList<>();
-	    MenuItem openTrip = new MenuItem("Open trip", getImageView16("window_next.png"));
-	    if (tripOpener != null)
-	    {
-    	    openTrip.setOnAction(e -> tripOpener.accept(getSelectedSpecimen().getTripId()));
-    	    items.add(openTrip);
-    	    items.add(new SeparatorMenuItem());
-	    }
+        List<MenuItem> items = new ArrayList<>();
+        MenuItem openTrip = new MenuItem("Open trip", getImageView16("window_next.png"));
+        if (tripOpener != null)
+        {
+            openTrip.setOnAction(e -> tripOpener.accept(getSelectedSpecimen().getTripId()));
+            items.add(openTrip);
+            items.add(new SeparatorMenuItem());
+        }
 
         MenuItem add = new MenuItem("Add", getImageView16("add.png"));
         if (tripSupplier != null)
@@ -169,143 +169,143 @@ class SpecimenTable extends TableView<SpecimenWrapper>
     }
 
     private void setSpecimens(ObservableList<SpecimenWrapper> tableSpecimens)
-	{
-		SortedList<SpecimenWrapper> sortedList = new SortedList<>(tableSpecimens);
-		setItems(sortedList);
-		sortedList.comparatorProperty().bind(comparatorProperty());
-	}
+    {
+        SortedList<SpecimenWrapper> sortedList = new SortedList<>(tableSpecimens);
+        setItems(sortedList);
+        sortedList.comparatorProperty().bind(comparatorProperty());
+    }
 
-	private Collection<TableColumn<SpecimenWrapper, ?>> createColumns()
-	{
-	    Collection<Specie> species = specieSupplier.get();
-		TableColumn<SpecimenWrapper, Specie> specieColumn = new TableColumn<>("Specie");
-		specieColumn.setCellValueFactory(cdf -> cdf.getValue().specieProperty());
-		specieColumn.setCellFactory(c ->
+    private Collection<TableColumn<SpecimenWrapper, ?>> createColumns()
+    {
+        Collection<Specie> species = specieSupplier.get();
+        TableColumn<SpecimenWrapper, Specie> specieColumn = new TableColumn<>("Specie");
+        specieColumn.setCellValueFactory(cdf -> cdf.getValue().specieProperty());
+        specieColumn.setCellFactory(c ->
         {
-        	ComboBoxTableCell<SpecimenWrapper, Specie> cell = new ComboBoxTableCell<>();
+            ComboBoxTableCell<SpecimenWrapper, Specie> cell = new ComboBoxTableCell<>();
             cell.getItems().setAll(species);
-        	cell.setConverter(specieConverter());
-        	return cell;
+            cell.setConverter(specieConverter());
+            return cell;
         });
 
-		TableColumn<SpecimenWrapper, Integer> weightColumn = new TableColumn<>("Weight");
-		weightColumn.setCellValueFactory(cdf -> cdf.getValue().weightProperty());
-		weightColumn.setCellFactory(forTableColumn(new IntegerStringConverter()));
-		weightColumn.setStyle(RIGHT_ALIGNMENT);
+        TableColumn<SpecimenWrapper, Integer> weightColumn = new TableColumn<>("Weight");
+        weightColumn.setCellValueFactory(cdf -> cdf.getValue().weightProperty());
+        weightColumn.setCellFactory(forTableColumn(new IntegerStringConverter()));
+        weightColumn.setStyle(RIGHT_ALIGNMENT);
 
-		TableColumn<SpecimenWrapper, Double> ratioColumn = new TableColumn<>("Ratio");
-		ratioColumn.setCellValueFactory(cdf -> cdf.getValue().ratioProperty());
-		ratioColumn.setCellFactory(column -> new ProgressBarTableCell<>()
+        TableColumn<SpecimenWrapper, Double> ratioColumn = new TableColumn<>("Ratio");
+        ratioColumn.setCellValueFactory(cdf -> cdf.getValue().ratioProperty());
+        ratioColumn.setCellFactory(column -> new ProgressBarTableCell<>()
         {
-        	@Override
-        	public void updateItem(Double ratio, boolean empty)
-        	{
-        		super.updateItem(ratio, empty);
-        		setTooltip(empty ? null : new Tooltip(((int) (ratio * 100)) + "%"));
-        		if (!empty)
-        		{
-        			if (ratio >= 1.0)
-        			{
-        				getGraphic().setStyle(BACKGROUND_GREEN);
-        			}
-        			else if (ratio <= 0.5)
-        			{
-        				getGraphic().setStyle(BACKGROUND_RED);
-        			}
-        			else
-        			{
-        				getGraphic().setStyle(null);
-        			}
-        		}
-        	}
+            @Override
+            public void updateItem(Double ratio, boolean empty)
+            {
+                super.updateItem(ratio, empty);
+                setTooltip(empty ? null : new Tooltip(((int) (ratio * 100)) + "%"));
+                if (!empty)
+                {
+                    if (ratio >= 1.0)
+                    {
+                        getGraphic().setStyle(BACKGROUND_GREEN);
+                    }
+                    else if (ratio <= 0.5)
+                    {
+                        getGraphic().setStyle(BACKGROUND_RED);
+                    }
+                    else
+                    {
+                        getGraphic().setStyle(null);
+                    }
+                }
+            }
         });
 
-		TableColumn<SpecimenWrapper, Float> lengthColumn = new TableColumn<>("Length");
-		lengthColumn.setStyle(RIGHT_ALIGNMENT);
-		lengthColumn.setCellValueFactory(cdf -> cdf.getValue().lengthProperty());
-		lengthColumn.setCellFactory(forTableColumn(lengthConverter()));
+        TableColumn<SpecimenWrapper, Float> lengthColumn = new TableColumn<>("Length");
+        lengthColumn.setStyle(RIGHT_ALIGNMENT);
+        lengthColumn.setCellValueFactory(cdf -> cdf.getValue().lengthProperty());
+        lengthColumn.setCellFactory(forTableColumn(lengthConverter()));
 
-		TableColumn<SpecimenWrapper, String> locationColumn = new TableColumn<>("Location");
-		locationColumn.setCellValueFactory(f -> f.getValue().locationProperty());
-		locationColumn.setCellFactory(forTableColumn());
+        TableColumn<SpecimenWrapper, String> locationColumn = new TableColumn<>("Location");
+        locationColumn.setCellValueFactory(f -> f.getValue().locationProperty());
+        locationColumn.setCellFactory(forTableColumn());
 
-		TableColumn<SpecimenWrapper, LocalDate> dateColumn = new TableColumn<>("Date");
-		dateColumn.setCellValueFactory(cdf -> cdf.getValue().dateProperty());
-		dateColumn.setCellFactory(forTableColumn(dateConverter()));
+        TableColumn<SpecimenWrapper, LocalDate> dateColumn = new TableColumn<>("Date");
+        dateColumn.setCellValueFactory(cdf -> cdf.getValue().dateProperty());
+        dateColumn.setCellFactory(forTableColumn(dateConverter()));
 
-		TableColumn<SpecimenWrapper, LocalTime> timeColumn = new TableColumn<>("Time");
-		timeColumn.setCellValueFactory(cdf -> cdf.getValue().timeProperty());
-		timeColumn.setCellFactory(forTableColumn(timeConverter()));
+        TableColumn<SpecimenWrapper, LocalTime> timeColumn = new TableColumn<>("Time");
+        timeColumn.setCellValueFactory(cdf -> cdf.getValue().timeProperty());
+        timeColumn.setCellFactory(forTableColumn(timeConverter()));
 
-		TableColumn<SpecimenWrapper, String> methodColumn = new TableColumn<>("Method");
-		methodColumn.setCellValueFactory(f -> f.getValue().methodProperty());
-		methodColumn.setCellFactory(forTableColumn());
+        TableColumn<SpecimenWrapper, String> methodColumn = new TableColumn<>("Method");
+        methodColumn.setCellValueFactory(f -> f.getValue().methodProperty());
+        methodColumn.setCellFactory(forTableColumn());
 
-		TableColumn<SpecimenWrapper, String> baitColumn = new TableColumn<>("Bait");
-		baitColumn.setCellValueFactory(f -> f.getValue().baitProperty());
-		baitColumn.setCellFactory(forTableColumn());
+        TableColumn<SpecimenWrapper, String> baitColumn = new TableColumn<>("Bait");
+        baitColumn.setCellValueFactory(f -> f.getValue().baitProperty());
+        baitColumn.setCellFactory(forTableColumn());
 
-		TableColumn<SpecimenWrapper, String> weatherColumn = new TableColumn<>("Weather");
-		weatherColumn.setCellValueFactory(f -> f.getValue().weatherProperty());
-		weatherColumn.setCellFactory(forTableColumn());
+        TableColumn<SpecimenWrapper, String> weatherColumn = new TableColumn<>("Weather");
+        weatherColumn.setCellValueFactory(f -> f.getValue().weatherProperty());
+        weatherColumn.setCellFactory(forTableColumn());
 
-		TableColumn<SpecimenWrapper, String> textColumn = new TableColumn<>("Text");
-		textColumn.setCellValueFactory(f -> f.getValue().textProperty());
-		textColumn.setCellFactory(forTableColumn());
+        TableColumn<SpecimenWrapper, String> textColumn = new TableColumn<>("Text");
+        textColumn.setCellValueFactory(f -> f.getValue().textProperty());
+        textColumn.setCellFactory(forTableColumn());
 
-		specieColumn.setPrefWidth(80);
-		weightColumn.setPrefWidth(70);
-		ratioColumn.setPrefWidth(120);
-		lengthColumn.setPrefWidth(70);
-		locationColumn.setPrefWidth(200);
-		dateColumn.setPrefWidth(100);
-		timeColumn.setPrefWidth(60);
-		methodColumn.setPrefWidth(110);
-		baitColumn.setPrefWidth(200);
-		weatherColumn.setPrefWidth(110);
-		widthProperty().addListener(o -> resizeTextColumn());
+        specieColumn.setPrefWidth(80);
+        weightColumn.setPrefWidth(70);
+        ratioColumn.setPrefWidth(120);
+        lengthColumn.setPrefWidth(70);
+        locationColumn.setPrefWidth(200);
+        dateColumn.setPrefWidth(100);
+        timeColumn.setPrefWidth(60);
+        methodColumn.setPrefWidth(110);
+        baitColumn.setPrefWidth(200);
+        weatherColumn.setPrefWidth(110);
+        widthProperty().addListener(o -> resizeTextColumn());
 
-		return asList(specieColumn, weightColumn, ratioColumn, lengthColumn, locationColumn, dateColumn, timeColumn, methodColumn, baitColumn, weatherColumn, textColumn);
-	}
+        return asList(specieColumn, weightColumn, ratioColumn, lengthColumn, locationColumn, dateColumn, timeColumn, methodColumn, baitColumn, weatherColumn, textColumn);
+    }
 
-	/**
-	 * Resizes text column to occupy remaining width of table.
-	 * <p>
-	 * TableView has bad support for column sizes, it lacks pack feature as J(X)Table has.
-	 * Clicking edge of column header resizes column to fit content, but implementation is hidden in TableSkinUtils.
-	 * <p>
-	 * Possible workarounds:
-	 * 		http://dlsc.com/2015/12/10/javafx-tip-22-autosize-tree-table-columns/
-	 *		Google "javafx tableview autosize columns"
-	 */
-	private void resizeTextColumn()
-	{
-		TableColumn<?, ?> textColumn = getColumns().get(getColumns().size() - 1);
-		double occupiedWidth = getColumns().stream().filter(c -> c != textColumn).mapToDouble(TableColumn::getWidth).sum();
-		double columnWidth = Math.max(getWidth() - occupiedWidth - 16, 80);
-		textColumn.setPrefWidth(columnWidth);
-	}
+    /**
+     * Resizes text column to occupy remaining width of table.
+     * <p>
+     * TableView has bad support for column sizes, it lacks pack feature as J(X)Table has.
+     * Clicking edge of column header resizes column to fit content, but implementation is hidden in TableSkinUtils.
+     * <p>
+     * Possible workarounds:
+     *         http://dlsc.com/2015/12/10/javafx-tip-22-autosize-tree-table-columns/
+     *        Google "javafx tableview autosize columns"
+     */
+    private void resizeTextColumn()
+    {
+        TableColumn<?, ?> textColumn = getColumns().get(getColumns().size() - 1);
+        double occupiedWidth = getColumns().stream().filter(c -> c != textColumn).mapToDouble(TableColumn::getWidth).sum();
+        double columnWidth = Math.max(getWidth() - occupiedWidth - 16, 80);
+        textColumn.setPrefWidth(columnWidth);
+    }
 
-	/**
-	 * Adds column to display if specimen has photo(s).
-	 * 
-	 * @param hasPhoto tests whether a specimen has photo(s) or not
-	 */
-	void addPhotoColumn(Predicate<SpecimenWrapper> hasPhoto)
-	{
-		TableColumn<SpecimenWrapper, Boolean> column = new TableColumn<>("");
-		column.setEditable(false);
-		column.setCellValueFactory(cdf -> new SimpleBooleanProperty(hasPhoto.test(cdf.getValue())));
-		column.setCellFactory(c -> new TableCell<>()
-		{
-			@Override
-			protected void updateItem(Boolean hasPhoto, boolean empty)
-			{
-				super.updateItem(hasPhoto, empty);
-				setGraphic(TRUE.equals(hasPhoto) ? getImageView16("photo.png") : null);
-				setAlignment(CENTER);
-			}
-		});
-		getColumns().add(10, column);
-	}
+    /**
+     * Adds column to display if specimen has photo(s).
+     * 
+     * @param hasPhoto tests whether a specimen has photo(s) or not
+     */
+    void addPhotoColumn(Predicate<SpecimenWrapper> hasPhoto)
+    {
+        TableColumn<SpecimenWrapper, Boolean> column = new TableColumn<>("");
+        column.setEditable(false);
+        column.setCellValueFactory(cdf -> new SimpleBooleanProperty(hasPhoto.test(cdf.getValue())));
+        column.setCellFactory(c -> new TableCell<>()
+        {
+            @Override
+            protected void updateItem(Boolean hasPhoto, boolean empty)
+            {
+                super.updateItem(hasPhoto, empty);
+                setGraphic(TRUE.equals(hasPhoto) ? getImageView16("photo.png") : null);
+                setAlignment(CENTER);
+            }
+        });
+        getColumns().add(10, column);
+    }
 }

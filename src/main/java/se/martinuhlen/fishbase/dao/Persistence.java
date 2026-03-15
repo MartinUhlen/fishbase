@@ -18,7 +18,7 @@ public interface Persistence
      * @return input stream with given name
      * @throws IOException if data can't be read
      */
-	InputStream input(String name) throws IOException;
+    InputStream input(String name) throws IOException;
 
     /**
      * Gets an output stream with given name.
@@ -27,5 +27,5 @@ public interface Persistence
      * @return output stream with given name
      * @throws IOException if data can't be written
      */
-	OutputStream output(String name) throws IOException;
+    OutputStream output(String name) throws IOException;
 }

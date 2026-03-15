@@ -9,14 +9,14 @@ import se.martinuhlen.fishbase.domain.Specie;
  */
 public class SpecieTextPredicate extends TextPredicate<Specie>
 {
-	public SpecieTextPredicate(String text)
-	{
-		super(text);
-	}
+    public SpecieTextPredicate(String text)
+    {
+        super(text);
+    }
 
-	@Override
-	boolean matchesText(Specie specie, String text)
-	{
-		return containsIgnoreCase(specie.getName(), text);
-	}
+    @Override
+    boolean matchesText(Specie specie, String text)
+    {
+        return containsIgnoreCase(specie.getName(), text);
+    }
 }

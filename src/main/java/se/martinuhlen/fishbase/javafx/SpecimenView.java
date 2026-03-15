@@ -47,59 +47,59 @@ import se.martinuhlen.fishbase.utils.Cursor;
 
 class SpecimenView extends AbstractTableView<SpecimenWrapper, Specimen>
 {
-	private final FishBaseDao dao;
-	private final PhotoService photoService;
-	private final SlideshowPane slideshow;
-	private final PhotoLoader photoLoader;
-	private final Consumer<String> tripOpener;
-	private final TextField filterField;
-	private final Slider ratioSlider;
-	private final CheckBox personalBestCheckBox;
+    private final FishBaseDao dao;
+    private final PhotoService photoService;
+    private final SlideshowPane slideshow;
+    private final PhotoLoader photoLoader;
+    private final Consumer<String> tripOpener;
+    private final TextField filterField;
+    private final Slider ratioSlider;
+    private final CheckBox personalBestCheckBox;
 
-	SpecimenView(FishBaseDao dao, PhotoService photoService, Consumer<String> tripOpener)
-	{
-		super("Specimens", dao::getSpecimens, dao::saveSpecimens, dao::deleteSpecimens);
-		this.dao = dao;
-		this.photoService = photoService;
-		this.tripOpener = tripOpener;
-		this.slideshow = new SlideshowPane();
-		this.photoLoader = new PhotoLoader();
+    SpecimenView(FishBaseDao dao, PhotoService photoService, Consumer<String> tripOpener)
+    {
+        super("Specimens", dao::getSpecimens, dao::saveSpecimens, dao::deleteSpecimens);
+        this.dao = dao;
+        this.photoService = photoService;
+        this.tripOpener = tripOpener;
+        this.slideshow = new SlideshowPane();
+        this.photoLoader = new PhotoLoader();
         this.filterField = createClearableTextField();
-		this.ratioSlider = new Slider(0, 1.0, 0.5);
-		this.personalBestCheckBox = new CheckBox("PB");
-		filterField.setPromptText("Filter...");
-		filterField.setTooltip(new Tooltip("Filter specimens by free text"));
-		ratioSlider.setTooltip(new Tooltip("Filter specimens by the ratio of their weight compared to the reg weight of it's specie"));
-		personalBestCheckBox.setTooltip(new Tooltip("Show only personal best of each specie"));
-	}
+        this.ratioSlider = new Slider(0, 1.0, 0.5);
+        this.personalBestCheckBox = new CheckBox("PB");
+        filterField.setPromptText("Filter...");
+        filterField.setTooltip(new Tooltip("Filter specimens by free text"));
+        ratioSlider.setTooltip(new Tooltip("Filter specimens by the ratio of their weight compared to the reg weight of it's specie"));
+        personalBestCheckBox.setTooltip(new Tooltip("Show only personal best of each specie"));
+    }
 
-	@Override
-	Node createTopNode()
-	{
-	    filterField.setPrefWidth(200);
-	    ratioSlider.setPrefWidth(200);
-	    ratioSlider.setShowTickLabels(true);
-	    ratioSlider.setShowTickMarks(true);
-	    ratioSlider.setSnapToTicks(true);
-	    ratioSlider.setMajorTickUnit(0.25);
-	    ratioSlider.setMinorTickCount(4);
-	    ratioSlider.setLabelFormatter(converter(ratio -> Integer.toString((int) (ratio.doubleValue() * 100))));
+    @Override
+    Node createTopNode()
+    {
+        filterField.setPrefWidth(200);
+        ratioSlider.setPrefWidth(200);
+        ratioSlider.setShowTickLabels(true);
+        ratioSlider.setShowTickMarks(true);
+        ratioSlider.setSnapToTicks(true);
+        ratioSlider.setMajorTickUnit(0.25);
+        ratioSlider.setMinorTickCount(4);
+        ratioSlider.setLabelFormatter(converter(ratio -> Integer.toString((int) (ratio.doubleValue() * 100))));
 
-	    Label ratioLabel = new Label();
-	    ratioLabel.textProperty().bind(createStringBinding(() -> ratioSlider.getLabelFormatter().toString(ratioSlider.getValue()) + "%", ratioSlider.valueProperty()));
+        Label ratioLabel = new Label();
+        ratioLabel.textProperty().bind(createStringBinding(() -> ratioSlider.getLabelFormatter().toString(ratioSlider.getValue()) + "%", ratioSlider.valueProperty()));
 
-	    Label countLabel = new Label();
-	    countLabel.textProperty().bind(createStringBinding(() -> getTable().getItems().size() + " specimens", getTable().getItems()));
+        Label countLabel = new Label();
+        countLabel.textProperty().bind(createStringBinding(() -> getTable().getItems().size() + " specimens", getTable().getItems()));
 
-	    HBox box = new HBox(8, filterField, ratioSlider, ratioLabel, personalBestCheckBox, new Label("  "), countLabel);
-	    box.setAlignment(Pos.CENTER_LEFT);
-	    return box;
-	}
+        HBox box = new HBox(8, filterField, ratioSlider, ratioLabel, personalBestCheckBox, new Label("  "), countLabel);
+        box.setAlignment(Pos.CENTER_LEFT);
+        return box;
+    }
 
-	@Override
-	TableView<SpecimenWrapper> createTable()
-	{
-	    FilteredList<SpecimenWrapper> filteredList = list.filtered(createFilterPredicate());
+    @Override
+    TableView<SpecimenWrapper> createTable()
+    {
+        FilteredList<SpecimenWrapper> filteredList = list.filtered(createFilterPredicate());
         SpecimenTable specimenTable = new SpecimenTable(filteredList, dao::getSpecies, dao::getAutoCompletions, tripOpener);
         specimenTable.getSelectionModel().selectedItemProperty().addListener(obs -> photoLoader.restart());
         InvalidationListener listener = obs -> filteredList.setPredicate(createFilterPredicate());
@@ -108,17 +108,17 @@ class SpecimenView extends AbstractTableView<SpecimenWrapper, Specimen>
         personalBestCheckBox.selectedProperty().addListener(listener);
         specimenTable.addPhotoColumn(this::hasPhotos);
         return specimenTable;
-	}
+    }
 
-	private boolean hasPhotos(SpecimenWrapper wrapper)
-	{
-		Specimen specimen = wrapper.getWrapee();
-		return dao.getTrip(specimen.getTripId())
-				.getPhotos()
-				.stream()
-				.anyMatch(photo -> photo.getSpecimens().contains(specimen.getId()));
-	}
-	
+    private boolean hasPhotos(SpecimenWrapper wrapper)
+    {
+        Specimen specimen = wrapper.getWrapee();
+        return dao.getTrip(specimen.getTripId())
+                .getPhotos()
+                .stream()
+                .anyMatch(photo -> photo.getSpecimens().contains(specimen.getId()));
+    }
+    
     private Predicate<SpecimenWrapper> createFilterPredicate()
     {
         Predicate<Specimen> textPredicate = new SpecimenTextPredicate(filterField.getText());
@@ -141,69 +141,69 @@ class SpecimenView extends AbstractTableView<SpecimenWrapper, Specimen>
         return w -> predicate.test(w.getWrapee());
     }
 
-	@Override
-	Node createTableNode()
-	{
-		StackPane stackPane = new StackPane(getTable(), slideshow);
-		slideshow.setVisible(false);
-		slideshow.setButtonSize(SIZE_16);
-		slideshow.bindSizeToFitWithin(
-				stackPane.widthProperty().multiply(0.50),
-				stackPane.heightProperty().multiply(0.50));
-		StackPane.setAlignment(slideshow, BOTTOM_RIGHT);
-		StackPane.setMargin(slideshow, new Insets(0, 16, 16, 0));
-		return stackPane;
-	}
+    @Override
+    Node createTableNode()
+    {
+        StackPane stackPane = new StackPane(getTable(), slideshow);
+        slideshow.setVisible(false);
+        slideshow.setButtonSize(SIZE_16);
+        slideshow.bindSizeToFitWithin(
+                stackPane.widthProperty().multiply(0.50),
+                stackPane.heightProperty().multiply(0.50));
+        StackPane.setAlignment(slideshow, BOTTOM_RIGHT);
+        StackPane.setMargin(slideshow, new Insets(0, 16, 16, 0));
+        return stackPane;
+    }
 
-	@Override
-	SpecimenWrapper wrap(Specimen specimen)
-	{
-		return new SpecimenWrapper(specimen);
-	}
+    @Override
+    SpecimenWrapper wrap(Specimen specimen)
+    {
+        return new SpecimenWrapper(specimen);
+    }
 
-	@Override
-	void removeSelected()
-	{
-	    ((SpecimenTable) getTable()).removeSelected();
-	}
+    @Override
+    void removeSelected()
+    {
+        ((SpecimenTable) getTable()).removeSelected();
+    }
 
-	private class PhotoLoader extends Service<List<FishingPhoto>>
-	{
-		@Override
-		protected Task<List<FishingPhoto>> createTask()
-		{
-			slideshow.setPhotos(emptyCursor());
-			SpecimenWrapper selectedItem = getTable().getSelectionModel().getSelectedItem();
-			return new Task<>()
-			{
-				@Override
-				protected List<FishingPhoto> call() throws Exception
-				{
-					if (selectedItem == null)
-					{
-						return emptyList();
-					}
-					else
-					{
-						Specimen specimen = selectedItem.getWrapee();
-						List<Photo> photos = dao.getTrip(specimen.getTripId())
-								.getPhotos()
-								.stream()
-								.filter(p -> p.getSpecimens().contains(specimen.getId()))
-								.sorted(comparing(Photo::isStarred).reversed().thenComparing(Photo::getTime))
-								.collect(toList());
-						return photoService.load(photos);
-					}
-				}
-			};
-		}
+    private class PhotoLoader extends Service<List<FishingPhoto>>
+    {
+        @Override
+        protected Task<List<FishingPhoto>> createTask()
+        {
+            slideshow.setPhotos(emptyCursor());
+            SpecimenWrapper selectedItem = getTable().getSelectionModel().getSelectedItem();
+            return new Task<>()
+            {
+                @Override
+                protected List<FishingPhoto> call() throws Exception
+                {
+                    if (selectedItem == null)
+                    {
+                        return emptyList();
+                    }
+                    else
+                    {
+                        Specimen specimen = selectedItem.getWrapee();
+                        List<Photo> photos = dao.getTrip(specimen.getTripId())
+                                .getPhotos()
+                                .stream()
+                                .filter(p -> p.getSpecimens().contains(specimen.getId()))
+                                .sorted(comparing(Photo::isStarred).reversed().thenComparing(Photo::getTime))
+                                .collect(toList());
+                        return photoService.load(photos);
+                    }
+                }
+            };
+        }
 
-		@Override
-		protected void succeeded()
-		{
-			List<FishingPhoto> photos = getValue();			
-			slideshow.setPhotos(Cursor.of(photos, 0));
-			slideshow.setVisible(!photos.isEmpty());
-		}
-	}
+        @Override
+        protected void succeeded()
+        {
+            List<FishingPhoto> photos = getValue();            
+            slideshow.setPhotos(Cursor.of(photos, 0));
+            slideshow.setVisible(!photos.isEmpty());
+        }
+    }
 }

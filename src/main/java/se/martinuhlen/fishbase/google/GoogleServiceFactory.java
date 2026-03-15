@@ -28,94 +28,94 @@ import se.martinuhlen.fishbase.google.photos.PickerClient;
 
 public class GoogleServiceFactory
 {
-	private static final String USER_ID = "user_v3";
-	private static final java.io.File LOCAL_FOLDER = new java.io.File(System.getProperty("user.home"), "." + APPLICATION_NAME.toLowerCase());
+    private static final String USER_ID = "user_v3";
+    private static final java.io.File LOCAL_FOLDER = new java.io.File(System.getProperty("user.home"), "." + APPLICATION_NAME.toLowerCase());
 
-	private static final List<String> REQUIRED_SCOPES = Stream.concat(
-	        Stream.of("https://www.googleapis.com/auth/photospicker.mediaitems.readonly"),
-	        DriveScopes.all().stream()).toList();
+    private static final List<String> REQUIRED_SCOPES = Stream.concat(
+            Stream.of("https://www.googleapis.com/auth/photospicker.mediaitems.readonly"),
+            DriveScopes.all().stream()).toList();
 
-	public static GoogleServiceFactory get()
-	{
-		try
-		{
-			return getImpl();
-		}
-		catch (GeneralSecurityException | IOException e)
-		{
-			throw new RuntimeException(e);
-		}
-	}
+    public static GoogleServiceFactory get()
+    {
+        try
+        {
+            return getImpl();
+        }
+        catch (GeneralSecurityException | IOException e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
 
-	private static GoogleServiceFactory getImpl() throws GeneralSecurityException, IOException
-	{
-		HttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
-		FileDataStoreFactory dataStoreFactory = new FileDataStoreFactory(LOCAL_FOLDER);
-		JsonFactory jsonFactory = GsonFactory.getDefaultInstance();
-		GoogleClientSecrets clientSecrets = readClientSecrets(jsonFactory);
+    private static GoogleServiceFactory getImpl() throws GeneralSecurityException, IOException
+    {
+        HttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
+        FileDataStoreFactory dataStoreFactory = new FileDataStoreFactory(LOCAL_FOLDER);
+        JsonFactory jsonFactory = GsonFactory.getDefaultInstance();
+        GoogleClientSecrets clientSecrets = readClientSecrets(jsonFactory);
 
-		GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(httpTransport, jsonFactory, clientSecrets, REQUIRED_SCOPES)
-				.setDataStoreFactory(dataStoreFactory)
-				.build();
+        GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(httpTransport, jsonFactory, clientSecrets, REQUIRED_SCOPES)
+                .setDataStoreFactory(dataStoreFactory)
+                .build();
 
-		Credential credential = flow.loadCredential(USER_ID);
-		if (credential == null)
-		{
-			credential = new AuthorizationCodeInstalledApp(flow, new LocalServerReceiver()).authorize(USER_ID);
-		}
-		return new GoogleServiceFactory(httpTransport, jsonFactory, clientSecrets, credential);
-	}
+        Credential credential = flow.loadCredential(USER_ID);
+        if (credential == null)
+        {
+            credential = new AuthorizationCodeInstalledApp(flow, new LocalServerReceiver()).authorize(USER_ID);
+        }
+        return new GoogleServiceFactory(httpTransport, jsonFactory, clientSecrets, credential);
+    }
 
-	private static GoogleClientSecrets readClientSecrets(JsonFactory jsonFactory) throws IOException
-	{
-		InputStream stream = GoogleServiceFactory.class.getResourceAsStream("/ClientSecrets.json");
-		if (stream == null)
-		{
-			throw new IllegalStateException("ClientSecrets.json is missing from the classpath. Please add it to src/main/resources.");
-		}
-		try (Reader reader = new InputStreamReader(stream))
-		{
-			return GoogleClientSecrets.load(jsonFactory, reader);
-		}
-	}
+    private static GoogleClientSecrets readClientSecrets(JsonFactory jsonFactory) throws IOException
+    {
+        InputStream stream = GoogleServiceFactory.class.getResourceAsStream("/ClientSecrets.json");
+        if (stream == null)
+        {
+            throw new IllegalStateException("ClientSecrets.json is missing from the classpath. Please add it to src/main/resources.");
+        }
+        try (Reader reader = new InputStreamReader(stream))
+        {
+            return GoogleClientSecrets.load(jsonFactory, reader);
+        }
+    }
 
-	private final HttpTransport httpTransport;
-	private final JsonFactory jsonFactory;
-	private final GoogleClientSecrets clientSecrets;
-	private final Credential credential;
+    private final HttpTransport httpTransport;
+    private final JsonFactory jsonFactory;
+    private final GoogleClientSecrets clientSecrets;
+    private final Credential credential;
 
-	private GoogleServiceFactory(HttpTransport httpTransport, JsonFactory jsonFactory, GoogleClientSecrets clientSecrets, Credential credential)
-	{
-		this.httpTransport = httpTransport;
-		this.jsonFactory = jsonFactory;
-		this.clientSecrets = clientSecrets;
-		this.credential = credential;
-	}
+    private GoogleServiceFactory(HttpTransport httpTransport, JsonFactory jsonFactory, GoogleClientSecrets clientSecrets, Credential credential)
+    {
+        this.httpTransport = httpTransport;
+        this.jsonFactory = jsonFactory;
+        this.clientSecrets = clientSecrets;
+        this.credential = credential;
+    }
 
-	public Drive createDrive()
-	{
-		return new Drive.Builder(httpTransport, jsonFactory, credential)
-				.setApplicationName(APPLICATION_NAME)
-				.build();
-	}
+    public Drive createDrive()
+    {
+        return new Drive.Builder(httpTransport, jsonFactory, credential)
+                .setApplicationName(APPLICATION_NAME)
+                .build();
+    }
 
-	public PickerClient createPickerClient()
-	{
-		Supplier<String> accessToken = () ->
-		{
-			try
-			{
-				if (credential.getAccessToken() == null || credential.getExpiresInSeconds() != null && credential.getExpiresInSeconds() <= 60)
-				{
-					credential.refreshToken();
-				}
-				return credential.getAccessToken();
-			}
-			catch (IOException e)
-			{
-				throw new RuntimeException("Failed to get access token", e);
-			}
-		};
-		return new PickerClient(accessToken);
-	}
+    public PickerClient createPickerClient()
+    {
+        Supplier<String> accessToken = () ->
+        {
+            try
+            {
+                if (credential.getAccessToken() == null || credential.getExpiresInSeconds() != null && credential.getExpiresInSeconds() <= 60)
+                {
+                    credential.refreshToken();
+                }
+                return credential.getAccessToken();
+            }
+            catch (IOException e)
+            {
+                throw new RuntimeException("Failed to get access token", e);
+            }
+        };
+        return new PickerClient(accessToken);
+    }
 }

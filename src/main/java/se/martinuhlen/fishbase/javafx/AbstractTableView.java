@@ -34,170 +34,170 @@ import com.google.common.flogger.FluentLogger;
 
 abstract class AbstractTableView<W extends Wrapper<D>, D extends Domain<D>> implements View
 {
-	private static final FluentLogger LOG = FluentLogger.forEnclosingClass();
-	private final ReadOnlyStringProperty titleProperty;
-	private final Supplier<List<D>> loader;
-	private final Consumer<Collection<D>> saver;
-	private final Consumer<Collection<D>> deleter;
+    private static final FluentLogger LOG = FluentLogger.forEnclosingClass();
+    private final ReadOnlyStringProperty titleProperty;
+    private final Supplier<List<D>> loader;
+    private final Consumer<Collection<D>> saver;
+    private final Consumer<Collection<D>> deleter;
 
-	private TableView<W> table;
-	final ObservableList<W> list;
-	private List<D> unchangedList = emptyList();
+    private TableView<W> table;
+    final ObservableList<W> list;
+    private List<D> unchangedList = emptyList();
 
-	private final RunnableAction saveAction = new RunnableAction(false, () -> save());
-	private final RunnableAction refreshAction = new RunnableAction(true, () -> refreshOrRollback());
-	private final RunnableAction deleteAction = new RunnableAction(false, () -> delete());
+    private final RunnableAction saveAction = new RunnableAction(false, () -> save());
+    private final RunnableAction refreshAction = new RunnableAction(true, () -> refreshOrRollback());
+    private final RunnableAction deleteAction = new RunnableAction(false, () -> delete());
 
-	private Node content;
+    private Node content;
 
-	AbstractTableView(String title, Supplier<List<D>> loader, Consumer<Collection<D>> saver, Consumer<Collection<D>> deleter)
-	{
-		this.titleProperty = new ReadOnlyStringWrapper(title).getReadOnlyProperty();
-		this.loader = loader;
-		this.saver = saver;
-		this.deleter = deleter;
-		this.list = observableArrayList();
-		list.addListener((Observable obs) -> tableChange());
-	}
+    AbstractTableView(String title, Supplier<List<D>> loader, Consumer<Collection<D>> saver, Consumer<Collection<D>> deleter)
+    {
+        this.titleProperty = new ReadOnlyStringWrapper(title).getReadOnlyProperty();
+        this.loader = loader;
+        this.saver = saver;
+        this.deleter = deleter;
+        this.list = observableArrayList();
+        list.addListener((Observable obs) -> tableChange());
+    }
 
-	@Override
-	public ReadOnlyStringProperty titleProperty()
-	{
-		return titleProperty;
-	}
+    @Override
+    public ReadOnlyStringProperty titleProperty()
+    {
+        return titleProperty;
+    }
 
-	@Override
-	public final Node getContent()
-	{
-		if (content == null)
-		{
-			BorderPane pane = new BorderPane();
-			pane.setTop(createTopNode());
-			pane.setCenter(createTableNode());
-			content = pane;
-		}
-		return content;
-	}
+    @Override
+    public final Node getContent()
+    {
+        if (content == null)
+        {
+            BorderPane pane = new BorderPane();
+            pane.setTop(createTopNode());
+            pane.setCenter(createTableNode());
+            content = pane;
+        }
+        return content;
+    }
 
     Node createTopNode()
     {
         return null;
     }
 
-	Node createTableNode()
-	{
-		return getTable();
-	}
+    Node createTableNode()
+    {
+        return getTable();
+    }
 
-	TableView<W> getTable()
-	{
-		if (table == null)
-		{
-			table = createTable();
-			table.setEditable(true);
-			table.getSelectionModel().selectedItemProperty().addListener((obs, oldValue, newValue) -> deleteAction.setEnabled(newValue != null));
-		}
-		return table;
-	}
+    TableView<W> getTable()
+    {
+        if (table == null)
+        {
+            table = createTable();
+            table.setEditable(true);
+            table.getSelectionModel().selectedItemProperty().addListener((obs, oldValue, newValue) -> deleteAction.setEnabled(newValue != null));
+        }
+        return table;
+    }
 
     abstract TableView<W> createTable();
 
-	void tableChange(@SuppressWarnings("unused") Observable obs)
-	{
-		tableChange();
-	}
+    void tableChange(@SuppressWarnings("unused") Observable obs)
+    {
+        tableChange();
+    }
 
-	void tableChange()
-	{
-		boolean hasChanges = !unchangedList.equals(currentList());
-		LOG.atFine().log("Has changes: %b", hasChanges);
-		saveAction.setEnabled(hasChanges);
-	}
+    void tableChange()
+    {
+        boolean hasChanges = !unchangedList.equals(currentList());
+        LOG.atFine().log("Has changes: %b", hasChanges);
+        saveAction.setEnabled(hasChanges);
+    }
 
-	List<D> currentList()
-	{
-		return list.stream().map(Wrapper::getWrapee).collect(toList());
-	}
+    List<D> currentList()
+    {
+        return list.stream().map(Wrapper::getWrapee).collect(toList());
+    }
 
-	@Override
-	public final Action saveAction()
-	{
-		return saveAction;
-	}
+    @Override
+    public final Action saveAction()
+    {
+        return saveAction;
+    }
 
-	private void save()
-	{
-		String message = currentList()
-				.stream()
-				.flatMap(Domain::getValidationErrors)
-				.collect(Collectors.joining("\n"));
-		if (isNotBlank(message))
-		{
-			Alert alert = new Alert(ERROR);
-			alert.setTitle("Can not save");
-			alert.setHeaderText("Can not save due to validation errors.");
-			alert.setContentText(message);
-			alert.showAndWait();
-		}
-		else
-		{
-			List<D> rowsToSave = currentList();
-			rowsToSave.removeAll(unchangedList);
-			saver.accept(rowsToSave);
-			LOG.atInfo().log("Saving: (%d) %s", rowsToSave.size(), rowsToSave);
+    private void save()
+    {
+        String message = currentList()
+                .stream()
+                .flatMap(Domain::getValidationErrors)
+                .collect(Collectors.joining("\n"));
+        if (isNotBlank(message))
+        {
+            Alert alert = new Alert(ERROR);
+            alert.setTitle("Can not save");
+            alert.setHeaderText("Can not save due to validation errors.");
+            alert.setContentText(message);
+            alert.showAndWait();
+        }
+        else
+        {
+            List<D> rowsToSave = currentList();
+            rowsToSave.removeAll(unchangedList);
+            saver.accept(rowsToSave);
+            LOG.atInfo().log("Saving: (%d) %s", rowsToSave.size(), rowsToSave);
 
-			Set<String> currentIds = currentList().stream().map(Domain::getId).collect(toSet());
-			List<D> rowsToDelete = unchangedList.stream().filter(t -> !currentIds.contains(t.getId())).collect(toList());
-			LOG.atInfo().log("Deleting: (%d) %s", rowsToDelete.size(), rowsToDelete);
-			deleteRows(rowsToDelete);
+            Set<String> currentIds = currentList().stream().map(Domain::getId).collect(toSet());
+            List<D> rowsToDelete = unchangedList.stream().filter(t -> !currentIds.contains(t.getId())).collect(toList());
+            LOG.atInfo().log("Deleting: (%d) %s", rowsToDelete.size(), rowsToDelete);
+            deleteRows(rowsToDelete);
 
-			refresh();
-		}
-	}
+            refresh();
+        }
+    }
 
     void deleteRows(List<D> rowsToDelete)
     {
         deleter.accept(rowsToDelete);
     }
 
-	@Override
-	public final Action refreshAction()
-	{
-		return refreshAction;
-	}
+    @Override
+    public final Action refreshAction()
+    {
+        return refreshAction;
+    }
 
-	private void refreshOrRollback()
-	{
-		if (discardChanges())
-		{
-			refresh();
-		}
-	}
+    private void refreshOrRollback()
+    {
+        if (discardChanges())
+        {
+            refresh();
+        }
+    }
 
-	private void refresh()
-	{
-		list.forEach(s -> s.removeAllListeners());
-		unchangedList = loader.get();
-		list.setAll(unchangedList.stream().map(t -> wrap(t)).peek(w -> w.addListener(this::tableChange)).collect(toList()));
-	}
+    private void refresh()
+    {
+        list.forEach(s -> s.removeAllListeners());
+        unchangedList = loader.get();
+        list.setAll(unchangedList.stream().map(t -> wrap(t)).peek(w -> w.addListener(this::tableChange)).collect(toList()));
+    }
 
-	abstract W wrap(D d);
+    abstract W wrap(D d);
 
-	@Override
-	public final Action deleteAction()
-	{
-		return deleteAction;
-	}
+    @Override
+    public final Action deleteAction()
+    {
+        return deleteAction;
+    }
 
-	private void delete()
-	{
-		W wrapper = table.getSelectionModel().getSelectedItem();
-		D wrapee = wrapper.getWrapee();
-		if (isRemovable(wrapee))
-		{
-		    removeSelected();
-		}
-	}
+    private void delete()
+    {
+        W wrapper = table.getSelectionModel().getSelectedItem();
+        D wrapee = wrapper.getWrapee();
+        if (isRemovable(wrapee))
+        {
+            removeSelected();
+        }
+    }
 
     void removeSelected()
     {
@@ -210,8 +210,8 @@ abstract class AbstractTableView<W extends Wrapper<D>, D extends Domain<D>> impl
         alert.setHeaderText("Are you sure you want to remove '" + wrapee.getLabel() + "'?");
         alert.getButtonTypes().setAll(delete, CANCEL);
         alert.showAndWait()
-        	.filter(b -> b == delete)
-        	.ifPresent(b -> list.remove(wrapper));
+            .filter(b -> b == delete)
+            .ifPresent(b -> list.remove(wrapper));
     }
 
     /**
@@ -220,8 +220,8 @@ abstract class AbstractTableView<W extends Wrapper<D>, D extends Domain<D>> impl
      * @param wrapee to check
      * @return {@code true} if OK to remove
      */
-	boolean isRemovable(D wrapee)
-	{
-		return true;
-	}
+    boolean isRemovable(D wrapee)
+    {
+        return true;
+    }
 }

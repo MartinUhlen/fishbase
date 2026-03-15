@@ -21,44 +21,44 @@ import se.martinuhlen.fishbase.domain.Specie;
  */
 public class SpecieWrapperTest extends WrapperTestCase<Specie, SpecieWrapper>
 {
-	@Override
-	protected SpecieWrapper createWrapper()
-	{
-		return new SpecieWrapper(bream(), listener);
-	}
+    @Override
+    protected SpecieWrapper createWrapper()
+    {
+        return new SpecieWrapper(bream(), listener);
+    }
 
-	@Test
-	public void nameProperty()
-	{
-		testProperty("name", wrapper::nameProperty, Specie::getName, "A", "B", "C");
-	}
+    @Test
+    public void nameProperty()
+    {
+        testProperty("name", wrapper::nameProperty, Specie::getName, "A", "B", "C");
+    }
 
-	@Test
-	public void regWeightProperty()
-	{
-		testProperty("regWeight", wrapper::regWeightProperty, Specie::getRegWeight, 1000, 2000, 3000);
-	}
+    @Test
+    public void regWeightProperty()
+    {
+        testProperty("regWeight", wrapper::regWeightProperty, Specie::getRegWeight, 1000, 2000, 3000);
+    }
 
-	@Test
-	public void freshWaterProperty()
-	{
-		testProperty("freshWater", wrapper::freshWaterProperty, Specie::isFreshWater, false, true, false, true);
-	}
+    @Test
+    public void freshWaterProperty()
+    {
+        testProperty("freshWater", wrapper::freshWaterProperty, Specie::isFreshWater, false, true, false, true);
+    }
 
-	@Test
-	public void wrapeeEquals()
-	{
-		assertEquals(bream(), wrapper.getWrapee());
-	}
+    @Test
+    public void wrapeeEquals()
+    {
+        assertEquals(bream(), wrapper.getWrapee());
+    }
 
-	@Test
-	public void hasChanges()
-	{
-	    wrapper.setWrapee(tench());
-	    assertFalse(wrapper.hasChanges());
+    @Test
+    public void hasChanges()
+    {
+        wrapper.setWrapee(tench());
+        assertFalse(wrapper.hasChanges());
 
-	    wrapper.nameProperty().setValue("Sutare");
-	    assertTrue(wrapper.hasChanges());
+        wrapper.nameProperty().setValue("Sutare");
+        assertTrue(wrapper.hasChanges());
 
         wrapper.nameProperty().setValue("Tench");
         assertFalse(wrapper.hasChanges());
@@ -68,25 +68,25 @@ public class SpecieWrapperTest extends WrapperTestCase<Specie, SpecieWrapper>
 
         wrapper.setWrapee(bream());
         assertFalse(wrapper.hasChanges());
-	}
+    }
 
     @Test
     @SuppressWarnings("unchecked")
-	public void removeAllListeners()
-	{
-		Property<String> property = wrapper.nameProperty();
+    public void removeAllListeners()
+    {
+        Property<String> property = wrapper.nameProperty();
 
-		InvalidationListener invalidationListener = mock(InvalidationListener.class);
-		ChangeListener<String> changeListener = mock(ChangeListener.class);
-		wrapper.nameProperty().addListener(invalidationListener);
-		property.addListener(changeListener);
+        InvalidationListener invalidationListener = mock(InvalidationListener.class);
+        ChangeListener<String> changeListener = mock(ChangeListener.class);
+        wrapper.nameProperty().addListener(invalidationListener);
+        property.addListener(changeListener);
 
-		wrapper.removeAllListeners();
+        wrapper.removeAllListeners();
 
-		property.setValue("Test");
-		verifyNoInteractions(listener, invalidationListener, changeListener);
+        property.setValue("Test");
+        verifyNoInteractions(listener, invalidationListener, changeListener);
 
-		wrapper.setWrapee(newSpecie());
-		verifyNoInteractions(listener, invalidationListener, changeListener);
-	}
+        wrapper.setWrapee(newSpecie());
+        verifyNoInteractions(listener, invalidationListener, changeListener);
+    }
 }

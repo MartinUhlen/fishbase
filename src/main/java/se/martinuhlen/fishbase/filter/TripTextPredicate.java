@@ -13,31 +13,31 @@ import se.martinuhlen.fishbase.domain.Trip;
  */
 public class TripTextPredicate extends TextPredicate<Trip>
 {
-	private final Predicate<Specimen> specimenPredicate;
+    private final Predicate<Specimen> specimenPredicate;
 
-	public TripTextPredicate(String text)
-	{
-		super(text);
-		this.specimenPredicate = new SpecimenTextPredicate(text);
-	}
+    public TripTextPredicate(String text)
+    {
+        super(text);
+        this.specimenPredicate = new SpecimenTextPredicate(text);
+    }
 
-	@Override
-	boolean matchesText(Trip trip, String text)
-	{
-		return tripMatches(trip, text)
-			|| specimensMatches(trip);
-	}
+    @Override
+    boolean matchesText(Trip trip, String text)
+    {
+        return tripMatches(trip, text)
+            || specimensMatches(trip);
+    }
 
-	private boolean tripMatches(Trip trip, String text)
-	{
-		return Stream.of(trip.getDescription(), trip.getStartDate().toString(), trip.getText())
-					.anyMatch(str -> containsIgnoreCase(str, text));
-	}
+    private boolean tripMatches(Trip trip, String text)
+    {
+        return Stream.of(trip.getDescription(), trip.getStartDate().toString(), trip.getText())
+                    .anyMatch(str -> containsIgnoreCase(str, text));
+    }
 
-	private boolean specimensMatches(Trip trip)
-	{
-		return trip.getSpecimens()
-				.stream()
-				.anyMatch(specimenPredicate);
-	}
+    private boolean specimensMatches(Trip trip)
+    {
+        return trip.getSpecimens()
+                .stream()
+                .anyMatch(specimenPredicate);
+    }
 }

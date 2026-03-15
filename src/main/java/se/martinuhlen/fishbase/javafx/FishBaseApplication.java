@@ -55,105 +55,105 @@ import se.martinuhlen.fishbase.javafx.utils.Images;
 
 public class FishBaseApplication extends Application
 {
-	/*
-	 * http://fxexperience.com/controlsfx/features/
-	 * FontAwesomeFX
-	 *
-	 * https://developers.google.com/drive/v3/web/about-sdk
-	 * https://stackoverflow.com/questions/35143283/google-drive-api-v3-migration
-	 *
-	 * Use org.controlsfx.control.StatusBar
-	 *
-	 * Package org.controlsfx.validation
-	 *
-	 * Fish icon: https://www.iconexperience.com/v_collection/search/?q=fish
-	 */
+    /*
+     * http://fxexperience.com/controlsfx/features/
+     * FontAwesomeFX
+     *
+     * https://developers.google.com/drive/v3/web/about-sdk
+     * https://stackoverflow.com/questions/35143283/google-drive-api-v3-migration
+     *
+     * Use org.controlsfx.control.StatusBar
+     *
+     * Package org.controlsfx.validation
+     *
+     * Fish icon: https://www.iconexperience.com/v_collection/search/?q=fish
+     */
 
-	public static void main(String[] args)
-	{
-		Application.launch(args);
-	}
-
-	private final Map<Tab, View> tabToView = new LinkedHashMap<>();
-	private final ReplaceableAction addAction = new ReplaceableAction();
-	private final ReplaceableAction saveAction = new ReplaceableAction();
-	private final ReplaceableAction refreshAction = new ReplaceableAction();
-	private final ReplaceableAction deleteAction = new ReplaceableAction();
-
-	private Stage stage;
-	private final Scene scene;
-	private final TabPane tabPane;
-
-	private PhotoService photoService;
-	private DriveService driveService;
-	private DrivePersistence drivePersistence;
-	private FishBaseDao dao;
-
-	private final Consumer<String> tripOpener = tripId -> openTab(TripView.class).selectTrip(tripId);
-
-	private final Map<Class<? extends View>, Supplier<? extends View>> viewSuppliers = Map.of(
-			TripView.class, () -> new TripView(dao, photoService),
-			SpecimenView.class, () -> new SpecimenView(dao, photoService, tripOpener),
-			SpecieView.class, () -> new SpecieView(dao),
-			PhotoView.class, () -> new PhotoView(photoService, dao, tripOpener));
-
-	public FishBaseApplication()
-	{
-		scene = new Scene(new Label());
-		tabPane = new TabPane();
-	}
-
-	@Override
-	public void start(Stage stage) throws Exception
-	{
-	    this.stage = stage;
-	    driveService = new DriveService(GoogleServiceFactory.get().createDrive());
-		photoService = PhotoService.create(GoogleServiceFactory.get().createPickerClient(), driveService);
-		drivePersistence = new DrivePersistence(driveService);
-		dao = FishBaseDao.create(drivePersistence);
-
-		tabPane.getSelectionModel().selectedItemProperty().addListener((obs, oldTab, newTab) -> selectView());
-		tabPane.setTabClosingPolicy(ALL_TABS);
-
-		Button startButton = createStartButton();
-		Button addButton = createActionButton("Add", "add.png", "CTRL+N", addAction);
-		Button saveButton = createActionButton("Save", "save.png", "CTRL+S", saveAction);
-		Button refreshButton = createActionButton("Refresh", "refresh.png", "F5", refreshAction);
-		Button deleteButton = createActionButton("Delete", "delete.png", "CTRL+D", deleteAction);
-		saveAction.enabledProperty().addListener((obs, old, enabled) ->	refreshButton.setGraphic(image(enabled ? "undo.png" : "refresh.png")));
-		HBox toolbar = new HBox(startButton, addButton, saveButton, refreshButton, deleteButton);
-
-		StackPane centerPane = new StackPane(getImageView("fish.png", SIZE_256), tabPane);
-		BorderPane borderPane = new BorderPane();
-		borderPane.setTop(toolbar);
-		borderPane.setCenter(centerPane);
-
-		scene.setRoot(borderPane);
-		stage.setScene(scene);
-		stage.setTitle(APPLICATION_NAME);
-		stage.getIcons().setAll(getImages("fish.png"));
-		stage.setMaximized(true);
-		stage.show();
-
-		stage.onCloseRequestProperty().set(e ->
-		{
-			if (tabPane.getTabs().stream().map(tab -> tabToView.getOrDefault(tab, EMPTY_VIEW)).anyMatch(View::hasChanges))
-			{
-				Alert alert = new Alert(CONFIRMATION);
-				alert.setTitle("Discard changes?");
-				alert.setHeaderText("There are unsaved changes, discard them and exit anyway?");
-				ButtonType shutdown = new ButtonType("Exit application", OK_DONE);
-				alert.getButtonTypes().setAll(shutdown, CANCEL);
-				alert.showAndWait()
-					.filter(b -> b != shutdown)
-					.ifPresent(b -> e.consume());
-			}
-		});
-	}
-
-	private Button createStartButton()
+    public static void main(String[] args)
     {
-	    ContextMenu menu = new ContextMenu(
+        Application.launch(args);
+    }
+
+    private final Map<Tab, View> tabToView = new LinkedHashMap<>();
+    private final ReplaceableAction addAction = new ReplaceableAction();
+    private final ReplaceableAction saveAction = new ReplaceableAction();
+    private final ReplaceableAction refreshAction = new ReplaceableAction();
+    private final ReplaceableAction deleteAction = new ReplaceableAction();
+
+    private Stage stage;
+    private final Scene scene;
+    private final TabPane tabPane;
+
+    private PhotoService photoService;
+    private DriveService driveService;
+    private DrivePersistence drivePersistence;
+    private FishBaseDao dao;
+
+    private final Consumer<String> tripOpener = tripId -> openTab(TripView.class).selectTrip(tripId);
+
+    private final Map<Class<? extends View>, Supplier<? extends View>> viewSuppliers = Map.of(
+            TripView.class, () -> new TripView(dao, photoService),
+            SpecimenView.class, () -> new SpecimenView(dao, photoService, tripOpener),
+            SpecieView.class, () -> new SpecieView(dao),
+            PhotoView.class, () -> new PhotoView(photoService, dao, tripOpener));
+
+    public FishBaseApplication()
+    {
+        scene = new Scene(new Label());
+        tabPane = new TabPane();
+    }
+
+    @Override
+    public void start(Stage stage) throws Exception
+    {
+        this.stage = stage;
+        driveService = new DriveService(GoogleServiceFactory.get().createDrive());
+        photoService = PhotoService.create(GoogleServiceFactory.get().createPickerClient(), driveService);
+        drivePersistence = new DrivePersistence(driveService);
+        dao = FishBaseDao.create(drivePersistence);
+
+        tabPane.getSelectionModel().selectedItemProperty().addListener((obs, oldTab, newTab) -> selectView());
+        tabPane.setTabClosingPolicy(ALL_TABS);
+
+        Button startButton = createStartButton();
+        Button addButton = createActionButton("Add", "add.png", "CTRL+N", addAction);
+        Button saveButton = createActionButton("Save", "save.png", "CTRL+S", saveAction);
+        Button refreshButton = createActionButton("Refresh", "refresh.png", "F5", refreshAction);
+        Button deleteButton = createActionButton("Delete", "delete.png", "CTRL+D", deleteAction);
+        saveAction.enabledProperty().addListener((obs, old, enabled) ->    refreshButton.setGraphic(image(enabled ? "undo.png" : "refresh.png")));
+        HBox toolbar = new HBox(startButton, addButton, saveButton, refreshButton, deleteButton);
+
+        StackPane centerPane = new StackPane(getImageView("fish.png", SIZE_256), tabPane);
+        BorderPane borderPane = new BorderPane();
+        borderPane.setTop(toolbar);
+        borderPane.setCenter(centerPane);
+
+        scene.setRoot(borderPane);
+        stage.setScene(scene);
+        stage.setTitle(APPLICATION_NAME);
+        stage.getIcons().setAll(getImages("fish.png"));
+        stage.setMaximized(true);
+        stage.show();
+
+        stage.onCloseRequestProperty().set(e ->
+        {
+            if (tabPane.getTabs().stream().map(tab -> tabToView.getOrDefault(tab, EMPTY_VIEW)).anyMatch(View::hasChanges))
+            {
+                Alert alert = new Alert(CONFIRMATION);
+                alert.setTitle("Discard changes?");
+                alert.setHeaderText("There are unsaved changes, discard them and exit anyway?");
+                ButtonType shutdown = new ButtonType("Exit application", OK_DONE);
+                alert.getButtonTypes().setAll(shutdown, CANCEL);
+                alert.showAndWait()
+                    .filter(b -> b != shutdown)
+                    .ifPresent(b -> e.consume());
+            }
+        });
+    }
+
+    private Button createStartButton()
+    {
+        ContextMenu menu = new ContextMenu(
                 createOpenItem("Trips", "F1", TripView.class),
                 createOpenItem("Specimens", "F2", SpecimenView.class),
                 createOpenItem("Species", "F3", SpecieView.class),
@@ -161,15 +161,15 @@ public class FishBaseApplication extends Application
                 new SeparatorMenuItem(),
                 createAboutItem(),
                 createExitItem());
-	    menu.setAutoHide(true);
+        menu.setAutoHide(true);
 
-	    Button button = createButton("Menu", "menu.png", "CTRL+SPACE");
-	    button.setOnAction(e ->
-	    {
-	        menu.show(button, BOTTOM, 0, 0);
-	        menu.requestFocus();
-	    });
-	    return button;
+        Button button = createButton("Menu", "menu.png", "CTRL+SPACE");
+        button.setOnAction(e ->
+        {
+            menu.show(button, BOTTOM, 0, 0);
+            menu.requestFocus();
+        });
+        return button;
     }
 
     private <V extends View> MenuItem createOpenItem(String text, String shortcut, Class<V> typeOfView)
@@ -182,12 +182,12 @@ public class FishBaseApplication extends Application
     }
 
     private Button createActionButton(String text, String imageName, String shortcut, Action action)
-	{
+    {
         Button button = createButton(text, imageName, shortcut);
         button.setOnAction(action);
-		button.disableProperty().bind(action.enabledProperty().not());
-		return button;
-	}
+        button.disableProperty().bind(action.enabledProperty().not());
+        return button;
+    }
 
     private Button createButton(String text, String imageName, String shortcut)
     {
@@ -221,50 +221,50 @@ public class FishBaseApplication extends Application
         return exit;
     }
 
-	private ImageView image(String name)
-	{
-		return Images.getImageView32(name);
-	}
+    private ImageView image(String name)
+    {
+        return Images.getImageView32(name);
+    }
 
-	private void selectView()
-	{
-		View view = selectedView();
-		addAction.setAction(view.addAction());
-		saveAction.setAction(view.saveAction());
-		refreshAction.setAction(view.refreshAction());
-		deleteAction.setAction(view.deleteAction());
-	}
+    private void selectView()
+    {
+        View view = selectedView();
+        addAction.setAction(view.addAction());
+        saveAction.setAction(view.saveAction());
+        refreshAction.setAction(view.refreshAction());
+        deleteAction.setAction(view.deleteAction());
+    }
 
-	private View selectedView()
-	{
-		Tab selectedTab = tabPane.getSelectionModel().getSelectedItem();
-		return tabToView.getOrDefault(selectedTab, EMPTY_VIEW);
-	}
+    private View selectedView()
+    {
+        Tab selectedTab = tabPane.getSelectionModel().getSelectedItem();
+        return tabToView.getOrDefault(selectedTab, EMPTY_VIEW);
+    }
 
-	private <V extends View> V openTab(Class<V> typeOfView)
-	{
-		try
-		{
-			Optional<Entry<Tab, View>> tabWithView = tabToView
-					.entrySet()
-					.stream()
-					.filter(e -> typeOfView.isInstance(e.getValue()))
-					.findAny();
+    private <V extends View> V openTab(Class<V> typeOfView)
+    {
+        try
+        {
+            Optional<Entry<Tab, View>> tabWithView = tabToView
+                    .entrySet()
+                    .stream()
+                    .filter(e -> typeOfView.isInstance(e.getValue()))
+                    .findAny();
 
-			tabWithView.ifPresentOrElse(
-					e -> selectTab(e.getKey()),
-					() -> addTab(typeOfView));
+            tabWithView.ifPresentOrElse(
+                    e -> selectTab(e.getKey()),
+                    () -> addTab(typeOfView));
 
-			@SuppressWarnings("unchecked")
-			V view = (V) selectedView();
-			return view;
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-			System.err.println();
-			throw e;
-		}
-	}
+            @SuppressWarnings("unchecked")
+            V view = (V) selectedView();
+            return view;
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            System.err.println();
+            throw e;
+        }
+    }
 
     private <V extends View> void addTab(Class<V> typeOfView)
     {
@@ -292,18 +292,18 @@ public class FishBaseApplication extends Application
         selectTab(tab);
     }
 
-	private void selectTab(Tab tab)
-	{
-		tabPane.getSelectionModel().select(tab);
-	}
+    private void selectTab(Tab tab)
+    {
+        tabPane.getSelectionModel().select(tab);
+    }
 
-	@Override
-	public void stop() throws Exception
-	{
-		super.stop();
-		if (drivePersistence != null)
-		{
-			drivePersistence.shutdown();
-		}
-	}
+    @Override
+    public void stop() throws Exception
+    {
+        super.stop();
+        if (drivePersistence != null)
+        {
+            drivePersistence.shutdown();
+        }
+    }
 }

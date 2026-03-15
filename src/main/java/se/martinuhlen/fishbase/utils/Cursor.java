@@ -5,50 +5,50 @@ import java.util.Collection;
 
 public interface Cursor<T>
 {
-	static <X> Cursor<X> of(Collection<? extends X> elements, int currentIndex)
-	{
-		if (elements == null || elements.isEmpty())
-		{
-			return EmptyCursor.emptyCursor();
-		}
-		else
-		{
-			return new ListCursor<>(elements, currentIndex);
-		}
-	}
+    static <X> Cursor<X> of(Collection<? extends X> elements, int currentIndex)
+    {
+        if (elements == null || elements.isEmpty())
+        {
+            return EmptyCursor.emptyCursor();
+        }
+        else
+        {
+            return new ListCursor<>(elements, currentIndex);
+        }
+    }
 
-	T first();
+    T first();
 
-	boolean isFirst();
+    boolean isFirst();
 
-	boolean hasPrevious();
+    boolean hasPrevious();
 
-	T previous();
+    T previous();
 
-	T peekPrevious();
+    T peekPrevious();
 
-	boolean hasCurrent();
+    boolean hasCurrent();
 
-	T current();
+    T current();
 
-	int currentIndex();
+    int currentIndex();
 
-	boolean hasNext();
+    boolean hasNext();
 
-	T next();
+    T next();
 
-	T peekNext();
+    T peekNext();
 
-	T last();
+    T last();
 
-	boolean isLast();
+    boolean isLast();
 
-	int size();
+    int size();
 
-	default boolean isEmpty()
-	{
-		return size() == 0;
-	}
+    default boolean isEmpty()
+    {
+        return size() == 0;
+    }
 
-	Cursor<T> copy();
+    Cursor<T> copy();
 }

@@ -4,5 +4,5 @@ import se.martinuhlen.fishbase.google.photos.GooglePhoto;
 
 public interface HasPhoto
 {
-	GooglePhoto getPhoto();
+    GooglePhoto getPhoto();
 }

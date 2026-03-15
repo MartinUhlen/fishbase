@@ -8,38 +8,38 @@ import javafx.event.ActionEvent;
 
 public class RunnableAction implements Action, Runnable
 {
-	private final SimpleBooleanProperty enabledProperty;
-	private final Runnable action;
+    private final SimpleBooleanProperty enabledProperty;
+    private final Runnable action;
 
-	public RunnableAction(boolean enabled, Runnable action)
-	{
-		enabledProperty = new SimpleBooleanProperty(enabled);
-		this.action = requireNonNull(action, "action can't be null");
-	}
+    public RunnableAction(boolean enabled, Runnable action)
+    {
+        enabledProperty = new SimpleBooleanProperty(enabled);
+        this.action = requireNonNull(action, "action can't be null");
+    }
 
-	public void setEnabled(boolean value)
-	{
-		enabledProperty.set(value);
-	}
+    public void setEnabled(boolean value)
+    {
+        enabledProperty.set(value);
+    }
 
-	@Override
-	public ReadOnlyBooleanProperty enabledProperty()
-	{
-		return enabledProperty;
-	}
+    @Override
+    public ReadOnlyBooleanProperty enabledProperty()
+    {
+        return enabledProperty;
+    }
 
-	@Override
-	public void handle(ActionEvent event)
-	{
-		run();
-	}
+    @Override
+    public void handle(ActionEvent event)
+    {
+        run();
+    }
 
-	@Override
-	public void run()
-	{
-		if (enabledProperty().get())
-		{
-			action.run();
-		}
-	}
+    @Override
+    public void run()
+    {
+        if (enabledProperty().get())
+        {
+            action.run();
+        }
+    }
 }

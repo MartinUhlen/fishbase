@@ -14,34 +14,34 @@ import org.apache.commons.lang3.StringUtils;
  */
 abstract class TextPredicate<T> implements Predicate<T>
 {
-	private final String text;
-	private final String[] parts;
+    private final String text;
+    private final String[] parts;
 
-	TextPredicate(String text)
-	{
-		this.text = defaultIfBlank(text, "").toLowerCase().trim();
-		this.parts = StringUtils.split(text);
-	}
+    TextPredicate(String text)
+    {
+        this.text = defaultIfBlank(text, "").toLowerCase().trim();
+        this.parts = StringUtils.split(text);
+    }
 
-	@Override
-	public final boolean test(T obj)
-	{
-		if (text.isEmpty())
-		{
-			return true;
-		}
-		else
-		{
-			return Stream.of(parts)
-					.allMatch(str -> matchesText(obj, str));
-		}
-	}
+    @Override
+    public final boolean test(T obj)
+    {
+        if (text.isEmpty())
+        {
+            return true;
+        }
+        else
+        {
+            return Stream.of(parts)
+                    .allMatch(str -> matchesText(obj, str));
+        }
+    }
 
-	/**
-	 * Tests if the filtered object matches the text.
-	 * @param obj being filtered
-	 * @param text to compare {@code obj} against
-	 * @return {@code true} if the object matches the text
-	 */
-	abstract boolean matchesText(T obj, String text);
+    /**
+     * Tests if the filtered object matches the text.
+     * @param obj being filtered
+     * @param text to compare {@code obj} against
+     * @return {@code true} if the object matches the text
+     */
+    abstract boolean matchesText(T obj, String text);
 }

@@ -14,17 +14,17 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
  */
 public final class Specie extends Domain<Specie>
 {
-	public static final Specie EMPTY_SPECIE = new Builder("#emptySpecie", false).build();
+    public static final Specie EMPTY_SPECIE = new Builder("#emptySpecie", false).build();
 
-	public static NameBuilder asPersisted(String id)
-	{
-	    return new Builder(id, true);
-	}
+    public static NameBuilder asPersisted(String id)
+    {
+        return new Builder(id, true);
+    }
 
-	public static Specie asNew()
-	{
-		return new Builder(UUID.randomUUID().toString(), false).build();
-	}
+    public static Specie asNew()
+    {
+        return new Builder(UUID.randomUUID().toString(), false).build();
+    }
 
     private Specie(String id, boolean persisted, String name, int regWeight, boolean freshWater)
     {
@@ -34,76 +34,76 @@ public final class Specie extends Domain<Specie>
         this.freshWater = freshWater;
     }
 
-	//@formatter:off
-	private final String name;
-	public String getName(){return name;}
-	public Specie withName(String name){return with(this.name.equals(name), name, regWeight, freshWater);}
+    //@formatter:off
+    private final String name;
+    public String getName(){return name;}
+    public Specie withName(String name){return with(this.name.equals(name), name, regWeight, freshWater);}
 
-	private final int regWeight;
-	public int getRegWeight(){return regWeight;}
-	public Specie withRegWeight(int regWeight){return with(this.regWeight == regWeight, name, regWeight, freshWater);}
+    private final int regWeight;
+    public int getRegWeight(){return regWeight;}
+    public Specie withRegWeight(int regWeight){return with(this.regWeight == regWeight, name, regWeight, freshWater);}
 
-	private final boolean freshWater;
-	public boolean isFreshWater(){return freshWater;}
-	public Specie withFreshWater(boolean freshWater){return with(this.freshWater == freshWater, name, regWeight, freshWater);}
-	//@formatter:off
+    private final boolean freshWater;
+    public boolean isFreshWater(){return freshWater;}
+    public Specie withFreshWater(boolean freshWater){return with(this.freshWater == freshWater, name, regWeight, freshWater);}
+    //@formatter:off
 
-	private <T> Specie with(boolean equals, String name, int regWeight, boolean freshWater)
-	{
-	    return equals
-	            ? this
-	            : new Specie(getId(), isPersisted(), name, regWeight, freshWater);
-	}
+    private <T> Specie with(boolean equals, String name, int regWeight, boolean freshWater)
+    {
+        return equals
+                ? this
+                : new Specie(getId(), isPersisted(), name, regWeight, freshWater);
+    }
 
-	@Override
-	public Stream<String> getValidationErrors()
-	{
-		return Stream.of(
-					isBlank(name) ? "Name" : "",
-					regWeight <= 0 ? "Registration weight" : "")
-			.filter(str -> !str.isEmpty())
-			.map(str -> str + " is required");
-	}
+    @Override
+    public Stream<String> getValidationErrors()
+    {
+        return Stream.of(
+                    isBlank(name) ? "Name" : "",
+                    regWeight <= 0 ? "Registration weight" : "")
+            .filter(str -> !str.isEmpty())
+            .map(str -> str + " is required");
+    }
 
-	@Override
-	public String getLabel()
-	{
-		return name;
-	}
+    @Override
+    public String getLabel()
+    {
+        return name;
+    }
 
-	@Override
-	protected boolean equalsData(Specie that)
-	{
-		return new EqualsBuilder()
-				.append(this.name, that.name)
-				.append(this.regWeight, that.regWeight)
-				.append(this.freshWater, that.freshWater)
-				.isEquals();
-	}
+    @Override
+    protected boolean equalsData(Specie that)
+    {
+        return new EqualsBuilder()
+                .append(this.name, that.name)
+                .append(this.regWeight, that.regWeight)
+                .append(this.freshWater, that.freshWater)
+                .isEquals();
+    }
 
-	@Override
-	public Specie copy()
-	{
-		return new Specie(getId(), isPersisted(), name, regWeight, freshWater);
-	}
+    @Override
+    public Specie copy()
+    {
+        return new Specie(getId(), isPersisted(), name, regWeight, freshWater);
+    }
 
-	private static class Builder extends Domain.Builder<Specie> implements NameBuilder, RegWeightBuilder, FreshWaterBuilder
-	{
+    private static class Builder extends Domain.Builder<Specie> implements NameBuilder, RegWeightBuilder, FreshWaterBuilder
+    {
         private String name = "";
         private int regWeight;
         private boolean freshWater = true;
 
-	    Builder(String id, boolean persisted)
+        Builder(String id, boolean persisted)
         {
-	    	super(id, persisted);
+            super(id, persisted);
         }
 
-	    @Override
-	    public RegWeightBuilder name(String name)
-	    {
-	        this.name = name;
-	        return this;
-	    }
+        @Override
+        public RegWeightBuilder name(String name)
+        {
+            this.name = name;
+            return this;
+        }
 
         @Override
         public FreshWaterBuilder regWeight(int regWeight)
@@ -123,12 +123,12 @@ public final class Specie extends Domain<Specie>
         {
             return new Specie(id, persisted, name, regWeight, freshWater);
         }
-	}
+    }
 
-	public interface NameBuilder
-	{
-	    RegWeightBuilder name(String name);
-	}
+    public interface NameBuilder
+    {
+        RegWeightBuilder name(String name);
+    }
 
     public interface RegWeightBuilder
     {

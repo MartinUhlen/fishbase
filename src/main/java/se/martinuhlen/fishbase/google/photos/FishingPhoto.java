@@ -14,41 +14,41 @@ import se.martinuhlen.fishbase.domain.Trip;
  */
 public interface FishingPhoto extends GooglePhoto
 {
-	/**
-	 * Gets the ID of the {@link Trip} this photo refers to.
-	 * 
-	 * @return trip ID
-	 */
-	String getTripId();
+    /**
+     * Gets the ID of the {@link Trip} this photo refers to.
+     * 
+     * @return trip ID
+     */
+    String getTripId();
 
-	/**
-	 * Gets if this photo contains {@link Specimen} with given ID.
-	 * 
-	 * @param specimenId ID of specimen to check
-	 * @return {@code true} if this photo contains specimen
-	 */
-	boolean containsSpecimen(String specimenId);
+    /**
+     * Gets if this photo contains {@link Specimen} with given ID.
+     * 
+     * @param specimenId ID of specimen to check
+     * @return {@code true} if this photo contains specimen
+     */
+    boolean containsSpecimen(String specimenId);
 
-	/**
-	 * Adds {@link Specimen} with given ID to this photo.
-	 * 
-	 * @param specimenId ID of specimen to add to this photo
-	 */
-	void addSpecimen(String specimenId);
+    /**
+     * Adds {@link Specimen} with given ID to this photo.
+     * 
+     * @param specimenId ID of specimen to add to this photo
+     */
+    void addSpecimen(String specimenId);
 
-	/**
-	 * Removes {@link Specimen} with given ID from this photo.
-	 * 
-	 * @param specimenId ID of specimen to remove from this photo
-	 */
-	void removeSpecimen(String specimenId);
+    /**
+     * Removes {@link Specimen} with given ID from this photo.
+     * 
+     * @param specimenId ID of specimen to remove from this photo
+     */
+    void removeSpecimen(String specimenId);
 
-	/**
-	 * Removes {@link Specimen}s with given IDs from this photo.
-	 * 
-	 * @param specimenIds IDs of specimens to remove from this photo
-	 */
-	void removeSpecimens(Collection<String> specimenIds);
+    /**
+     * Removes {@link Specimen}s with given IDs from this photo.
+     * 
+     * @param specimenIds IDs of specimens to remove from this photo
+     */
+    void removeSpecimens(Collection<String> specimenIds);
 
     /**
      * Gets if this photo is "starred" as a special photo.

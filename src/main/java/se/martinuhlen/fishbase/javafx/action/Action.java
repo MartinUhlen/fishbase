@@ -6,10 +6,10 @@ import javafx.event.EventHandler;
 
 public interface Action extends EventHandler<ActionEvent>
 {
-	ReadOnlyBooleanProperty enabledProperty();
+    ReadOnlyBooleanProperty enabledProperty();
 
-	default boolean isEnabled()
-	{
-		return enabledProperty().get();
-	}
+    default boolean isEnabled()
+    {
+        return enabledProperty().get();
+    }
 }

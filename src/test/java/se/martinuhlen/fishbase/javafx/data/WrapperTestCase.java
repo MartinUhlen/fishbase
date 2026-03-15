@@ -31,66 +31,66 @@ import se.martinuhlen.fishbase.domain.Domain;
  */
 public abstract class WrapperTestCase<D extends Domain<D>, W extends Wrapper<D>>
 {
-	protected InvalidationListener listener;
-	protected W wrapper;
+    protected InvalidationListener listener;
+    protected W wrapper;
 
-	@BeforeEach
-	public void setUp()
-	{
-		listener = mock(InvalidationListener.class);
-		wrapper = createWrapper();
-	}
+    @BeforeEach
+    public void setUp()
+    {
+        listener = mock(InvalidationListener.class);
+        wrapper = createWrapper();
+    }
 
-	protected abstract W createWrapper();
+    protected abstract W createWrapper();
 
     @SafeVarargs
     @SuppressWarnings("unchecked")
-	protected final <P> void testProperty(String name, Supplier<Property<P>> propertyGetter, Function<D, P> valueGetter, P... values)
-	{
-		Property<P> property = propertyGetter.get();
-		assertNotNull(property);
-		assertSame(property, propertyGetter.get());
+    protected final <P> void testProperty(String name, Supplier<Property<P>> propertyGetter, Function<D, P> valueGetter, P... values)
+    {
+        Property<P> property = propertyGetter.get();
+        assertNotNull(property);
+        assertSame(property, propertyGetter.get());
 
-		assertSame(wrapper, property.getBean());
-		assertEquals(name, property.getName());
+        assertSame(wrapper, property.getBean());
+        assertEquals(name, property.getName());
 
-		InvalidationListener invalidationListener = mock(InvalidationListener.class);
-		ChangeListener<P> changeListener = mock(ChangeListener.class);
-		property.addListener(invalidationListener);
-		property.addListener(changeListener);
+        InvalidationListener invalidationListener = mock(InvalidationListener.class);
+        ChangeListener<P> changeListener = mock(ChangeListener.class);
+        property.addListener(invalidationListener);
+        property.addListener(changeListener);
 
-		asList(values).forEach(value ->
-		{
-			reset(listener, invalidationListener, changeListener);
-			P oldValue = property.getValue();
-			property.setValue(value);
-			assertEquals(value, property.getValue());
-			assertEquals(value, valueGetter.apply(wrapper.getWrapee()));
-			verify(listener, atLeastOnce()).invalidated(wrapper);
-			verify(invalidationListener, atLeastOnce()).invalidated(property);
-			verify(changeListener, atLeastOnce()).changed(property, oldValue, value);
+        asList(values).forEach(value ->
+        {
+            reset(listener, invalidationListener, changeListener);
+            P oldValue = property.getValue();
+            property.setValue(value);
+            assertEquals(value, property.getValue());
+            assertEquals(value, valueGetter.apply(wrapper.getWrapee()));
+            verify(listener, atLeastOnce()).invalidated(wrapper);
+            verify(invalidationListener, atLeastOnce()).invalidated(property);
+            verify(changeListener, atLeastOnce()).changed(property, oldValue, value);
 
-			reset(listener, invalidationListener, changeListener);
-			property.setValue(property.getValue());
-			verifyNoInteractions(listener, invalidationListener, changeListener);
-		});
+            reset(listener, invalidationListener, changeListener);
+            property.setValue(property.getValue());
+            verifyNoInteractions(listener, invalidationListener, changeListener);
+        });
 
-		SimpleObjectProperty<P> prop = new SimpleObjectProperty<>(values[0]);
-		property.bindBidirectional(prop);
-		assertEquals(values[0], property.getValue());
-		prop.setValue(values[1]);
-		assertEquals(values[1], property.getValue());
-		property.setValue(values[2]);
-		assertEquals(values[2], prop.getValue());
-		property.unbindBidirectional(prop);
+        SimpleObjectProperty<P> prop = new SimpleObjectProperty<>(values[0]);
+        property.bindBidirectional(prop);
+        assertEquals(values[0], property.getValue());
+        prop.setValue(values[1]);
+        assertEquals(values[1], property.getValue());
+        property.setValue(values[2]);
+        assertEquals(values[2], prop.getValue());
+        property.unbindBidirectional(prop);
 
-		property.setValue(values[0]);
-		D wrapee = wrapper.getWrapee().copy();
-		property.setValue(values[1]);
-		reset(listener, invalidationListener, changeListener);
-		wrapper.setWrapee(wrapee);
-		verify(listener, atLeastOnce()).invalidated(wrapper);
-		verify(invalidationListener, atLeastOnce()).invalidated(property);
-		verify(changeListener, atLeastOnce()).changed(eq(property), any(), eq(values[0]));
-	}
+        property.setValue(values[0]);
+        D wrapee = wrapper.getWrapee().copy();
+        property.setValue(values[1]);
+        reset(listener, invalidationListener, changeListener);
+        wrapper.setWrapee(wrapee);
+        verify(listener, atLeastOnce()).invalidated(wrapper);
+        verify(invalidationListener, atLeastOnce()).invalidated(property);
+        verify(changeListener, atLeastOnce()).changed(eq(property), any(), eq(values[0]));
+    }
 }

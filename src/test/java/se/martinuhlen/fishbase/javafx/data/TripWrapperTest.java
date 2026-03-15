@@ -30,141 +30,141 @@ import se.martinuhlen.fishbase.domain.Trip;
  */
 public class TripWrapperTest extends WrapperTestCase<Trip, TripWrapper>
 {
-	@Override
-	protected TripWrapper createWrapper()
-	{
-		TripWrapper w = new TripWrapper();
-		w.setWrapee(trip1());
-		w.addListener(listener);
-		return w;
-	}
+    @Override
+    protected TripWrapper createWrapper()
+    {
+        TripWrapper w = new TripWrapper();
+        w.setWrapee(trip1());
+        w.addListener(listener);
+        return w;
+    }
 
-	@Test
-	public void isEmpty()
-	{
-		wrapper.setWrapee(trip1());
-		assertFalse(wrapper.isEmpty());
+    @Test
+    public void isEmpty()
+    {
+        wrapper.setWrapee(trip1());
+        assertFalse(wrapper.isEmpty());
 
-		wrapper.setWrapee(EMPTY_TRIP);
-		assertTrue(wrapper.isEmpty());
-	}
+        wrapper.setWrapee(EMPTY_TRIP);
+        assertTrue(wrapper.isEmpty());
+    }
 
-	@Test
-	public void id()
-	{
-		ObservableValue<String> id = wrapper.id();
-		assertEquals(trip1().getId(), id.getValue());
+    @Test
+    public void id()
+    {
+        ObservableValue<String> id = wrapper.id();
+        assertEquals(trip1().getId(), id.getValue());
 
-		InvalidationListener l = Mockito.mock(InvalidationListener.class);
-		id.addListener(l);
+        InvalidationListener l = Mockito.mock(InvalidationListener.class);
+        id.addListener(l);
 
-		wrapper.setWrapee(trip2());
-		assertEquals(trip2().getId(), id.getValue());
-		verify(l).invalidated(id);
-	}
+        wrapper.setWrapee(trip2());
+        assertEquals(trip2().getId(), id.getValue());
+        verify(l).invalidated(id);
+    }
 
-	@Test
-	public void descriptionProperty()
-	{
-		testProperty("description", wrapper::description, Trip::getDescription, "A", "B", "C");
-	}
+    @Test
+    public void descriptionProperty()
+    {
+        testProperty("description", wrapper::description, Trip::getDescription, "A", "B", "C");
+    }
 
-	@Test
-	public void textProperty()
-	{
-		testProperty("text", wrapper::text, Trip::getText, "A", "B", "C");
-	}
+    @Test
+    public void textProperty()
+    {
+        testProperty("text", wrapper::text, Trip::getText, "A", "B", "C");
+    }
 
-	@Test
-	public void startDateProperty()
-	{
-		testProperty("startDate", wrapper::startDate, Trip::getStartDate, LocalDate.parse("2017-02-02"), LocalDate.parse("2017-04-10"), LocalDate.parse("2017-08-24"));
-	}
+    @Test
+    public void startDateProperty()
+    {
+        testProperty("startDate", wrapper::startDate, Trip::getStartDate, LocalDate.parse("2017-02-02"), LocalDate.parse("2017-04-10"), LocalDate.parse("2017-08-24"));
+    }
 
-	@Test
-	public void endDateProperty()
-	{
-		testProperty("endDate", wrapper::endDate, Trip::getEndDate, LocalDate.parse("2017-02-02"), LocalDate.parse("2017-04-10"), LocalDate.parse("2017-08-24"));
-	}
+    @Test
+    public void endDateProperty()
+    {
+        testProperty("endDate", wrapper::endDate, Trip::getEndDate, LocalDate.parse("2017-02-02"), LocalDate.parse("2017-04-10"), LocalDate.parse("2017-08-24"));
+    }
 
-	@Test
-	public void endDateFollowsStartDate()
-	{
-		wrapper.startDate().setValue(LocalDate.parse("2017-02-02"));
-		assertEquals(LocalDate.parse("2017-02-02"), wrapper.startDate().getValue());
-		assertEquals(LocalDate.parse("2017-02-02"), wrapper.endDate().getValue());
+    @Test
+    public void endDateFollowsStartDate()
+    {
+        wrapper.startDate().setValue(LocalDate.parse("2017-02-02"));
+        assertEquals(LocalDate.parse("2017-02-02"), wrapper.startDate().getValue());
+        assertEquals(LocalDate.parse("2017-02-02"), wrapper.endDate().getValue());
 
-		wrapper.endDate().setValue(LocalDate.parse("2017-04-10"));
-		assertEquals(LocalDate.parse("2017-02-02"), wrapper.startDate().getValue());
-		assertEquals(LocalDate.parse("2017-04-10"), wrapper.endDate().getValue());
-	}
+        wrapper.endDate().setValue(LocalDate.parse("2017-04-10"));
+        assertEquals(LocalDate.parse("2017-02-02"), wrapper.startDate().getValue());
+        assertEquals(LocalDate.parse("2017-04-10"), wrapper.endDate().getValue());
+    }
 
-	@Test
-	public void specimens()
-	{
-		ObservableList<SpecimenWrapper> specimens = wrapper.specimenWrappers();
-		wrapper.setWrapee(trip2());
-		assertEquals(2, specimens.size());
-		assertEquals(trip2().getSpecimens(), specimens.stream().map(SpecimenWrapper::getWrapee).collect(toList()));
+    @Test
+    public void specimens()
+    {
+        ObservableList<SpecimenWrapper> specimens = wrapper.specimenWrappers();
+        wrapper.setWrapee(trip2());
+        assertEquals(2, specimens.size());
+        assertEquals(trip2().getSpecimens(), specimens.stream().map(SpecimenWrapper::getWrapee).collect(toList()));
 
-		reset(listener);
-		wrapper.addSpecimen();
-		assertEquals(3, specimens.size());
-		verify(listener).invalidated(wrapper);
+        reset(listener);
+        wrapper.addSpecimen();
+        assertEquals(3, specimens.size());
+        verify(listener).invalidated(wrapper);
 
-		reset(listener);
-		specimens.forEach(s -> s.locationProperty().setValue("X"));
-		verify(listener, times(3)).invalidated(wrapper);
+        reset(listener);
+        specimens.forEach(s -> s.locationProperty().setValue("X"));
+        verify(listener, times(3)).invalidated(wrapper);
 
-		reset(listener);
-		wrapper.addSpecimen();
-		assertEquals(4, specimens.size());
-		verify(listener).invalidated(wrapper);
+        reset(listener);
+        wrapper.addSpecimen();
+        assertEquals(4, specimens.size());
+        verify(listener).invalidated(wrapper);
 
-		reset(listener);
-		specimens.forEach(s -> s.methodProperty().setValue("Y"));
-		verify(listener, times(4)).invalidated(wrapper);
+        reset(listener);
+        specimens.forEach(s -> s.methodProperty().setValue("Y"));
+        verify(listener, times(4)).invalidated(wrapper);
 
-		reset(listener);
-		specimens.remove(2);
-		verify(listener).invalidated(wrapper);
+        reset(listener);
+        specimens.remove(2);
+        verify(listener).invalidated(wrapper);
 
-		reset(listener);
-		specimens.forEach(s -> s.baitProperty().setValue("Z"));
-		verify(listener, times(3)).invalidated(wrapper);
-	}
+        reset(listener);
+        specimens.forEach(s -> s.baitProperty().setValue("Z"));
+        verify(listener, times(3)).invalidated(wrapper);
+    }
 
-	@Test
-	public void removeSpecimenWhenContainedInPhoto()
-	{
-		String tripId = wrapper.id().getValue();
-		Specimen specimen0 = Specimen.asNew(tripId);
-		Specimen specimen1 = Specimen.asNew(tripId);
-		Specimen specimen2 = Specimen.asNew(tripId);
-		wrapper.specimens().setValue(asList(specimen0, specimen1, specimen2));
-		wrapper.photos().setValue(List.of(
-				newPhoto("1", tripId).addSpecimen(specimen1.getId()),
-				newPhoto("2", tripId).addSpecimen(specimen2.getId())));
+    @Test
+    public void removeSpecimenWhenContainedInPhoto()
+    {
+        String tripId = wrapper.id().getValue();
+        Specimen specimen0 = Specimen.asNew(tripId);
+        Specimen specimen1 = Specimen.asNew(tripId);
+        Specimen specimen2 = Specimen.asNew(tripId);
+        wrapper.specimens().setValue(asList(specimen0, specimen1, specimen2));
+        wrapper.photos().setValue(List.of(
+                newPhoto("1", tripId).addSpecimen(specimen1.getId()),
+                newPhoto("2", tripId).addSpecimen(specimen2.getId())));
 
-		wrapper.specimenWrappers().remove(1);
+        wrapper.specimenWrappers().remove(1);
 
-		assertEquals(asList(specimen0, specimen2), wrapper.specimens().getValue());
-		assertEquals(List.of(newPhoto("1", tripId), newPhoto("2", tripId).addSpecimen(specimen2.getId())), wrapper.photos().getValue());
-	}
+        assertEquals(asList(specimen0, specimen2), wrapper.specimens().getValue());
+        assertEquals(List.of(newPhoto("1", tripId), newPhoto("2", tripId).addSpecimen(specimen2.getId())), wrapper.photos().getValue());
+    }
 
-	@Test
-	public void removeSpecimenWhenNotContainedInPhoto()
-	{
-		String tripId = wrapper.id().getValue();
-		Specimen specimen0 = Specimen.asNew(tripId);
-		Specimen specimen1 = Specimen.asNew(tripId);
-		Specimen specimen2 = Specimen.asNew(tripId);
-		wrapper.specimens().setValue(asList(specimen0, specimen1, specimen2));
-		wrapper.photos().setValue(List.of(newPhoto("1", tripId), newPhoto("2", tripId)));
+    @Test
+    public void removeSpecimenWhenNotContainedInPhoto()
+    {
+        String tripId = wrapper.id().getValue();
+        Specimen specimen0 = Specimen.asNew(tripId);
+        Specimen specimen1 = Specimen.asNew(tripId);
+        Specimen specimen2 = Specimen.asNew(tripId);
+        wrapper.specimens().setValue(asList(specimen0, specimen1, specimen2));
+        wrapper.photos().setValue(List.of(newPhoto("1", tripId), newPhoto("2", tripId)));
 
-		wrapper.specimenWrappers().remove(1);
+        wrapper.specimenWrappers().remove(1);
 
-		assertEquals(asList(specimen0, specimen2), wrapper.specimens().getValue());
-		assertEquals(List.of(newPhoto("1", tripId), newPhoto("2", tripId)), wrapper.photos().getValue());
-	}
+        assertEquals(asList(specimen0, specimen2), wrapper.specimens().getValue());
+        assertEquals(List.of(newPhoto("1", tripId), newPhoto("2", tripId)), wrapper.photos().getValue());
+    }
 }

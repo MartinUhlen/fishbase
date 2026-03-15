@@ -13,23 +13,23 @@ public class SpecimenTextPredicate extends TextPredicate<Specimen>
 {
     private final SpecieTextPredicate speciePredicate;
 
-	public SpecimenTextPredicate(String text)
-	{
-		super(text);
-		this.speciePredicate = new SpecieTextPredicate(text);
-	}
+    public SpecimenTextPredicate(String text)
+    {
+        super(text);
+        this.speciePredicate = new SpecieTextPredicate(text);
+    }
 
-	@Override
-	boolean matchesText(Specimen s, String text)
-	{
-		return speciePredicate.test(s.getSpecie())
-	        || Stream.of(
-    			s.getLocation(),
-    			s.getInstant().toString(),
-    			s.getMethod(),
-    			s.getBait(),
-    			s.getWeather(),
-    			s.getText())
-    					.anyMatch(str -> containsIgnoreCase(str, text));
-	}
+    @Override
+    boolean matchesText(Specimen s, String text)
+    {
+        return speciePredicate.test(s.getSpecie())
+            || Stream.of(
+                s.getLocation(),
+                s.getInstant().toString(),
+                s.getMethod(),
+                s.getBait(),
+                s.getWeather(),
+                s.getText())
+                        .anyMatch(str -> containsIgnoreCase(str, text));
+    }
 }
