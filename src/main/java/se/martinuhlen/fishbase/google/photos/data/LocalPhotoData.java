@@ -3,6 +3,8 @@ package se.martinuhlen.fishbase.google.photos.data;
 import static java.util.UUID.randomUUID;
 import static se.martinuhlen.fishbase.utils.Checked.get;
 
+import com.google.common.flogger.FluentLogger;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -11,12 +13,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URL;
 import java.util.function.Supplier;
 
 import se.martinuhlen.fishbase.google.photos.PhotoData;
-
-import com.google.common.flogger.FluentLogger;
 
 /**
  * {@link PhotoData} implementation of locally stored data.
@@ -25,7 +24,6 @@ import com.google.common.flogger.FluentLogger;
  */
 public class LocalPhotoData implements PhotoData {
     private static final FluentLogger LOG = FluentLogger.forEnclosingClass();
-    private static final URL PHOTO_NOT_FOUND = LocalPhotoData.class.getResource("/images/PhotoNotFound.png");
 
     private final File localFile;
     private final Supplier<PhotoData> remote;
@@ -51,7 +49,7 @@ public class LocalPhotoData implements PhotoData {
             return get(() -> localFile.toURI().toURL().toExternalForm());
         }
         else {
-            return PHOTO_NOT_FOUND.toExternalForm();
+            return NotFoundPhotoData.INSTANCE.getUrl();
         }
     }
 
@@ -87,7 +85,7 @@ public class LocalPhotoData implements PhotoData {
             }
             catch (Exception e) {
                 LOG.atWarning().withCause(e).log("Failed to get remote photo stream");
-                inputStream = PHOTO_NOT_FOUND.openStream();
+                inputStream = NotFoundPhotoData.INSTANCE.getStream();
             }
         }
 

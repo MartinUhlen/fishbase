@@ -18,7 +18,8 @@ import com.google.api.services.drive.model.File;
 
 import com.google.common.flogger.FluentLogger;
 
-public class DriveService {
+public class DriveService {
+
     private static final FluentLogger LOG = FluentLogger.forEnclosingClass();
     private static final String MIMETYPE_FOLDER = "application/vnd.google-apps.folder";
 
@@ -26,11 +27,11 @@ public class DriveService {
 
     private File applicationFolder;
 
-    public DriveService(Drive drive) {
+    public DriveService(Drive drive) {
         this.drive = drive;
     }
 
-    public void upload(String name, InputStream input) {
+    public void upload(String name, InputStream input) {
         InputStreamContent content = new InputStreamContent(null, input);
         findFile(name)
           .ifPresentOrElse(
@@ -38,7 +39,7 @@ public class DriveService {
                   $(() -> insertFile(name, content)));
     }
 
-    private void updateFile(File file, AbstractInputStreamContent content) throws IOException {
+    private void updateFile(File file, AbstractInputStreamContent content) throws IOException {
         LOG.atInfo().log("Starting update of '" + file.getName() + "'");
         Update update = drive.files().update(file.getId(), null, content);
         update.getMediaHttpUploader().setDirectUploadEnabled(true);
@@ -46,7 +47,7 @@ public class DriveService {
         LOG.atInfo().log("Finished updating '" + file.getName() + "'");
     }
 
-    private void insertFile(String name, AbstractInputStreamContent content) throws IOException {
+    private void insertFile(String name, AbstractInputStreamContent content) throws IOException {
         LOG.atInfo().log("Starting insert of '" + name + "'");
         File file = new File();
         file.setName(name);
@@ -55,12 +56,12 @@ public class DriveService {
         LOG.atInfo().log("Finished inserting '" + name + "'");
     }
 
-    public void download(String name, OutputStream output) {
+    public void download(String name, OutputStream output) {
         findFile(name)
             .ifPresentOrElse(
-                $(f -> {
+                $(f -> {
                       LOG.atInfo().log("Starting download of '" + name + "'");
-                      try (output) {
+                      try (output) {
                           drive.files().get(f.getId()).executeMediaAndDownloadTo(output);
                           LOG.atInfo().log("Finished downloading '" + name + "'");
                       }
@@ -68,7 +69,7 @@ public class DriveService {
                 $(() -> output.close()));
     }
 
-    private Optional<File> findFile(String name) {
+    private Optional<File> findFile(String name) {
         LOG.atInfo().log("Searching for file '" + name + '"');
         Optional<File> file = get(() -> drive.files()
                 .list()
@@ -78,18 +79,18 @@ public class DriveService {
                 .stream()
                 .findAny());
 
-        if (file.isPresent()) {
+        if (file.isPresent()) {
             LOG.atInfo().log("Found file '" + name + "'");
         }
-        else {
+        else {
             LOG.atInfo().log("File not found: '" + name + "'");
         }
         return file;
     }
 
 
-    private synchronized File getApplicationFolder() {
-        if (applicationFolder == null) {
+    private synchronized File getApplicationFolder() {
+        if (applicationFolder == null) {
             applicationFolder = get(() -> drive.files()
                     .list()
                     .setQ("name = '" + APPLICATION_NAME + "' and trashed = false and mimeType = '" + MIMETYPE_FOLDER + "'")
@@ -98,7 +99,7 @@ public class DriveService {
                         .getFiles()
                         .stream()
                         .findAny()
-                        .orElseGet($(() -> {
+                        .orElseGet($(() -> {
                             File file = new File()
                                     .setName(APPLICATION_NAME)
                                     .setMimeType(MIMETYPE_FOLDER);
