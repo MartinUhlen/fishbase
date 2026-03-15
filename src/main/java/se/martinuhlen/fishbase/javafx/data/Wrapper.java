@@ -20,7 +20,7 @@ import javafx.beans.property.ReadOnlyProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import se.martinuhlen.fishbase.domain.Domain;
-import se.martinuhlen.fishbase.utils.Logger;
+import com.google.common.flogger.FluentLogger;
 
 /**
  * Abstract JavaFX bean that wraps an object, the wrapee, and provides properties for it.
@@ -29,7 +29,7 @@ import se.martinuhlen.fishbase.utils.Logger;
  */
 public abstract class Wrapper<D extends Domain<D>> implements Observable
 {
-	private final Logger logger = Logger.getLogger(getClass());
+	private static final FluentLogger LOG = FluentLogger.forEnclosingClass();
 	private final Map<String, ReadableProperty<?>> properties;
 	private final List<InvalidationListener> listeners;
 
@@ -216,7 +216,7 @@ public abstract class Wrapper<D extends Domain<D>> implements Observable
 			V oldValue = getValue();
 			if (!Objects.equals(oldValue, value))
 			{
-				logger.log("Changing '" + name + "' from '" + oldValue + "' to '" + value + "'");
+				LOG.atFine().log("Changing '%s' from '%s' to '%s'", name, oldValue, value);
 				currentWrapee = wither.apply(currentWrapee, value);
 				notifyListeners(oldValue, value);
 			}

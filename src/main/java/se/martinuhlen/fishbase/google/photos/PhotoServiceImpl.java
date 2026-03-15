@@ -12,7 +12,7 @@ import java.util.List;
 import se.martinuhlen.fishbase.domain.Photo;
 import se.martinuhlen.fishbase.google.drive.DriveService;
 import se.martinuhlen.fishbase.google.photos.PickerClient.PickerSession;
-import se.martinuhlen.fishbase.utils.Logger;
+import com.google.common.flogger.FluentLogger;
 
 /**
  * Default implementation of {@link PhotoService}.
@@ -21,7 +21,7 @@ import se.martinuhlen.fishbase.utils.Logger;
  */
 class PhotoServiceImpl implements PhotoService
 {
-	private static final Logger LOGGER = Logger.getLogger(PhotoServiceImpl.class);
+	private static final FluentLogger LOG = FluentLogger.forEnclosingClass();
 	private static final long TIMEOUT_MS = 30L * 60L * 1000L; // 30 minutes
 
 	private final PickerClient pickerClient;
@@ -37,7 +37,7 @@ class PhotoServiceImpl implements PhotoService
 	public List<FishingPhoto> load(List<Photo> photos)
 	{
 		requireNonNull(photos, "photos cannot be null");
-		log("Loading " + photos.size() + " photos");
+		LOG.atInfo().log("Loading %d photos", photos.size());
 		return photos
 				.stream()
 				.map(photo -> new FishingPhotoImpl(photo, fileName -> new DrivePhotoData(fileName, driveService)))
@@ -49,9 +49,9 @@ class PhotoServiceImpl implements PhotoService
 	{
 		try
 		{
-			log("Creating picker session");
+			LOG.atInfo().log("Creating picker session");
 			PickerSession session = pickerClient.createSession();
-			log("Picker session created: " + session.id() + ", opening browser at " + session.pickerUri());
+			LOG.atInfo().log("Picker session created: %s, opening browser at %s", session.id(), session.pickerUri());
 
 			Desktop.getDesktop().browse(URI.create(session.pickerUri()));
 
@@ -61,44 +61,44 @@ class PhotoServiceImpl implements PhotoService
 			while (System.currentTimeMillis() < deadline)
 			{
 				Thread.sleep(pollIntervalMs);
-				log("Polling picker session " + session.id());
+				LOG.atInfo().log("Polling picker session %s", session.id());
 				if (pickerClient.isSelectionDone(session.id()))
 				{
-					log("Selection done, listing media items");
+					LOG.atInfo().log("Selection done, listing media items");
 					List<PickerGooglePhoto> items = pickerClient.listMediaItems(session.id());
-					log("Got " + items.size() + " media items");
+					LOG.atInfo().log("Got %d media items", items.size());
 					try
 					{
 						pickerClient.deleteSession(session.id());
-						log("Picker session deleted");
+						LOG.atInfo().log("Picker session deleted");
 					}
 					catch (Exception e)
 					{
-						log("Failed to delete picker session: " + e);
+						LOG.atWarning().withCause(e).log("Failed to delete picker session");
 					}
 					return List.copyOf(items);
 				}
 			}
-			log("Picker session timed out after 30 minutes");
+			LOG.atWarning().log("Picker session timed out after 30 minutes");
 			try
 			{
 				pickerClient.deleteSession(session.id());
 			}
 			catch (Exception e)
 			{
-				log("Failed to delete timed-out picker session: " + e);
+				LOG.atWarning().withCause(e).log("Failed to delete timed-out picker session");
 			}
 			return emptyList();
 		}
 		catch (InterruptedException e)
 		{
 			Thread.currentThread().interrupt();
-			log("Picker interrupted");
+			LOG.atInfo().log("Picker interrupted");
 			return emptyList();
 		}
 		catch (Exception e)
 		{
-			log("Picker failed: " + e);
+			LOG.atSevere().withCause(e).log("Picker failed");
 			throw new RuntimeException("Failed to pick photos", e);
 		}
 	}
@@ -119,8 +119,4 @@ class PhotoServiceImpl implements PhotoService
 		return new FishingPhotoImpl(domain, photo);
 	}
 
-	private void log(String message)
-	{
-		LOGGER.log(message);
-	}
 }

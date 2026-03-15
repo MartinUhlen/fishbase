@@ -30,11 +30,11 @@ import se.martinuhlen.fishbase.domain.Domain;
 import se.martinuhlen.fishbase.javafx.action.Action;
 import se.martinuhlen.fishbase.javafx.action.RunnableAction;
 import se.martinuhlen.fishbase.javafx.data.Wrapper;
-import se.martinuhlen.fishbase.utils.Logger;
+import com.google.common.flogger.FluentLogger;
 
 abstract class AbstractTableView<W extends Wrapper<D>, D extends Domain<D>> implements View
 {
-	private final Logger logger = Logger.getLogger(getClass());
+	private static final FluentLogger LOG = FluentLogger.forEnclosingClass();
 	private final ReadOnlyStringProperty titleProperty;
 	private final Supplier<List<D>> loader;
 	private final Consumer<Collection<D>> saver;
@@ -110,7 +110,7 @@ abstract class AbstractTableView<W extends Wrapper<D>, D extends Domain<D>> impl
 	void tableChange()
 	{
 		boolean hasChanges = !unchangedList.equals(currentList());
-		logger.log("Has changes: " + hasChanges);
+		LOG.atFine().log("Has changes: %b", hasChanges);
 		saveAction.setEnabled(hasChanges);
 	}
 
@@ -144,11 +144,11 @@ abstract class AbstractTableView<W extends Wrapper<D>, D extends Domain<D>> impl
 			List<D> rowsToSave = currentList();
 			rowsToSave.removeAll(unchangedList);
 			saver.accept(rowsToSave);
-			logger.log("Saving: (" + rowsToSave.size() + ") " + rowsToSave);
+			LOG.atInfo().log("Saving: (%d) %s", rowsToSave.size(), rowsToSave);
 
 			Set<String> currentIds = currentList().stream().map(Domain::getId).collect(toSet());
 			List<D> rowsToDelete = unchangedList.stream().filter(t -> !currentIds.contains(t.getId())).collect(toList());
-			logger.log("Deleting: (" + rowsToDelete.size() + ") " + rowsToDelete);
+			LOG.atInfo().log("Deleting: (%d) %s", rowsToDelete.size(), rowsToDelete);
 			deleteRows(rowsToDelete);
 
 			refresh();

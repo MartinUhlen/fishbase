@@ -14,7 +14,7 @@ import java.io.OutputStream;
 import java.net.URL;
 import java.util.function.Supplier;
 
-import se.martinuhlen.fishbase.utils.Logger;
+import com.google.common.flogger.FluentLogger;
 
 /**
  * {@link PhotoData} implementation of locally stored data.
@@ -23,11 +23,11 @@ import se.martinuhlen.fishbase.utils.Logger;
  */
 class LocalPhotoData implements PhotoData
 {
-	private static final Logger LOGGER = Logger.getLogger(LocalPhotoData.class);
+	private static final FluentLogger LOG = FluentLogger.forEnclosingClass();
 	private static final URL PHOTO_NOT_FOUND = LocalPhotoData.class.getResource("/images/PhotoNotFound.png");
 
-	private File localFile;
-	private Supplier<PhotoData> remote;
+	private final File localFile;
+	private final Supplier<PhotoData> remote;
 
 	LocalPhotoData(File localFile, Supplier<PhotoData> remote)
 	{
@@ -48,7 +48,7 @@ class LocalPhotoData implements PhotoData
 			}
 			catch (Exception e)
 			{
-				LOGGER.log("Failed to download remote photo for URL: " + e);
+				LOG.atWarning().withCause(e).log("Failed to download remote photo for URL");
 			}
 		}
 		if (localFile.exists())
@@ -73,10 +73,10 @@ class LocalPhotoData implements PhotoData
 			return new RemoteOrNotFoundInputStream();
 		}
 	}
-	
+
 	/**
 	 * Input stream for the remote photo, or fallback to "photo not found".
-	 * 
+	 *
 	 * @author Martin
 	 */
 	private class RemoteOrNotFoundInputStream extends InputStream
@@ -101,7 +101,7 @@ class LocalPhotoData implements PhotoData
 			}
 			catch (Exception e)
 			{
-				LOGGER.log("Failed to get remote photo stream: " + e);
+				LOG.atWarning().withCause(e).log("Failed to get remote photo stream");
 				inputStream = PHOTO_NOT_FOUND.openStream();
 			}
 		}
@@ -119,14 +119,14 @@ class LocalPhotoData implements PhotoData
 
 	/**
 	 * An input stream that reads from a remote stream and meanwhile writes to a local file.
-	 * 
+	 *
 	 * @author Martin
 	 */
 	private class DownloadingInputStream extends InputStream
 	{
 		private final InputStream remoteStream;
-	    private OutputStream localStream;
-	    private File tempFile;
+	    private final OutputStream localStream;
+	    private final File tempFile;
 	    private boolean closed;
 
 	    DownloadingInputStream(InputStream remoteStream) throws IOException
@@ -157,7 +157,7 @@ class LocalPhotoData implements PhotoData
 		            close();
 		            tempFile.renameTo(localFile);
 		        }
-		        return read;	        	
+		        return read;
 	        }
 	    }
 
