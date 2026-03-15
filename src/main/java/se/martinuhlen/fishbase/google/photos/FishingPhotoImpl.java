@@ -20,7 +20,7 @@ import se.martinuhlen.fishbase.domain.Photo;
 class FishingPhotoImpl implements FishingPhoto
 {
 	private static final Set<String> VIDEO_EXTENSIONS = Set.of("mp4", "mpg");
-	private static final java.io.File CACHE_DIR = new java.io.File(new java.io.File(System.getProperty("user.home"), ".fishbase"), "cache");
+	static final java.io.File CACHE_DIR = new java.io.File(new java.io.File(System.getProperty("user.home"), ".fishbase"), "cache");
 	static
 	{
 		CACHE_DIR.mkdirs();

@@ -1,5 +1,7 @@
 package se.martinuhlen.fishbase.google.photos;
 
+import static se.martinuhlen.fishbase.google.photos.FishingPhotoImpl.CACHE_DIR;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -26,13 +28,13 @@ class DrivePhotoData implements PhotoData {
     @Override
     public String getUrl() {
         getStream();
-        File file = new File("C:\\Users\\maruhl899\\.fishbase\\cache", fileName);
+        File file = new File(CACHE_DIR, fileName);
         return file.toURI().toString();
     }
 
     @Override
     public InputStream getStream() {
-        File file = new File("C:\\Users\\maruhl899\\.fishbase\\cache", fileName);
+        File file = new File(CACHE_DIR, fileName);
         try {
             if (!file.exists()) {
                 service.download(fileName, new BufferedOutputStream(new FileOutputStream(file)));
