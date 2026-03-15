@@ -10,8 +10,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import se.martinuhlen.fishbase.domain.Photo;
-import se.martinuhlen.fishbase.google.photos.data.LocalPhoto;
-import se.martinuhlen.fishbase.google.photos.data.LocalPhotoData;
 import se.martinuhlen.fishbase.google.photos.data.PhotoData;
 
 /**
@@ -23,24 +21,18 @@ class FishingPhotoImpl implements FishingPhoto {
     private static final Set<String> VIDEO_EXTENSIONS = Set.of("mp4", "mpg");
 
     private final Set<Consumer<? super FishingPhoto>> listeners = new LinkedHashSet<>();
-    private final Function<String, PhotoData> remoteContent;
-    private final Function<String, PhotoData> remoteThumbnail;
+    private final Function<String, PhotoData> content;
+    private final Function<String, PhotoData> thumbnail;
     private Photo domain;
 
-    private FishingPhotoImpl(Photo domain, Function<String, PhotoData> remoteContent, Function<String, PhotoData> remoteThumbnail) {
+    FishingPhotoImpl(Photo domain, Function<String, PhotoData> content, Function<String, PhotoData> thumbnail) {
         this.domain = domain;
-        this.remoteContent = remoteContent;
-        this.remoteThumbnail = remoteThumbnail;
+        this.content = content;
+        this.thumbnail = thumbnail;
     }
 
-    // TODO Existing photos (exists on Drive)
-    FishingPhotoImpl(Photo domain, Function<String, PhotoData> remote) {
-        this(domain, remote, remote);
-    }
-
-    // TODO New photos (does not exists locally, yet)
-    FishingPhotoImpl(Photo domain, GooglePhoto googlePhoto) {
-        this(domain, _ -> googlePhoto.getContent(), _ -> googlePhoto.getThumbnail());
+    FishingPhotoImpl(Photo domain, Function<String, PhotoData> photoData) {
+        this(domain, photoData, photoData);
     }
 
     @Override
@@ -67,17 +59,12 @@ class FishingPhotoImpl implements FishingPhoto {
 
     @Override
     public PhotoData getThumbnail() {
-        return getPhotoData(getThumbnailFileName(), remoteThumbnail);
+        return thumbnail.apply(getThumbnailFileName());
     }
 
     @Override
     public PhotoData getContent() {
-        return getPhotoData(getContentFileName(), remoteContent);
-    }
-
-    private PhotoData getPhotoData(String fileName, Function<String, PhotoData> remote) {
-        LocalPhoto localPhoto = new LocalPhoto(fileName);
-        return new LocalPhotoData(localPhoto.getFile(), () -> remote.apply(fileName));
+        return content.apply(getContentFileName());
     }
 
     @Override

@@ -20,13 +20,13 @@ import java.util.function.Supplier;
  *
  * @author Martin
  */
-public class LocalPhotoData implements PhotoData {
+class LocalPhotoData implements PhotoData {
     private static final FluentLogger LOG = FluentLogger.forEnclosingClass();
 
     private final File localFile;
     private final Supplier<PhotoData> remote;
 
-    public LocalPhotoData(File localFile, Supplier<PhotoData> remote) {
+    LocalPhotoData(File localFile, Supplier<PhotoData> remote) {
         this.localFile = localFile;
         this.remote = remote;
     }

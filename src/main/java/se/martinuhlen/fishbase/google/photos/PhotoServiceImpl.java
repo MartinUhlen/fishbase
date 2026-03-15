@@ -5,6 +5,8 @@ import static java.util.Collections.emptySet;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
+import com.google.common.flogger.FluentLogger;
+
 import java.awt.Desktop;
 import java.net.URI;
 import java.util.List;
@@ -12,9 +14,7 @@ import java.util.List;
 import se.martinuhlen.fishbase.domain.Photo;
 import se.martinuhlen.fishbase.google.drive.DriveService;
 import se.martinuhlen.fishbase.google.photos.PickerClient.PickerSession;
-import se.martinuhlen.fishbase.google.photos.data.DrivePhotoData;
-
-import com.google.common.flogger.FluentLogger;
+import se.martinuhlen.fishbase.google.photos.data.PhotoDataFactory;
 
 /**
  * Default implementation of {@link PhotoService}.
@@ -27,10 +27,12 @@ class PhotoServiceImpl implements PhotoService {
 
     private final PickerClient pickerClient;
     private final DriveService driveService;
+    private final PhotoDataFactory photoDataFactory;
 
     PhotoServiceImpl(PickerClient pickerClient, DriveService driveService) {
         this.pickerClient = pickerClient;
         this.driveService = driveService;
+        this.photoDataFactory = new PhotoDataFactory(driveService);
     }
 
     @Override
@@ -42,7 +44,7 @@ class PhotoServiceImpl implements PhotoService {
             LOG.atInfo().log("Loading %d photos", photos.size());
             return photos
                     .stream()
-                    .map(photo -> new FishingPhotoImpl(photo, fileName -> new DrivePhotoData(fileName, driveService)))
+                    .map(photo -> new FishingPhotoImpl(photo, photoDataFactory::get))
                     .collect(toList());
         }
     }
@@ -108,7 +110,6 @@ class PhotoServiceImpl implements PhotoService {
         driveService.upload(photo.getContentFileName(), photo.getContent().getStream());
         driveService.upload(photo.getThumbnailFileName(), photo.getThumbnail().getStream());
 
-        return new FishingPhotoImpl(domain, photo);
+        return new FishingPhotoImpl(domain, _ -> photo.getContent(), _ -> photo.getThumbnail());
     }
-
 }

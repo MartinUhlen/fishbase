@@ -3,20 +3,21 @@ package se.martinuhlen.fishbase.google.drive;
 import static java.util.Arrays.asList;
 import static se.martinuhlen.fishbase.utils.Checked.$;
 import static se.martinuhlen.fishbase.utils.Checked.get;
+import static se.martinuhlen.fishbase.utils.Checked.run;
 import static se.martinuhlen.fishbase.utils.Constants.APPLICATION_NAME;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Optional;
 
 import com.google.api.client.http.AbstractInputStreamContent;
 import com.google.api.client.http.InputStreamContent;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.Drive.Files.Update;
 import com.google.api.services.drive.model.File;
-
 import com.google.common.flogger.FluentLogger;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Optional;
+import java.util.concurrent.Callable;
 
 public class DriveService {
 
@@ -56,17 +57,26 @@ public class DriveService {
         LOG.atInfo().log("Finished inserting '" + name + "'");
     }
 
-    public void download(String name, OutputStream output) {
-        findFile(name)
-            .ifPresentOrElse(
-                $(f -> {
-                      LOG.atInfo().log("Starting download of '" + name + "'");
-                      try (output) {
-                          drive.files().get(f.getId()).executeMediaAndDownloadTo(output);
-                          LOG.atInfo().log("Finished downloading '" + name + "'");
-                      }
-                  }),
-                $(() -> output.close()));
+    public boolean download(String name, OutputStream output) {
+        boolean downloaded = download(name, () -> output);
+        run(() -> output.close());
+        return downloaded;
+    }
+
+    public boolean download(String name, Callable<OutputStream> outputSupplier) {
+        File file = findFile(name).orElse(null);
+        if (file != null) {
+            run(() -> {
+                LOG.atInfo().log("Starting download of '" + name + "'");
+                try (OutputStream output = outputSupplier.call();) {
+                    drive.files().get(file.getId()).executeMediaAndDownloadTo(output);
+                    LOG.atInfo().log("Finished downloading '" + name + "'");
+                }
+            });
+            return true;
+        } else {
+            return false;
+        }
     }
 
     private Optional<File> findFile(String name) {
