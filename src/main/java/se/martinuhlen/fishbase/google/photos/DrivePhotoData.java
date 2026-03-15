@@ -1,7 +1,5 @@
 package se.martinuhlen.fishbase.google.photos;
 
-import static se.martinuhlen.fishbase.google.photos.FishingPhotoImpl.CACHE_DIR;
-
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -18,26 +16,26 @@ import se.martinuhlen.fishbase.google.drive.DriveService;
 class DrivePhotoData implements PhotoData {
 
     private final DriveService service;
-    private final String fileName;
+    private final LocalPhoto localPhoto;
 
     DrivePhotoData(String fileName, DriveService service) {
-        this.fileName = fileName;
+        localPhoto = new LocalPhoto(fileName);
         this.service = service;
     }
 
     @Override
     public String getUrl() {
         getStream();
-        File file = new File(CACHE_DIR, fileName);
+        File file = localPhoto.getFile();
         return file.toURI().toString();
     }
 
     @Override
     public InputStream getStream() {
-        File file = new File(CACHE_DIR, fileName);
+        File file = localPhoto.getFile();
         try {
             if (!file.exists()) {
-                service.download(fileName, new BufferedOutputStream(new FileOutputStream(file)));
+                service.download(file.getName(), new BufferedOutputStream(new FileOutputStream(file)));
             }
             return new BufferedInputStream(new FileInputStream(file));
         } catch (FileNotFoundException e) {

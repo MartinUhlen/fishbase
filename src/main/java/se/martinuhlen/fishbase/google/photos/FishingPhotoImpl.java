@@ -2,7 +2,6 @@ package se.martinuhlen.fishbase.google.photos;
 
 import static org.apache.commons.io.FilenameUtils.getExtension;
 
-import java.io.File;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -19,10 +18,6 @@ import se.martinuhlen.fishbase.domain.Photo;
  */
 class FishingPhotoImpl implements FishingPhoto {
     private static final Set<String> VIDEO_EXTENSIONS = Set.of("mp4", "mpg");
-    static final java.io.File CACHE_DIR = new java.io.File(new java.io.File(System.getProperty("user.home"), ".fishbase"), "cache");
-    static {
-        CACHE_DIR.mkdirs();
-    }
 
     private final Set<Consumer<? super FishingPhoto>> listeners = new LinkedHashSet<>();
     private final Function<String, PhotoData> remoteContent;
@@ -76,8 +71,8 @@ class FishingPhotoImpl implements FishingPhoto {
     }
 
     private PhotoData getPhotoData(String fileName, Function<String, PhotoData> remote) {
-        File localFile = new File(CACHE_DIR, fileName);
-        return new LocalPhotoData(localFile, () -> remote.apply(fileName));
+        LocalPhoto localPhoto = new LocalPhoto(fileName);
+        return new LocalPhotoData(localPhoto.getFile(), () -> remote.apply(fileName));
     }
 
     @Override

@@ -25,8 +25,12 @@ class LocalPhoto {
         return file.exists();
     }
 
-    public String fileName() {
+    public String getFileName() {
         return file.getName();
+    }
+
+    File getFile() {
+        return file;
     }
 
     public String getUrl() {
