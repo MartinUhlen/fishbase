@@ -1,21 +1,21 @@
 package se.martinuhlen.fishbase.google.photos;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Supplier;
-
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URI;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Supplier;
 
 /**
  * HTTP client for the Google Photos Picker API.
@@ -116,8 +116,8 @@ public class PickerClient {
         }
     }
 
-    private HttpURLConnection openConnection(String urlString, String method) throws IOException {
-        HttpURLConnection conn = (HttpURLConnection) new URL(urlString).openConnection();
+    private HttpURLConnection openConnection(String url, String method) throws IOException {
+        HttpURLConnection conn = (HttpURLConnection) URI.create(url).toURL().openConnection();
         conn.setRequestMethod(method);
         conn.setRequestProperty("Authorization", "Bearer " + accessToken.get());
         conn.setRequestProperty("Accept", "application/json");

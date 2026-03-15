@@ -30,10 +30,12 @@ class FishingPhotoImpl implements FishingPhoto {
         this.remoteThumbnail = remoteThumbnail;
     }
 
+    // TODO Existing photos (exists on Drive)
     FishingPhotoImpl(Photo domain, Function<String, PhotoData> remote) {
         this(domain, remote, remote);
     }
 
+    // TODO New photos (does not exists locally, yet)
     FishingPhotoImpl(Photo domain, GooglePhoto googlePhoto) {
         this(domain, _ -> googlePhoto.getContent(), _ -> googlePhoto.getThumbnail());
     }
