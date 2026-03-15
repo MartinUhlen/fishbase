@@ -1,150 +1,25 @@
 package se.martinuhlen.fishbase.google.photos.data;
 
-import static java.util.UUID.randomUUID;
-import static se.martinuhlen.fishbase.utils.Checked.get;
-
-import com.google.common.flogger.FluentLogger;
-
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.function.Supplier;
 
 /**
- * {@link PhotoData} implementation of locally stored data.
- *
- * @author Martin
+ * {@link PhotoData} backed by a {@link LocalPhoto}.
  */
 class LocalPhotoData implements PhotoData {
-    private static final FluentLogger LOG = FluentLogger.forEnclosingClass();
 
-    private final File localFile;
-    private final Supplier<PhotoData> remote;
+    private final LocalPhoto photo;
 
-    LocalPhotoData(File localFile, Supplier<PhotoData> remote) {
-        this.localFile = localFile;
-        this.remote = remote;
+    LocalPhotoData(LocalPhoto photo) {
+        this.photo = photo;
     }
 
     @Override
     public String getUrl() {
-        if (!localFile.exists()) {
-            try {
-                InputStream stream = getStream();
-                stream.transferTo(OutputStream.nullOutputStream());
-                stream.close();
-            }
-            catch (Exception e) {
-                LOG.atWarning().withCause(e).log("Failed to download remote photo for URL");
-            }
-        }
-        if (localFile.exists()) {
-            return get(() -> localFile.toURI().toURL().toExternalForm());
-        }
-        else {
-            return NotFoundPhotoData.INSTANCE.getUrl();
-        }
+        return photo.getUrl();
     }
 
     @Override
     public InputStream getStream() {
-        if (localFile.exists()) {
-            return get(() -> new BufferedInputStream(new FileInputStream(localFile)));
-        }
-        else {
-            return new RemoteOrNotFoundInputStream();
-        }
-    }
-
-    /**
-     * Input stream for the remote photo, or fallback to "photo not found".
-     *
-     * @author Martin
-     */
-    private class RemoteOrNotFoundInputStream extends InputStream {
-        private InputStream inputStream;
-
-        @Override
-        public int read() throws IOException {
-            if (inputStream == null) {
-                createInputStream();
-            }
-            return inputStream.read();
-        }
-
-        private void createInputStream() throws IOException {
-            try {
-                inputStream = new DownloadingInputStream(remote.get().getStream());
-            }
-            catch (Exception e) {
-                LOG.atWarning().withCause(e).log("Failed to get remote photo stream");
-                inputStream = NotFoundPhotoData.INSTANCE.getStream();
-            }
-        }
-
-        @Override
-        public void close() throws IOException {
-            if (inputStream != null) {
-                inputStream.close();
-                inputStream = null;
-            }
-        }
-    }
-
-    /**
-     * An input stream that reads from a remote stream and meanwhile writes to a local file.
-     *
-     * @author Martin
-     */
-    private class DownloadingInputStream extends InputStream {
-        private final InputStream remoteStream;
-        private final OutputStream localStream;
-        private final File tempFile;
-        private boolean closed;
-
-        DownloadingInputStream(InputStream remoteStream) throws IOException {
-            this.remoteStream = remoteStream;
-            String tempSuffix = "." + randomUUID() + ".temp";
-            String tempFileName = localFile.getName() + tempSuffix;
-            tempFile = new File(localFile.getParentFile(), tempFileName);
-            tempFile.deleteOnExit();
-            localStream = new BufferedOutputStream(new FileOutputStream(tempFile));
-            LOG.atInfo().log("Starting download of '%s' with temporary suffix '%s'", localFile.getName(), tempSuffix);
-        }
-
-        @Override
-        public int read() throws IOException {
-            if (closed) {
-                return -1;
-            }
-            else {
-                int read = remoteStream.read();
-                if (read != -1) {
-                    localStream.write(read);
-                }
-                else {
-                    close();
-                    tempFile.renameTo(localFile);
-                    tempFile.delete();
-                }
-                return read;
-            }
-        }
-
-        @Override
-        public void close() throws IOException {
-            if (!closed) {
-                closed = true;
-                super.close();
-                remoteStream.close();
-                localStream.close();
-                tempFile.delete();
-            }
-        }
+        return photo.getInputStream();
     }
 }

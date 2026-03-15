@@ -9,6 +9,9 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+/**
+ * A photo stored locally in a cache.
+ */
 class LocalPhoto {
     private static final java.io.File CACHE_DIR = new java.io.File(new java.io.File(System.getProperty("user.home"), ".fishbase"), "cache");
     static    {
@@ -27,10 +30,6 @@ class LocalPhoto {
 
     String getFileName() {
         return file.getName();
-    }
-
-    File getFile() {
-        return file;
     }
 
     String getUrl() {

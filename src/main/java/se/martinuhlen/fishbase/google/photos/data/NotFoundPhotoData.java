@@ -8,7 +8,7 @@ import java.net.URL;
 enum NotFoundPhotoData implements PhotoData {
     INSTANCE;
 
-    private static final URL PHOTO_NOT_FOUND = LocalPhotoData.class.getResource("/images/PhotoNotFound.png");
+    private static final URL PHOTO_NOT_FOUND = NotFoundPhotoData.class.getResource("/images/PhotoNotFound.png");
 
     @Override
     public String getUrl() {

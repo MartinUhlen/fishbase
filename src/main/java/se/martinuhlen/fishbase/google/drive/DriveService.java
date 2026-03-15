@@ -34,10 +34,9 @@ public class DriveService {
 
     public void upload(String name, InputStream input) {
         InputStreamContent content = new InputStreamContent(null, input);
-        findFile(name)
-          .ifPresentOrElse(
-                  $(file -> updateFile(file, content)),
-                  $(() -> insertFile(name, content)));
+        findFile(name).ifPresentOrElse(
+                $(file -> updateFile(file, content)),
+                $(() -> insertFile(name, content)));
     }
 
     private void updateFile(File file, AbstractInputStreamContent content) throws IOException {
@@ -80,7 +79,6 @@ public class DriveService {
     }
 
     private Optional<File> findFile(String name) {
-        LOG.atInfo().log("Searching for file '" + name + '"');
         Optional<File> file = get(() -> drive.files()
                 .list()
                 .setQ("name='"+name+"' and parents in '"+getApplicationFolder().getId()+"' and trashed=false")
@@ -90,10 +88,9 @@ public class DriveService {
                 .findAny());
 
         if (file.isPresent()) {
-            LOG.atInfo().log("Found file '" + name + "'");
-        }
-        else {
-            LOG.atInfo().log("File not found: '" + name + "'");
+            LOG.atInfo().log("Found file '%s'", name);
+        } else {
+            LOG.atInfo().log("File not found: '%s'", name);
         }
         return file;
     }
