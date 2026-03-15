@@ -40,7 +40,7 @@ class PhotoServiceImpl implements PhotoService
 		log("Loading " + photos.size() + " photos");
 		return photos
 				.stream()
-				.map(photo -> new FishingPhotoImpl(photo, () -> { throw new IllegalStateException("Photo not in local cache"); }))
+				.map(photo -> new FishingPhotoImpl(photo, fileName -> new DrivePhotoData(fileName, driveService)))
 				.collect(toList());
 	}
 
@@ -116,7 +116,7 @@ class PhotoServiceImpl implements PhotoService
 		driveService.upload(photo.getContentFileName(), photo.getContent().getStream());
 		driveService.upload(photo.getThumbnailFileName(), photo.getThumbnail().getStream());
 
-		return new FishingPhotoImpl(domain, () -> photo);
+		return new FishingPhotoImpl(domain, photo);
 	}
 
 	private void log(String message)

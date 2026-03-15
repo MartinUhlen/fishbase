@@ -9,7 +9,6 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import se.martinuhlen.fishbase.domain.Photo;
 
@@ -28,13 +27,25 @@ class FishingPhotoImpl implements FishingPhoto
 	}
 
 	private final Set<Consumer<? super FishingPhoto>> listeners = new LinkedHashSet<>();
-	private final Supplier<GooglePhoto> googlePhoto;
-	private Photo domain;
+    private final Function<String, PhotoData> remoteContent;
+    private final Function<String, PhotoData> remoteThumbnail;
+    private Photo domain;
 
-	FishingPhotoImpl(Photo domain, Supplier<GooglePhoto> googlePhoto)
+	private FishingPhotoImpl(Photo domain, Function<String, PhotoData> remoteContent, Function<String, PhotoData> remoteThumbnail)
+    {
+        this.domain = domain;
+        this.remoteContent = remoteContent;
+        this.remoteThumbnail = remoteThumbnail;
+    }
+
+    FishingPhotoImpl(Photo domain, Function<String, PhotoData> remote)
+    {
+        this(domain, remote, remote);
+    }
+
+	FishingPhotoImpl(Photo domain, GooglePhoto googlePhoto)
 	{
-		this.domain = domain;
-		this.googlePhoto = googlePhoto;
+	    this(domain, _ -> googlePhoto.getContent(), _ -> googlePhoto.getThumbnail());
 	}
 
 	@Override
@@ -66,18 +77,18 @@ class FishingPhotoImpl implements FishingPhoto
 	@Override
 	public PhotoData getThumbnail()
 	{
-	    return getPhotoData(getThumbnailFileName(), GooglePhoto::getThumbnail);
+	    return getPhotoData(getThumbnailFileName(), remoteThumbnail);
 	}
 
 	@Override
 	public PhotoData getContent()
 	{
-	    return getPhotoData(getContentFileName(), GooglePhoto::getContent);
+	    return getPhotoData(getContentFileName(), remoteContent);
 	}
 
-	private PhotoData getPhotoData(String fileName, Function<GooglePhoto, PhotoData> remote) {
+	private PhotoData getPhotoData(String fileName, Function<String, PhotoData> remote) {
 	    File localFile = new File(CACHE_DIR, fileName);
-	    return new LocalPhotoData(localFile, () -> remote.apply(googlePhoto.get()));
+	    return new LocalPhotoData(localFile, () -> remote.apply(fileName));
 	}
 
 	@Override
