@@ -1,4 +1,4 @@
-package se.martinuhlen.fishbase.google.photos;
+package se.martinuhlen.fishbase.google.photos.data;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -9,16 +9,17 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 
 import se.martinuhlen.fishbase.google.drive.DriveService;
+import se.martinuhlen.fishbase.google.photos.PhotoData;
 
 /**
  * A photo stored on Google Drive.
  */
-class DrivePhotoData implements PhotoData {
+public class DrivePhotoData implements PhotoData {
 
     private final DriveService service;
     private final LocalPhoto localPhoto;
 
-    DrivePhotoData(String fileName, DriveService service) {
+    public DrivePhotoData(String fileName, DriveService service) {
         localPhoto = new LocalPhoto(fileName);
         this.service = service;
     }

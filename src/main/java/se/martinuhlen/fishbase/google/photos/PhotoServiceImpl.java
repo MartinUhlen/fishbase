@@ -12,6 +12,8 @@ import java.util.List;
 import se.martinuhlen.fishbase.domain.Photo;
 import se.martinuhlen.fishbase.google.drive.DriveService;
 import se.martinuhlen.fishbase.google.photos.PickerClient.PickerSession;
+import se.martinuhlen.fishbase.google.photos.data.DrivePhotoData;
+
 import com.google.common.flogger.FluentLogger;
 
 /**

@@ -1,4 +1,4 @@
-package se.martinuhlen.fishbase.google.photos;
+package se.martinuhlen.fishbase.google.photos.data;
 
 import java.io.BufferedInputStream;
 import java.io.InputStream;
@@ -7,6 +7,7 @@ import java.net.URI;
 import java.net.URL;
 import java.util.function.Supplier;
 
+import se.martinuhlen.fishbase.google.photos.PhotoData;
 import se.martinuhlen.fishbase.utils.Checked;
 
 /**
@@ -14,11 +15,11 @@ import se.martinuhlen.fishbase.utils.Checked;
  *
  * @author Martin
  */
-class RemotePhotoData implements PhotoData {
+public class RemotePhotoData implements PhotoData {
     private final String url;
     private final Supplier<String> accessToken;
 
-    RemotePhotoData(String url, Supplier<String> accessToken) {
+    public RemotePhotoData(String url, Supplier<String> accessToken) {
         this.url = url;
         this.accessToken = accessToken;
     }

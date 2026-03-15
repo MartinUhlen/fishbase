@@ -3,6 +3,8 @@ package se.martinuhlen.fishbase.google.photos;
 import java.time.LocalDateTime;
 import java.util.function.Supplier;
 
+import se.martinuhlen.fishbase.google.photos.data.RemotePhotoData;
+
 /**
  * A {@link GooglePhoto} picked in the Google Photos Picker API.
  */

@@ -1,4 +1,4 @@
-package se.martinuhlen.fishbase.google.photos;
+package se.martinuhlen.fishbase.google.photos.data;
 
 import static se.martinuhlen.fishbase.utils.Checked.get;
 import java.io.BufferedInputStream;
@@ -9,15 +9,15 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-class LocalPhoto {
+public class LocalPhoto {
     private static final java.io.File CACHE_DIR = new java.io.File(new java.io.File(System.getProperty("user.home"), ".fishbase"), "cache");
-    static {
+    static    {
         CACHE_DIR.mkdirs();
     }
 
     private final File file;
 
-    LocalPhoto(String fileName) {
+    public LocalPhoto(String fileName) {
         this.file = new File(CACHE_DIR, fileName);
     }
 
@@ -29,7 +29,7 @@ class LocalPhoto {
         return file.getName();
     }
 
-    File getFile() {
+    public File getFile() {
         return file;
     }
 

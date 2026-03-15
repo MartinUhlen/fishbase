@@ -10,6 +10,8 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import se.martinuhlen.fishbase.domain.Photo;
+import se.martinuhlen.fishbase.google.photos.data.LocalPhoto;
+import se.martinuhlen.fishbase.google.photos.data.LocalPhotoData;
 
 /**
  * Default implementation of {@link FishingPhoto}.

@@ -1,4 +1,4 @@
-package se.martinuhlen.fishbase.google.photos;
+package se.martinuhlen.fishbase.google.photos.data;
 
 import static java.util.UUID.randomUUID;
 import static se.martinuhlen.fishbase.utils.Checked.get;
@@ -14,6 +14,8 @@ import java.io.OutputStream;
 import java.net.URL;
 import java.util.function.Supplier;
 
+import se.martinuhlen.fishbase.google.photos.PhotoData;
+
 import com.google.common.flogger.FluentLogger;
 
 /**
@@ -21,14 +23,14 @@ import com.google.common.flogger.FluentLogger;
  *
  * @author Martin
  */
-class LocalPhotoData implements PhotoData {
+public class LocalPhotoData implements PhotoData {
     private static final FluentLogger LOG = FluentLogger.forEnclosingClass();
     private static final URL PHOTO_NOT_FOUND = LocalPhotoData.class.getResource("/images/PhotoNotFound.png");
 
     private final File localFile;
     private final Supplier<PhotoData> remote;
 
-    LocalPhotoData(File localFile, Supplier<PhotoData> remote) {
+    public LocalPhotoData(File localFile, Supplier<PhotoData> remote) {
         this.localFile = localFile;
         this.remote = remote;
     }
