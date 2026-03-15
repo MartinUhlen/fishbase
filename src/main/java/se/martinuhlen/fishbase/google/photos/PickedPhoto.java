@@ -4,22 +4,20 @@ import java.time.LocalDateTime;
 import java.util.function.Supplier;
 
 /**
- * {@link GooglePhoto} implementation based on the Google Photos Picker API.
- *
- * @author Martin
+ * A {@link GooglePhoto} picked in the Google Photos Picker API.
  */
-class PickerGooglePhoto implements GooglePhoto {
+final class PickedPhoto implements GooglePhoto {
     private final String id;
     private final String filename;
-    private final LocalDateTime createTime;
+    private final LocalDateTime time;
     private final boolean video;
     private final String baseUrl;
     private final Supplier<String> accessToken;
 
-    PickerGooglePhoto(String id, String filename, LocalDateTime createTime, boolean video, String baseUrl, Supplier<String> accessToken) {
+    PickedPhoto(String id, String filename, LocalDateTime time, boolean video, String baseUrl, Supplier<String> accessToken) {
         this.id = id;
         this.filename = filename;
-        this.createTime = createTime;
+        this.time = time;
         this.video = video;
         this.baseUrl = baseUrl;
         this.accessToken = accessToken;
@@ -37,7 +35,7 @@ class PickerGooglePhoto implements GooglePhoto {
 
     @Override
     public LocalDateTime getTime() {
-        return createTime;
+        return time;
     }
 
     @Override

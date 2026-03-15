@@ -62,7 +62,7 @@ class PhotoServiceImpl implements PhotoService {
                 LOG.atInfo().log("Polling picker session %s", session.id());
                 if (pickerClient.isSelectionDone(session.id())) {
                     LOG.atInfo().log("Selection done, listing media items");
-                    List<PickerGooglePhoto> items = pickerClient.listMediaItems(session.id());
+                    List<PickedPhoto> items = pickerClient.listMediaItems(session.id());
                     LOG.atInfo().log("Got %d media items", items.size());
                     try {
                         pickerClient.deleteSession(session.id());

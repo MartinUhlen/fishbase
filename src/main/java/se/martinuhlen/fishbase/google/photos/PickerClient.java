@@ -77,8 +77,8 @@ public class PickerClient {
      * @return list of picked photos
      * @throws IOException on network or HTTP errors
      */
-    List<PickerGooglePhoto> listMediaItems(String sessionId) throws IOException {
-        List<PickerGooglePhoto> result = new ArrayList<>();
+    List<PickedPhoto> listMediaItems(String sessionId) throws IOException {
+        List<PickedPhoto> result = new ArrayList<>();
         String pageToken = null;
         do {
             StringBuilder urlBuilder = new StringBuilder(BASE_URL + "/mediaItems?sessionId=" + sessionId + "&pageSize=100");
@@ -141,7 +141,7 @@ public class PickerClient {
         }
     }
 
-    private PickerGooglePhoto parseMediaItem(JsonObject item) {
+    private PickedPhoto parseMediaItem(JsonObject item) {
         String id = item.get("id").getAsString();
         String createTimeStr = item.has("createTime") ? item.get("createTime").getAsString() : null;
         LocalDateTime createTime;
@@ -159,7 +159,7 @@ public class PickerClient {
         String baseUrl = mediaFile.has("baseUrl") ? mediaFile.get("baseUrl").getAsString() : "";
         String filename = mediaFile.has("filename") ? mediaFile.get("filename").getAsString() : id;
 
-        return new PickerGooglePhoto(id, filename, createTime, isVideo, baseUrl, accessToken);
+        return new PickedPhoto(id, filename, createTime, isVideo, baseUrl, accessToken);
     }
 
     private long parsePollInterval(JsonObject json) {

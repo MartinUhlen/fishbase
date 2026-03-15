@@ -18,11 +18,6 @@ class RemotePhotoData implements PhotoData {
     private final String url;
     private final Supplier<String> accessToken;
 
-    RemotePhotoData(String url) {
-        this.url = url;
-        this.accessToken = null;
-    }
-
     RemotePhotoData(String url, Supplier<String> accessToken) {
         this.url = url;
         this.accessToken = accessToken;
@@ -37,14 +32,9 @@ class RemotePhotoData implements PhotoData {
     public InputStream getStream() {
         return Checked.get(() -> {
             URL urlToStream = URI.create(url).toURL();
-            if (accessToken != null) {
-                HttpURLConnection conn = (HttpURLConnection) urlToStream.openConnection();
-                conn.setRequestProperty("Authorization", "Bearer " + accessToken.get());
-                return new BufferedInputStream(conn.getInputStream());
-            }
-            else {
-                return new BufferedInputStream(urlToStream.openStream());
-            }
+            HttpURLConnection conn = (HttpURLConnection) urlToStream.openConnection();
+            conn.setRequestProperty("Authorization", "Bearer " + accessToken.get());
+            return new BufferedInputStream(conn.getInputStream());
         });
     }
 }
