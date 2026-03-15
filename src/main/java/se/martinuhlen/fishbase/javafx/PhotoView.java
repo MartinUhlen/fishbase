@@ -55,7 +55,7 @@ class PhotoView implements View {
     private ThumbnailPane createThumbnailPane() {
         ThumbnailPane pane = ThumbnailPane.forTimeline(dao::getTrip);
         MenuItem openTrip = new MenuItem("Open trip", getImageView16("window_next.png"));
-        openTrip.setOnAction(e -> tripOpener.accept(openTrip.getUserData().toString()));
+        openTrip.setOnAction(_ -> tripOpener.accept(openTrip.getUserData().toString()));
         ContextMenu contextMenu = new ContextMenu(openTrip);
         pane.setPhotoContextMenuHandler(e -> {
             HasPhoto owner = (HasPhoto) e.getSource();
@@ -89,7 +89,7 @@ class PhotoView implements View {
     }
 
     private class PhotoLoader extends Service<List<FishingPhoto>> {
-        private final Timeline batchTimeline = new Timeline(new KeyFrame(Duration.millis(100), e -> addNextBatchOfPhotos()));
+        private final Timeline batchTimeline = new Timeline(new KeyFrame(Duration.millis(100), _ -> addNextBatchOfPhotos()));
         private List<FishingPhoto> loadedPhotos = emptyList();
 
         @Override

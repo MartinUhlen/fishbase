@@ -81,14 +81,14 @@ class SpecimenTable extends TableView<SpecimenWrapper> {
         List<MenuItem> items = new ArrayList<>();
         MenuItem openTrip = new MenuItem("Open trip", getImageView16("window_next.png"));
         if (tripOpener != null) {
-            openTrip.setOnAction(e -> tripOpener.accept(getSelectedSpecimen().getTripId()));
+            openTrip.setOnAction(_ -> tripOpener.accept(getSelectedSpecimen().getTripId()));
             items.add(openTrip);
             items.add(new SeparatorMenuItem());
         }
 
         MenuItem add = new MenuItem("Add", getImageView16("add.png"));
         if (tripSupplier != null) {
-            add.setOnAction(e -> editSpecimen(true, createNewSpecimen(), s -> specimens.add(new SpecimenWrapper(s)))); // FIXME Must also add a listener (SpecimenView)?
+            add.setOnAction(_ -> editSpecimen(true, createNewSpecimen(), s -> specimens.add(new SpecimenWrapper(s)))); // FIXME Must also add a listener (SpecimenView)?
             items.add(add);
             setOnMouseClicked(e -> {
                 if (e.getClickCount() >= 2) {
@@ -98,20 +98,20 @@ class SpecimenTable extends TableView<SpecimenWrapper> {
         }
 
         MenuItem copy = new MenuItem("Copy", getImageView16("copy.png"));
-        copy.setOnAction(e -> editSpecimen(true, getSelectedSpecimen().copyAsNew(), s -> specimens.add(new SpecimenWrapper(s))));
+        copy.setOnAction(_ -> editSpecimen(true, getSelectedSpecimen().copyAsNew(), s -> specimens.add(new SpecimenWrapper(s))));
         items.add(copy);
 
         MenuItem edit = new MenuItem("Edit", getImageView16("edit.png"));
-        edit.setOnAction(e -> editSpecimen(false, getSelectedSpecimen().copy(), s -> getSelectedSpecimenWrapper().setWrapee(s)));
+        edit.setOnAction(_ -> editSpecimen(false, getSelectedSpecimen().copy(), s -> getSelectedSpecimenWrapper().setWrapee(s)));
         items.add(edit);
 
         MenuItem remove = new MenuItem("Remove", getImageView16("delete.png"));
-        remove.setOnAction(e -> removeSelected());
+        remove.setOnAction(_ -> removeSelected());
         items.add(remove);
 
         ContextMenu menu = new ContextMenu();
         menu.getItems().setAll(items);
-        menu.setOnShowing(e -> asList(openTrip, copy, edit, remove).forEach(item -> item.setDisable(getSelectionModel().isEmpty())));
+        menu.setOnShowing(_ -> asList(openTrip, copy, edit, remove).forEach(item -> item.setDisable(getSelectionModel().isEmpty())));
         return menu;
     }
 
@@ -123,7 +123,7 @@ class SpecimenTable extends TableView<SpecimenWrapper> {
         alert.getButtonTypes().setAll(delete, CANCEL);
         alert.showAndWait()
             .filter(b -> b == delete)
-            .ifPresent(b -> specimens.remove(getSelectedSpecimenWrapper()));
+            .ifPresent(_ -> specimens.remove(getSelectedSpecimenWrapper()));
     }
 
     private Specimen getSelectedSpecimen() {
@@ -162,7 +162,7 @@ class SpecimenTable extends TableView<SpecimenWrapper> {
         Collection<Specie> species = specieSupplier.get();
         TableColumn<SpecimenWrapper, Specie> specieColumn = new TableColumn<>("Specie");
         specieColumn.setCellValueFactory(cdf -> cdf.getValue().specieProperty());
-        specieColumn.setCellFactory(c -> {
+        specieColumn.setCellFactory(_ -> {
             ComboBoxTableCell<SpecimenWrapper, Specie> cell = new ComboBoxTableCell<>();
             cell.getItems().setAll(species);
             cell.setConverter(specieConverter());
@@ -176,7 +176,7 @@ class SpecimenTable extends TableView<SpecimenWrapper> {
 
         TableColumn<SpecimenWrapper, Double> ratioColumn = new TableColumn<>("Ratio");
         ratioColumn.setCellValueFactory(cdf -> cdf.getValue().ratioProperty());
-        ratioColumn.setCellFactory(column -> new ProgressBarTableCell<>() {
+        ratioColumn.setCellFactory(_ -> new ProgressBarTableCell<>() {
             @Override
             public void updateItem(Double ratio, boolean empty) {
                 super.updateItem(ratio, empty);
@@ -238,7 +238,7 @@ class SpecimenTable extends TableView<SpecimenWrapper> {
         methodColumn.setPrefWidth(110);
         baitColumn.setPrefWidth(200);
         weatherColumn.setPrefWidth(110);
-        widthProperty().addListener(o -> resizeTextColumn());
+        widthProperty().addListener(_ -> resizeTextColumn());
 
         return asList(specieColumn, weightColumn, ratioColumn, lengthColumn, locationColumn, dateColumn, timeColumn, methodColumn, baitColumn, weatherColumn, textColumn);
     }
@@ -262,14 +262,14 @@ class SpecimenTable extends TableView<SpecimenWrapper> {
 
     /**
      * Adds column to display if specimen has photo(s).
-     * 
+     *
      * @param hasPhoto tests whether a specimen has photo(s) or not
      */
     void addPhotoColumn(Predicate<SpecimenWrapper> hasPhoto) {
         TableColumn<SpecimenWrapper, Boolean> column = new TableColumn<>("");
         column.setEditable(false);
         column.setCellValueFactory(cdf -> new SimpleBooleanProperty(hasPhoto.test(cdf.getValue())));
-        column.setCellFactory(c -> new TableCell<>() {
+        column.setCellFactory(_ -> new TableCell<>() {
             @Override
             protected void updateItem(Boolean hasPhoto, boolean empty) {
                 super.updateItem(hasPhoto, empty);

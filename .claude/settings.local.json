@@ -17,7 +17,8 @@
       "WebFetch(domain:developers.google.com)",
       "Bash(cd D:/Projects/Martin/fishbase && ./mvnw.cmd package -DskipTests 2>&1)",
       "Bash(cd D:/Projects/Martin/fishbase && ./mvnw.cmd test 2>&1 | tail -20)",
-      "Bash(find D:/Projects/Martin/fishbase/src -name \"*.java\" | xargs perl -i -0777 -pe 's/\\\\r//g')"
+      "Bash(find D:/Projects/Martin/fishbase/src -name \"*.java\" | xargs perl -i -0777 -pe 's/\\\\r//g')",
+      "Bash(grep -rl \"import javafx.beans.Observable\" D:/Projects/Martin/fishbase/src/main/java | xargs grep -L \"Observable[^;]\")"
     ]
   }
 }

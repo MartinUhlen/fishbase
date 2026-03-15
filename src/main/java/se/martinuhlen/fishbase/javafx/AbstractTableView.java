@@ -55,7 +55,7 @@ abstract class AbstractTableView<W extends Wrapper<D>, D extends Domain<D>> impl
         this.saver = saver;
         this.deleter = deleter;
         this.list = observableArrayList();
-        list.addListener((Observable obs) -> tableChange());
+        list.addListener((Observable _) -> tableChange());
     }
 
     @Override
@@ -86,7 +86,7 @@ abstract class AbstractTableView<W extends Wrapper<D>, D extends Domain<D>> impl
         if (table == null) {
             table = createTable();
             table.setEditable(true);
-            table.getSelectionModel().selectedItemProperty().addListener((obs, oldValue, newValue) -> deleteAction.setEnabled(newValue != null));
+            table.getSelectionModel().selectedItemProperty().addListener((_, _, newValue) -> deleteAction.setEnabled(newValue != null));
         }
         return table;
     }
@@ -186,12 +186,12 @@ abstract class AbstractTableView<W extends Wrapper<D>, D extends Domain<D>> impl
         alert.getButtonTypes().setAll(delete, CANCEL);
         alert.showAndWait()
             .filter(b -> b == delete)
-            .ifPresent(b -> list.remove(wrapper));
+            .ifPresent(_ -> list.remove(wrapper));
     }
 
     /**
      * Checks if if given wrapee object can be removed from the table and then on save be deleted.
-     * 
+     *
      * @param wrapee to check
      * @return {@code true} if OK to remove
      */

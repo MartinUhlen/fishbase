@@ -108,7 +108,7 @@ public class FishBaseApplication extends Application {
         drivePersistence = new DrivePersistence(driveService);
         dao = FishBaseDao.create(drivePersistence);
 
-        tabPane.getSelectionModel().selectedItemProperty().addListener((obs, oldTab, newTab) -> selectView());
+        tabPane.getSelectionModel().selectedItemProperty().addListener((_, _, _) -> selectView());
         tabPane.setTabClosingPolicy(ALL_TABS);
 
         Button startButton = createStartButton();
@@ -116,7 +116,7 @@ public class FishBaseApplication extends Application {
         Button saveButton = createActionButton("Save", "save.png", "CTRL+S", saveAction);
         Button refreshButton = createActionButton("Refresh", "refresh.png", "F5", refreshAction);
         Button deleteButton = createActionButton("Delete", "delete.png", "CTRL+D", deleteAction);
-        saveAction.enabledProperty().addListener((obs, old, enabled) ->    refreshButton.setGraphic(image(enabled ? "undo.png" : "refresh.png")));
+        saveAction.enabledProperty().addListener((_, _, enabled) ->    refreshButton.setGraphic(image(enabled ? "undo.png" : "refresh.png")));
         HBox toolbar = new HBox(startButton, addButton, saveButton, refreshButton, deleteButton);
 
         StackPane centerPane = new StackPane(getImageView("fish.png", SIZE_256), tabPane);
@@ -140,7 +140,7 @@ public class FishBaseApplication extends Application {
                 alert.getButtonTypes().setAll(shutdown, CANCEL);
                 alert.showAndWait()
                     .filter(b -> b != shutdown)
-                    .ifPresent(b -> e.consume());
+                    .ifPresent(_ -> e.consume());
             }
         });
     }
@@ -157,7 +157,7 @@ public class FishBaseApplication extends Application {
         menu.setAutoHide(true);
 
         Button button = createButton("Menu", "menu.png", "CTRL+SPACE");
-        button.setOnAction(e -> {
+        button.setOnAction(_ -> {
             menu.show(button, BOTTOM, 0, 0);
             menu.requestFocus();
         });
@@ -166,7 +166,7 @@ public class FishBaseApplication extends Application {
 
     private <V extends View> MenuItem createOpenItem(String text, String shortcut, Class<V> typeOfView) {
         MenuItem item = new MenuItem(text);
-        item.setOnAction(e -> openTab(typeOfView));
+        item.setOnAction(_ -> openTab(typeOfView));
         item.setAccelerator(keyCombination(shortcut));
         scene.getAccelerators().put(item.getAccelerator(), () -> item.fire());
         return item;
@@ -190,7 +190,7 @@ public class FishBaseApplication extends Application {
 
     private MenuItem createAboutItem() {
         MenuItem about = new MenuItem("About", getImageView16("fish.png"));
-        about.setOnAction(e -> {
+        about.setOnAction(_ -> {
             Alert alert = new Alert(INFORMATION);
             alert.setTitle("About");
             alert.setHeaderText("FishBase 0.3");
@@ -203,7 +203,7 @@ public class FishBaseApplication extends Application {
     private MenuItem createExitItem() {
         MenuItem exit = new MenuItem("Exit");
         exit.setAccelerator(keyCombination("ALT+F4"));
-        exit.setOnAction(e -> stage.fireEvent(new WindowEvent(stage, WINDOW_CLOSE_REQUEST)));
+        exit.setOnAction(_ -> stage.fireEvent(new WindowEvent(stage, WINDOW_CLOSE_REQUEST)));
         return exit;
     }
 
@@ -264,7 +264,7 @@ public class FishBaseApplication extends Application {
                 e.consume();
             }
         });
-        tab.setOnClosed(e -> tabToView.remove(tab));
+        tab.setOnClosed(_ -> tabToView.remove(tab));
 
         tabPane.getTabs().add(tab);
         selectTab(tab);

@@ -19,7 +19,7 @@ import se.martinuhlen.fishbase.domain.Trip;
 public interface FishBaseDao {
     public static FishBaseDao create(Persistence persistence) {
         CompletableFuture<JsonDao> futureDao = supplyAsync(() -> new JsonDao(persistence));
-        return (FishBaseDao) newProxyInstance(currentThread().getContextClassLoader(), new Class<?>[] {FishBaseDao.class}, (proxy, method, args) -> {
+        return (FishBaseDao) newProxyInstance(currentThread().getContextClassLoader(), new Class<?>[] {FishBaseDao.class}, (_, method, args) -> {
             JsonDao dao = futureDao.get();
             try {
                 return method.invoke(dao, args);
@@ -45,7 +45,7 @@ public interface FishBaseDao {
     void deleteSpecies(Collection<Specie> species);
 
     Specimen getSpecimen(String id);
-    
+
     List<Specimen> getSpecimens();
 
     void saveSpecimens(Collection<Specimen> specimens);

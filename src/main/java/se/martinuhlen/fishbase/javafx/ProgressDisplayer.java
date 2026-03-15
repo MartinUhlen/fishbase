@@ -3,7 +3,6 @@ package se.martinuhlen.fishbase.javafx;
 import static javafx.stage.Modality.WINDOW_MODAL;
 import static javafx.stage.StageStyle.UTILITY;
 
-import javafx.beans.Observable;
 import javafx.concurrent.Service;
 import javafx.concurrent.Worker.State;
 import javafx.scene.Scene;
@@ -37,7 +36,7 @@ class ProgressDisplayer {
 
     void startAndThen(Runnable postAction) {
         service.start();
-        service.stateProperty().addListener((Observable obs) -> {
+        service.stateProperty().addListener(_ -> {
             if (service.getState().compareTo(State.RUNNING) <= 0) {
                 stage.show();
                 stage.requestFocus();

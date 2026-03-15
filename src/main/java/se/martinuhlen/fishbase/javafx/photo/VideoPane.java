@@ -32,7 +32,7 @@ import javafx.util.Duration;
 
 /*
  * FIXME Video does not work, need additional codecs?
- * 
+ *
  * sudo apt-get dist-upgrade
  * sudo apt-get install ubuntu-restricted-extras
  */
@@ -59,7 +59,7 @@ class VideoPane extends BorderPane {
         BorderPane.setAlignment(mediaBar, CENTER);
 
         playButton = new Button(">");
-        playButton.setOnAction(e -> {
+        playButton.setOnAction(_ -> {
             MediaPlayer player = getPlayer();
             Status status = player.getStatus();
             if (status == PAUSED || status == READY || status == STOPPED) {
@@ -77,7 +77,7 @@ class VideoPane extends BorderPane {
         HBox.setHgrow(timeSlider, ALWAYS);
         timeSlider.setMinWidth(50);
         timeSlider.setMaxWidth(MAX_VALUE);
-        timeSlider.valueProperty().addListener(obs -> {
+        timeSlider.valueProperty().addListener(_ -> {
             if (timeSlider.isValueChanging()) {
                 getPlayer().seek(getDuration().multiply(timeSlider.getValue() / 100.0));
             }
@@ -124,8 +124,8 @@ class VideoPane extends BorderPane {
     private void setPlayer(MediaPlayer player, boolean autoPlay) {
         player.setAutoPlay(autoPlay);
         mediaView.setMediaPlayer(player);
-        player.currentTimeProperty().addListener(obs -> updateTime());
-        player.statusProperty().addListener(obs -> {
+        player.currentTimeProperty().addListener(_ -> updateTime());
+        player.statusProperty().addListener(_ -> {
             updateTime();
             enableControls();
             playButton.setText(getStatus() == PLAYING ? "||" : ">");
@@ -134,7 +134,7 @@ class VideoPane extends BorderPane {
 
         showError("");
         player.setOnError(() -> showError(player.getError().getMessage()));
-        
+
         player.setOnEndOfMedia(() -> {
             player.seek(player.getStartTime());
             player.pause();

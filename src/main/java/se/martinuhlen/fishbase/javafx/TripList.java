@@ -36,12 +36,12 @@ class TripList extends VBox {
 
     TripList(Consumer<Trip> selectionHandler) {
         list = FXCollections.observableArrayList();
-        FilteredList<Trip> filteredList = list.filtered(t -> true);
+        FilteredList<Trip> filteredList = list.filtered(_ -> true);
         filter = createFilter(filteredList);
         listView = createListView(selectionHandler, filteredList);
 
         Label label = new Label();
-        filteredList.addListener((Observable obs) -> label.setText(filteredList.size() + " trips"));
+        filteredList.addListener((Observable _) -> label.setText(filteredList.size() + " trips"));
 
         setVgrow(listView, ALWAYS);
         getChildren().setAll(filter, listView, label);
@@ -50,7 +50,7 @@ class TripList extends VBox {
     private TextField createFilter(FilteredList<Trip> filteredList) {
         TextField filter = TextFields.createClearableTextField();
         filter.setPromptText("Filter...");
-        filter.textProperty().addListener(obs -> filteredList.setPredicate(new TripTextPredicate(filter.getText())));
+        filter.textProperty().addListener(_ -> filteredList.setPredicate(new TripTextPredicate(filter.getText())));
         filter.onKeyPressedProperty().set(e -> {
             if (e.getCode() == ESCAPE) {
                 filter.setText("");
@@ -67,8 +67,8 @@ class TripList extends VBox {
 
     private ListView<Trip> createListView(Consumer<Trip> selectionHandler, FilteredList<Trip> filteredList) {
         ListView<Trip> listView = new ListView<>(filteredList);
-        listView.setCellFactory(list -> new TripCell());
-        listView.getSelectionModel().selectedItemProperty().addListener((obs, oldTrip, newTrip) -> {
+        listView.setCellFactory(_ -> new TripCell());
+        listView.getSelectionModel().selectedItemProperty().addListener((_, _, newTrip) -> {
             if (newTrip != null) {
                 selectionHandler.accept(newTrip);
             }

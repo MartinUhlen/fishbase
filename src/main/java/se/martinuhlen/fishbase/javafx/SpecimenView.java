@@ -97,8 +97,8 @@ class SpecimenView extends AbstractTableView<SpecimenWrapper, Specimen> {
     TableView<SpecimenWrapper> createTable() {
         FilteredList<SpecimenWrapper> filteredList = list.filtered(createFilterPredicate());
         SpecimenTable specimenTable = new SpecimenTable(filteredList, dao::getSpecies, dao::getAutoCompletions, tripOpener);
-        specimenTable.getSelectionModel().selectedItemProperty().addListener(obs -> photoLoader.restart());
-        InvalidationListener listener = obs -> filteredList.setPredicate(createFilterPredicate());
+        specimenTable.getSelectionModel().selectedItemProperty().addListener(_ -> photoLoader.restart());
+        InvalidationListener listener = _ -> filteredList.setPredicate(createFilterPredicate());
         filterField.textProperty().addListener(listener);
         ratioSlider.valueProperty().addListener(listener);
         personalBestCheckBox.selectedProperty().addListener(listener);
@@ -113,11 +113,11 @@ class SpecimenView extends AbstractTableView<SpecimenWrapper, Specimen> {
                 .stream()
                 .anyMatch(photo -> photo.getSpecimens().contains(specimen.getId()));
     }
-    
+
     private Predicate<SpecimenWrapper> createFilterPredicate() {
         Predicate<Specimen> textPredicate = new SpecimenTextPredicate(filterField.getText());
         Predicate<Specimen> ratioPredicate = s -> s.getRatio() >= ratioSlider.getValue();
-        Predicate<Specimen> personalBestPredicate = w -> true;
+        Predicate<Specimen> personalBestPredicate = _ -> true;
         if (personalBestCheckBox.isSelected()) {
             Map<Specie, Specimen> personalBest = list
                     .stream()
@@ -184,7 +184,7 @@ class SpecimenView extends AbstractTableView<SpecimenWrapper, Specimen> {
 
         @Override
         protected void succeeded() {
-            List<FishingPhoto> photos = getValue();            
+            List<FishingPhoto> photos = getValue();
             slideshow.setPhotos(Cursor.of(photos, 0));
             slideshow.setVisible(!photos.isEmpty());
         }

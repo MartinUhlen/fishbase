@@ -69,7 +69,7 @@ class SpecimenDialog extends Dialog<Specimen> {
 
     SpecimenDialog(boolean add, Collection<Specie> species, Function<AutoCompleteField, SortedSet<String>> autoCompleter, Specimen specimen) {
         this.autoCompleter = autoCompleter;
-        this.wrapper = new SpecimenWrapper(specimen, obs -> enableOkButton());
+        this.wrapper = new SpecimenWrapper(specimen, _ -> enableOkButton());
         specieCombo = new ComboBox<>(observableArrayList(species));
         getDialogPane().getButtonTypes().setAll(CANCEL, OK);
         getDialogPane().setContent(createForm());
@@ -79,7 +79,7 @@ class SpecimenDialog extends Dialog<Specimen> {
         setResizable(true);
         setResultConverter(b -> b == OK ? wrapper.getWrapee() : null);
         setTitle(add ? "Add new specimen" : "Edit specimen");
-        setOnShowing(e -> onShowing());
+        setOnShowing(_ -> onShowing());
     }
 
     private void onShowing() {
@@ -199,7 +199,7 @@ class SpecimenDialog extends Dialog<Specimen> {
     }
 
     private void addValidation(ValidationSupport vs, Control control, String message) {
-        vs.registerValidator(control, false, createPredicateValidator(x -> !wrapper.getWrapee().getValidationErrors().anyMatch(str -> str.equals(message)), message));
+        vs.registerValidator(control, false, createPredicateValidator(_ -> !wrapper.getWrapee().getValidationErrors().anyMatch(str -> str.equals(message)), message));
     }
 
     private TextField textField(Property<String> property, AutoCompleteField autoCompleteField) {

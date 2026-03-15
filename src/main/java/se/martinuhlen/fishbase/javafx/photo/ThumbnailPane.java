@@ -130,9 +130,9 @@ public class ThumbnailPane extends BorderPane {
                 };
             }
         };
-        service.setOnScheduled(e -> pane.setPhotos(emptySet()));
-        service.stateProperty().addListener(obs -> progress.setVisible(service.getState() == RUNNING));
-        service.setOnSucceeded(e -> {
+        service.setOnScheduled(_ -> pane.setPhotos(emptySet()));
+        service.stateProperty().addListener(_ -> progress.setVisible(service.getState() == RUNNING));
+        service.setOnSucceeded(_ -> {
             pane.setPhotos(service.getValue());
             pane.selectAll(true);
         });
@@ -141,11 +141,11 @@ public class ThumbnailPane extends BorderPane {
         infoLabel.setAlignment(Pos.CENTER_LEFT);
         infoLabel.visibleProperty().bind(progress.visibleProperty().not());
         infoLabel.managedProperty().bind(infoLabel.visibleProperty());
-        pane.photos.addListener((Observable obs) -> infoLabel.setText("Found " + pane.photos.size() + " photos"));
+        pane.photos.addListener((Observable _) -> infoLabel.setText("Found " + pane.photos.size() + " photos"));
 
-        Timeline timeline = new Timeline(new KeyFrame(Duration.millis(250), e -> service.restart()));
-        fromPicker.valueProperty().addListener((obs, oldValue, newValue) -> timeline.playFromStart());
-        toPicker.valueProperty().addListener((obs, oldValue, newValue) -> timeline.playFromStart());
+        Timeline timeline = new Timeline(new KeyFrame(Duration.millis(250), _ -> service.restart()));
+        fromPicker.valueProperty().addListener((_, _, _) -> timeline.playFromStart());
+        toPicker.valueProperty().addListener((_, _, _) -> timeline.playFromStart());
         fromPicker.setValue(initialFrom);
         toPicker.setValue(initialTo);
 
@@ -232,7 +232,7 @@ public class ThumbnailPane extends BorderPane {
             }
         });
 
-        photos.addListener((Observable obs) -> {
+        photos.addListener((Observable _) -> {
             slider.setVisible(!photos.isEmpty());
             if (!photos.isEmpty()) {
                 LongSummaryStatistics stats = photos.stream()
@@ -248,7 +248,7 @@ public class ThumbnailPane extends BorderPane {
         });
 
         AtomicBoolean syncing = new AtomicBoolean(false);
-        Timeline sliderToScroll = new Timeline(new KeyFrame(Duration.millis(50), e -> {
+        Timeline sliderToScroll = new Timeline(new KeyFrame(Duration.millis(50), _ -> {
             if (!syncing.get()) {
                 syncing.set(true);
                 double value = slider.getValue();
@@ -266,13 +266,13 @@ public class ThumbnailPane extends BorderPane {
                 syncing.set(false);
             }
         }));
-        slider.valueProperty().addListener(obs -> {
+        slider.valueProperty().addListener(_ -> {
             if (!syncing.get()) {
                 sliderToScroll.playFromStart();
             }
         });
 
-        Timeline scrollToSlider = new Timeline(new KeyFrame(Duration.millis(50), e -> {
+        Timeline scrollToSlider = new Timeline(new KeyFrame(Duration.millis(50), _ -> {
             if (!syncing.get()) {
                 syncing.set(true);
                 streamVisibleThumbnails()
@@ -286,7 +286,7 @@ public class ThumbnailPane extends BorderPane {
                 syncing.set(false);
             }
         }));
-        InvalidationListener scrollToSliderListener = obs -> {
+        InvalidationListener scrollToSliderListener = _ -> {
             if (!syncing.get()) {
                 scrollToSlider.playFromStart();
             }
@@ -299,7 +299,7 @@ public class ThumbnailPane extends BorderPane {
 
     /**
      * Gets the comparator in which photos of this pane is sorted.
-     * 
+     *
      * @return photo comparator
      */
     public Comparator<GooglePhoto> getPhotoComparator() {
@@ -308,7 +308,7 @@ public class ThumbnailPane extends BorderPane {
 
     /**
      * Adds new photos to this pane.
-     * 
+     *
      * @param photos to add
      */
     public void addPhotos(Collection<? extends GooglePhoto> photos) {
@@ -353,7 +353,7 @@ public class ThumbnailPane extends BorderPane {
     ReadOnlyBooleanProperty hasSelectedPhotos() {
         if (hasSelectedPhotos == null) {
             ReadOnlyBooleanWrapper wrapper = new ReadOnlyBooleanWrapper(!getSelectedPhotos().isEmpty());
-            selectedPhotos.addListener((Change<?> change) -> wrapper.set(!getSelectedPhotos().isEmpty()));
+            selectedPhotos.addListener((Change<?> _) -> wrapper.set(!getSelectedPhotos().isEmpty()));
             hasSelectedPhotos = wrapper.getReadOnlyProperty();
         }
         return hasSelectedPhotos;
@@ -392,7 +392,7 @@ public class ThumbnailPane extends BorderPane {
         thumbnail.onMouseClickedProperty().set(slideshowHandler);
         thumbnail.setOnContextMenuRequested(contextMenuHandler);
         if (tooltipFunction != null) {
-            thumbnail.imageView.setOnMouseEntered(e -> {
+            thumbnail.imageView.setOnMouseEntered(_ -> {
                 String tooltipText = tooltipFunction.apply(thumbnail.photo);
                 if (isNotBlank(tooltipText)) {
                     Tooltip.install(thumbnail.imageView, new Tooltip(tooltipText));
@@ -459,7 +459,7 @@ public class ThumbnailPane extends BorderPane {
      * Sets handler for context menu on photo thumbnails.
      * <p>
      * The event source passed to the handler implements {@link HasPhoto}.
-     * 
+     *
      * @param contextMenuHandler handler for context menu, or {@code null}
      */
     public void setPhotoContextMenuHandler(EventHandler<? super ContextMenuEvent> contextMenuHandler) {
@@ -468,7 +468,7 @@ public class ThumbnailPane extends BorderPane {
 
     /**
      * Sets a function that produces photo tooltips, {@code null} is returned when thumbnail should have no no tooltip.
-     * 
+     *
      * @param tooltipFunction photo tooltip function or {@code null} for no tooltips
      */
     public void setTooltipFunction(Function<GooglePhoto, String> tooltipFunction) {
@@ -500,14 +500,14 @@ public class ThumbnailPane extends BorderPane {
             this.dayCheckBox = new CheckBox();
             this.dayCheckBox.setVisible(false);
             this.dayCheckBox.managedProperty().bind(dayCheckBox.visibleProperty());
-            this.dayCheckBox.selectedProperty().addListener(obs -> onDaySelected());
+            this.dayCheckBox.selectedProperty().addListener(_ -> onDaySelected());
             this.header = new Label("");
             this.imageView = new ImageView();
             this.imageView.setFitHeight(150);
             this.imageView.setPreserveRatio(true);
             this.imageCheckBox = new CheckBox();
             this.imageCheckBox.setVisible(false);
-            this.imageCheckBox.selectedProperty().addListener(obs -> this.onImageSelection.accept(imageCheckBox.isSelected()));
+            this.imageCheckBox.selectedProperty().addListener(_ -> this.onImageSelection.accept(imageCheckBox.isSelected()));
             this.footer = new Label();
 
             setMinHeight(USE_PREF_SIZE);
@@ -558,8 +558,8 @@ public class ThumbnailPane extends BorderPane {
                 header.setOnMouseClicked(null);
             }
             if (type.isSelectable()) {
-                setOnMouseEntered(e -> mouseEntered());
-                setOnMouseExited(e -> mouseExited());
+                setOnMouseEntered(_ -> mouseEntered());
+                setOnMouseExited(_ -> mouseExited());
             }
             else {
                 setOnMouseEntered(null);
@@ -621,7 +621,7 @@ public class ThumbnailPane extends BorderPane {
         private final Timeline timeline;
 
         ThumbnailLoader() {
-            timeline = new Timeline(new KeyFrame(Duration.millis(100), e -> loadVisibleThumbnails()));
+            timeline = new Timeline(new KeyFrame(Duration.millis(100), _ -> loadVisibleThumbnails()));
         }
 
         @Override

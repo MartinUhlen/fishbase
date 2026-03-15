@@ -19,7 +19,7 @@ public class DatePicker extends javafx.scene.control.DatePicker {
     public DatePicker() {
         super();
         setConverter(dateConverter());
-        focusedProperty().addListener(obs -> setValue(getConverter().fromString(getEditor().getText())));  // Workaround value not commited on focus lost
+        focusedProperty().addListener(_ -> setValue(getConverter().fromString(getEditor().getText())));  // Workaround value not commited on focus lost
     }
 
     /**

@@ -53,7 +53,7 @@ public class SlideshowPane extends BorderPane {
 
     /**
      * Creates a new slideshow pane.
-     * 
+     *
      * @param openStageOnClick {@code true} to open a new slideshow in a modal stage when this slideshow is clicked
      */
     public SlideshowPane(boolean openStageOnClick) {
@@ -68,7 +68,7 @@ public class SlideshowPane extends BorderPane {
         previousButton = button("Show previous photo", () -> showPreviousPhoto());
         nextButton = button("Show next photo", () -> showNextPhoto());
         lastButton = button("Show last photo", () -> showLastPhoto());
-        heightProperty().addListener(obs -> setButtonIcons());
+        heightProperty().addListener(_ -> setButtonIcons());
         HBox buttons = new HBox(firstButton, previousButton, nextButton, lastButton);
         buttons.setAlignment(CENTER);
 
@@ -80,7 +80,7 @@ public class SlideshowPane extends BorderPane {
         setBottom(bottomBox);
 
         if (openStageOnClick) {
-            imageView.setOnMouseClicked(SlideshowStage.openOnClick(hasPhoto -> photos.copy()));
+            imageView.setOnMouseClicked(SlideshowStage.openOnClick(_ -> photos.copy()));
         }
     }
 
@@ -112,7 +112,7 @@ public class SlideshowPane extends BorderPane {
         Button button = new Button();
         button.setTooltip(new Tooltip(tooltip));
         button.setDisable(true);
-        button.onActionProperty().set(e -> action.run());
+        button.onActionProperty().set(_ -> action.run());
         return button;
     }
 
@@ -223,7 +223,7 @@ public class SlideshowPane extends BorderPane {
                     videoPane.setVideo(getValue(), true);
                 }
             }
-        }.start();        
+        }.start();
     }
 
     private void showImage(GooglePhoto photo, Supplier<Image> supplier) {
@@ -279,7 +279,7 @@ public class SlideshowPane extends BorderPane {
         setMaxWidth(USE_PREF_SIZE);
         setMaxHeight(USE_PREF_SIZE);
 
-        InvalidationListener listener = obs -> fitSize();
+        InvalidationListener listener = _ -> fitSize();
         fitWidthValue.addListener(listener);
         fitHeightValue.addListener(listener);
         imageView.imageProperty().addListener(listener);

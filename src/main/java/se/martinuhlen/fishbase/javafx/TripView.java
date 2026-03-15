@@ -87,7 +87,7 @@ class TripView implements View {
     }
 
     private void bindButtons() {
-        wrapper.addListener(obs -> {
+        wrapper.addListener(_ -> {
             saveAction.setEnabled(wrapper.hasChanges());
             deleteAction.setEnabled(!wrapper.isEmpty());
         });
@@ -102,14 +102,14 @@ class TripView implements View {
             }
             finally {
                 sync.set(true);
-            }            
+            }
         };
 
         photos.addListener(new ListChangeListener<FishingPhoto>() {
             @Override
             public void onChanged(Change<? extends FishingPhoto> change) {
                 while(change.next()) {
-                    change.getAddedSubList().forEach(photo -> photo.addListener(p -> sync()));
+                    change.getAddedSubList().forEach(photo -> photo.addListener(_ -> sync()));
                 }
                 sync();
             }
@@ -142,7 +142,7 @@ class TripView implements View {
             }
         };
 
-        wrapper.id().addListener(change -> {
+        wrapper.id().addListener(_ -> {
             resetter.accept(emptyList());
             loader.restart();
         });
@@ -167,7 +167,7 @@ class TripView implements View {
     private ReadOnlyStringProperty createTitleProperty() {
         String defaultTitle = "Trips";
         ReadOnlyStringWrapper property = new ReadOnlyStringWrapper(defaultTitle);
-        wrapper.addListener(obs -> {
+        wrapper.addListener(_ -> {
             Trip trip = wrapper.getWrapee();
             String title = trip == EMPTY_TRIP
                     ? defaultTitle
@@ -217,14 +217,14 @@ class TripView implements View {
     }
 
     private void addValidation(ValidationSupport vs, Control control, String message) {
-        vs.registerValidator(control, false, createPredicateValidator(x -> !wrapper.getWrapee().getValidationErrors().anyMatch(str -> str.equals(message)), message));
+        vs.registerValidator(control, false, createPredicateValidator(_ -> !wrapper.getWrapee().getValidationErrors().anyMatch(str -> str.equals(message)), message));
     }
 
     private void bindPersistedDividerLocation(SplitPane split, String key, double defaultValue) {
         Preferences preferences = Preferences.userRoot();
         Divider divider = split.getDividers().get(0);
         divider.setPosition(preferences.getDouble(key, defaultValue));
-        divider.positionProperty().addListener((obs, oldValue, newValue) -> preferences.putDouble(key, newValue.doubleValue()));
+        divider.positionProperty().addListener((_, _, newValue) -> preferences.putDouble(key, newValue.doubleValue()));
     }
 
     private DatePicker createDatePicker(Property<LocalDate> property) {
@@ -246,7 +246,7 @@ class TripView implements View {
         bindPersistedDividerLocation(split, "TripView.horizontalSplit.left.dividerLocation", 0.20);
         list.setMinWidth(50);
         tripPane.setVisible(false);
-        wrapper.addListener(obs -> tripPane.setVisible(wrapper.getWrapee() != EMPTY_TRIP));
+        wrapper.addListener(_ -> tripPane.setVisible(wrapper.getWrapee() != EMPTY_TRIP));
         return split;
     }
 
@@ -331,7 +331,7 @@ class TripView implements View {
         alert.getButtonTypes().setAll(delete, CANCEL);
         alert.showAndWait()
             .filter(b -> b == delete)
-            .ifPresent(b -> deleteImpl());
+            .ifPresent(_ -> deleteImpl());
     }
 
     private void deleteImpl() {

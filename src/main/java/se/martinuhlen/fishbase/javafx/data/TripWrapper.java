@@ -5,15 +5,14 @@ import static java.util.stream.Collectors.toSet;
 import static javafx.collections.FXCollections.observableArrayList;
 import static se.martinuhlen.fishbase.domain.Trip.EMPTY_TRIP;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import com.google.common.annotations.VisibleForTesting;
-
 import javafx.beans.InvalidationListener;
-import javafx.beans.Observable;
 import javafx.beans.property.Property;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener.Change;
@@ -30,7 +29,7 @@ public class TripWrapper extends Wrapper<Trip> {
     }
 
     private void semiBindEndDateToStartDate() {
-        startDate().addListener(obs -> {
+        startDate().addListener(_ -> {
             if (!isSettingWrapee) {
                 endDate().setValue(startDate().getValue());
             }
@@ -71,7 +70,7 @@ public class TripWrapper extends Wrapper<Trip> {
         AtomicBoolean syncing = new AtomicBoolean(false);
 
         Runnable listToPropertyAction = () -> property.setValue(specimenWrappers.stream().map(SpecimenWrapper::getWrapee).collect(toList()));
-        InvalidationListener listToPropertyListener = (Observable obs) -> sync(syncing, listToPropertyAction);
+        InvalidationListener listToPropertyListener = _ -> sync(syncing, listToPropertyAction);
         specimenWrappers.addListener(listToPropertyListener);
         specimenWrappers.addListener((Change<? extends SpecimenWrapper> change) -> {
             while(change.next()) {
@@ -86,7 +85,7 @@ public class TripWrapper extends Wrapper<Trip> {
                 }
             }
         });
-        property.addListener(obs -> sync(syncing, () -> {
+        property.addListener(_ -> sync(syncing, () -> {
             List<SpecimenWrapper> wrappers = property.getValue().stream().map(s -> new SpecimenWrapper(s)).collect(toList());
             specimenWrappers.setAll(wrappers);
         }));

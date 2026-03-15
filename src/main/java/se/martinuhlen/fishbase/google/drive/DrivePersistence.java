@@ -42,7 +42,7 @@ public class DrivePersistence implements Persistence {
 
     private void execute(String name, Runnable task) {
         executors
-            .computeIfAbsent(name, n -> newSingleThreadExecutor(true, name))
+            .computeIfAbsent(name, _ -> newSingleThreadExecutor(true, name))
             .execute(task);
     }
 

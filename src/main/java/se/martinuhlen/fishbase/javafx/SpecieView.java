@@ -44,7 +44,7 @@ class SpecieView extends AbstractTableView<SpecieWrapper, Specie> {
 
         TableColumn<SpecieWrapper, Boolean> freshWaterColumn = new TableColumn<>("Fresh water");
         freshWaterColumn.setCellValueFactory(f -> f.getValue().freshWaterProperty());
-        freshWaterColumn.setCellFactory(c -> new CheckBoxTableCell<>());
+        freshWaterColumn.setCellFactory(_ -> new CheckBoxTableCell<>());
 
         table.getColumns().setAll(asList(nameColumn, regWeightColumn, freshWaterColumn));
 

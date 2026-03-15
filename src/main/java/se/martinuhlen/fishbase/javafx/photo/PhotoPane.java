@@ -8,7 +8,6 @@ import static javafx.scene.control.ButtonType.OK;
 import static se.martinuhlen.fishbase.javafx.utils.Images.getImageView16;
 
 import java.time.LocalDate;
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -17,7 +16,6 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableSet;
 import javafx.collections.SetChangeListener;
-import javafx.collections.SetChangeListener.Change;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.geometry.Rectangle2D;
@@ -54,8 +52,8 @@ import se.martinuhlen.fishbase.utils.Cursor;
  */
 public class PhotoPane extends BorderPane {
     private final PhotoService service;
-    private final ObservableValue<LocalDate> startDate;
-    private final ObservableValue<LocalDate> endDate;
+    private final ObservableValue<LocalDate> startDate; // TODO Left unsed after transition to Picker API
+    private final ObservableValue<LocalDate> endDate;   // TODO Left unsed after transition to Picker API
     private final ObservableValue<String> tripId;
     private final ObservableValue<List<Specimen>> specimens;
     private final ObservableList<FishingPhoto> fishingPhotos;
@@ -84,10 +82,10 @@ public class PhotoPane extends BorderPane {
         slideshowPane.prefWidthProperty().bind(widthProperty());
 
         addButton = new Button("", getImageView16("add.png"));
-        addButton.onActionProperty().set(e -> addPhotos());
+        addButton.onActionProperty().set(_ -> addPhotos());
         removeButton = new Button("", getImageView16("delete.png"));
         removeButton.disableProperty().bind(thumbnailPane.hasSelectedPhotos().not());
-        removeButton.onActionProperty().set(e -> thumbnailPane.removeSelectedPhotos());
+        removeButton.onActionProperty().set(_ -> thumbnailPane.removeSelectedPhotos());
 
         thumbnailToggle = new ToggleButton("", getImageView16("photos.png"));
         slideShowToggle = new ToggleButton("", getImageView16("photo.png"));
@@ -95,7 +93,7 @@ public class PhotoPane extends BorderPane {
         thumbnailToggle.setToggleGroup(toggleGroup);
         slideShowToggle.setToggleGroup(toggleGroup);
         toggleGroup.selectToggle(thumbnailToggle);
-        toggleGroup.selectedToggleProperty().addListener((obs, oldToggle, newToggle) -> {
+        toggleGroup.selectedToggleProperty().addListener((_, _, _) -> {
             boolean thumbnail = toggleGroup.getSelectedToggle() == thumbnailToggle;
             Pane pane = thumbnail ? thumbnailPane : slideshowPane;
             if (pane != getCenter()) {
@@ -124,7 +122,7 @@ public class PhotoPane extends BorderPane {
 
     // FIXME Such sophisticated sync is not needed anymore when FishingPhoto(Impl) is mutable?
     private void initPhotoSync() {
-        fishingPhotos.addListener((Observable obs) -> {
+        fishingPhotos.addListener((Observable _) -> {
             if (!syncing.get()) {
                 syncing.set(true);
                 thumbnailPane.setPhotos(fishingPhotos);
@@ -132,7 +130,7 @@ public class PhotoPane extends BorderPane {
                 syncing.set(false);
             }
         });
-        thumbnailPane.getPhotos().addListener((Observable obs) -> {
+        thumbnailPane.getPhotos().addListener((Observable _) -> {
             if (!syncing.get()) {
                 syncing.set(true);
                 List<FishingPhoto> photos = thumbnailPane.getPhotos().stream().map(FishingPhoto.class::cast).collect(toList());
@@ -174,11 +172,11 @@ public class PhotoPane extends BorderPane {
         waitDialog.setDialogPane(waitingPane);
         waitDialog.setResizable(false);
 
-        pickService.setOnSucceeded(e -> {
+        pickService.setOnSucceeded(_ -> {
             waitDialog.setResult(ButtonType.OK);
             waitDialog.close();
         });
-        pickService.setOnFailed(e -> {
+        pickService.setOnFailed(_ -> {
             waitDialog.setResult(ButtonType.CANCEL);
             waitDialog.close();
         });
@@ -205,7 +203,7 @@ public class PhotoPane extends BorderPane {
         reviewDialogPane.setContent(reviewPane);
         reviewDialogPane.setPrefWidth(Region.USE_COMPUTED_SIZE);
 
-        SetChangeListener<GooglePhoto> listener = (Change<? extends GooglePhoto> change) -> {
+        SetChangeListener<GooglePhoto> listener = _ -> {
             Button button = (Button) reviewDialogPane.lookupButton(OK);
             ObservableSet<GooglePhoto> photos = reviewPane.getSelectedPhotos();
             button.setDisable(photos.isEmpty());
@@ -227,7 +225,7 @@ public class PhotoPane extends BorderPane {
 
         reviewDialog.showAndWait()
             .filter(b -> b == OK)
-            .ifPresent(b -> {
+            .ifPresent(_ -> {
                 List<FishingPhoto> newPhotos = reviewPane.getSelectedPhotos()
                         .stream()
                         .map(photo -> service.create(photo, tripId.getValue()))
@@ -242,7 +240,7 @@ public class PhotoPane extends BorderPane {
         StarPhotoMenuItem starItem = new StarPhotoMenuItem();
         Menu specimenMenu = new Menu("Specimens");
         contextMenu.getItems().addAll(removeItem, starItem, specimenMenu);
-        specimens.addListener((Observable obs) -> {
+        specimens.addListener(_ -> {
             specimenMenu.getItems().setAll(specimens.getValue()
                     .stream()
                     .map(specimen -> new SpecimenMenuItem(specimen))
@@ -264,7 +262,7 @@ public class PhotoPane extends BorderPane {
 
         RemovePhotoMenuItem() {
             super("Remove photo", getImageView16("delete.png"));
-            setOnAction(e -> thumbnailPane.removePhoto(photoSource.getPhoto()));
+            setOnAction(_ -> thumbnailPane.removePhoto(photoSource.getPhoto()));
         }
 
         @Override
@@ -278,7 +276,7 @@ public class PhotoPane extends BorderPane {
 
         StarPhotoMenuItem() {
             super("Starred");
-            setOnAction(e -> toggle());
+            setOnAction(_ -> toggle());
         }
 
         @Override
@@ -311,7 +309,7 @@ public class PhotoPane extends BorderPane {
         SpecimenMenuItem(Specimen specimen) {
             super(specimen.getLabel());
             this.specimen = specimen;
-            setOnAction(e -> toggle());
+            setOnAction(_ -> toggle());
         }
 
         @Override

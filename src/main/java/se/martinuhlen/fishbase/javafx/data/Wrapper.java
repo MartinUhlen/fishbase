@@ -84,7 +84,7 @@ public abstract class Wrapper<D extends Domain<D>> implements Observable {
 
     <V> ReadOnlyProperty<V> getProperty(String name, Function<D, V> getter, Observable... dependencies) {
         ReadableProperty<V> property = getProperty(name, () -> new ReadableProperty<>(name, getter));
-        asList(dependencies).forEach(dep -> dep.addListener(obs -> property.notifyListeners()));
+        asList(dependencies).forEach(dep -> dep.addListener(_ -> property.notifyListeners()));
         return property;
     }
 
@@ -94,9 +94,9 @@ public abstract class Wrapper<D extends Domain<D>> implements Observable {
 
     @SuppressWarnings("unchecked")
     private <P extends ReadableProperty<?>> P getProperty(String name, Supplier<P> creator) {
-        return (P) properties.computeIfAbsent(name, n -> {
+        return (P) properties.computeIfAbsent(name, _ -> {
             P property = creator.get();
-            property.addListener(obs -> notifyListeners());
+            property.addListener(_ -> notifyListeners());
             return property;
         });
     }
