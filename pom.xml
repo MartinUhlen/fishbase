@@ -68,7 +68,7 @@
             <artifactId>controlsfx</artifactId>
             <version>11.2.3</version>
         </dependency>
-<dependency>
+        <dependency>
 			<groupId>com.google.apis</groupId>
 			<artifactId>google-api-services-drive</artifactId>
 			<version>v3-rev20260305-2.0.0</version>
@@ -97,18 +97,7 @@
             <version>5.14.3</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.junit.platform</groupId>
-            <artifactId>junit-platform-launcher</artifactId>
-            <version>1.14.3</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.platform</groupId>
-            <artifactId>junit-platform-runner</artifactId>
-            <version>1.14.3</version>
-            <scope>test</scope>
-        </dependency>
+
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
@@ -221,7 +210,6 @@
     </build>
 
     <profiles>
-
         <!-- Windows distribution -->
         <profile>
             <id>Windows</id>
