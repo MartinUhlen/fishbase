@@ -37,7 +37,7 @@ public final class Constants {
                         .getMainAttributes()
                         .getValue("Build-Time");
 
-                if (isBlank(buildValue)) // Empty when debugging {
+                if (isBlank(buildValue)) { // Empty when debugging
                     return LocalDateTime.now();
                 }
                 else {

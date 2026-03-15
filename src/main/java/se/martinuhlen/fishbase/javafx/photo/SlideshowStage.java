@@ -29,11 +29,11 @@ class SlideshowStage {
 
     /**
      * Creates a handler to show {@link SlideshowPane} in a modal {@link Stage}.
-     * 
+     *
      * @param callback accepts the clicked photo and returns cursor over all photos
      * @return mouse clicked handler
      */
-    static EventHandler<MouseEvent> openOnClick(Function<HasPhoto, Cursor<GooglePhoto>> callback) // FIXME Function -> Supplier? {
+    static EventHandler<MouseEvent> openOnClick(Function<HasPhoto, Cursor<GooglePhoto>> callback) { // FIXME Function -> Supplier?
         return new EventHandler<>() {
             private SlideshowPane slideshow;
             private Stage slideshowStage;

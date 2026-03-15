@@ -116,7 +116,7 @@ class SpecimenDialog extends Dialog<Specimen> {
         weightField.setTextFormatter(weightFormatter);
         weightField.setStyle(RIGHT_ALIGNMENT);
         grid.add(suffix(weightField, " g"), 0, 4);
-        weightField.textProperty().addListener(new InvalidationListener() // Commit weight value on any edit so error icon disappears. {
+        weightField.textProperty().addListener(new InvalidationListener() { // Commit weight value on any edit so error icon disappears.
             private boolean syncing;
 
             @Override
@@ -218,12 +218,12 @@ class SpecimenDialog extends Dialog<Specimen> {
                         .sorted((String s1, String s2) -> {
                             String str1 = s1.toLowerCase();
                             String str2 = s2.toLowerCase();
-                            return str1.startsWith(text) && str2.startsWith(text) 
-                                    ? str1.length() - str2.length() 
-                                    : str1.startsWith(text) 
-                                        ? -1 
-                                        : str2.startsWith(text) 
-                                            ? 1 
+                            return str1.startsWith(text) && str2.startsWith(text)
+                                    ? str1.length() - str2.length()
+                                    : str1.startsWith(text)
+                                        ? -1
+                                        : str2.startsWith(text)
+                                            ? 1
                                             : 0;
                         })
                         .collect(toList());
