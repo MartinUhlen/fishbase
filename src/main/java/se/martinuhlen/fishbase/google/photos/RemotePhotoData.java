@@ -3,6 +3,7 @@ package se.martinuhlen.fishbase.google.photos;
 import java.io.BufferedInputStream;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.util.function.Supplier;
 
@@ -15,8 +16,8 @@ import se.martinuhlen.fishbase.utils.Checked;
  */
 class RemotePhotoData implements PhotoData
 {
-	private String url;
-	private Supplier<String> accessToken;
+	private final String url;
+	private final Supplier<String> accessToken;
 
 	RemotePhotoData(String url)
 	{
@@ -41,15 +42,16 @@ class RemotePhotoData implements PhotoData
 	{
 		return Checked.get(() ->
 		{
+		    URL urlToStream = URI.create(url).toURL();
 			if (accessToken != null)
 			{
-				HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
+				HttpURLConnection conn = (HttpURLConnection) urlToStream.openConnection();
 				conn.setRequestProperty("Authorization", "Bearer " + accessToken.get());
 				return new BufferedInputStream(conn.getInputStream());
 			}
 			else
 			{
-				return new BufferedInputStream(new URL(url).openStream());
+				return new BufferedInputStream(urlToStream.openStream());
 			}
 		});
 	}

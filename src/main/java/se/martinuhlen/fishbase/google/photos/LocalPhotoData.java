@@ -132,10 +132,12 @@ class LocalPhotoData implements PhotoData
 	    DownloadingInputStream(InputStream remoteStream) throws IOException
 	    {
 			this.remoteStream = remoteStream;
-			String tempFileName = localFile.getName() + "." + randomUUID() + ".temp";
+			String tempSuffix = "." + randomUUID() + ".temp";
+            String tempFileName = localFile.getName() + tempSuffix;
 			tempFile = new File(localFile.getParentFile(), tempFileName);
 			tempFile.deleteOnExit();
 			localStream = new BufferedOutputStream(new FileOutputStream(tempFile));
+			LOG.atInfo().log("Starting download of '%s' with temporary suffix '%s'", localFile.getName(), tempSuffix);
 		}
 
 		@Override
@@ -156,6 +158,7 @@ class LocalPhotoData implements PhotoData
 		        {
 		            close();
 		            tempFile.renameTo(localFile);
+		            tempFile.delete();
 		        }
 		        return read;
 	        }
@@ -169,10 +172,8 @@ class LocalPhotoData implements PhotoData
 	            closed = true;
 	            super.close();
 	            remoteStream.close();
-	            if (localStream != null)
-	            {
-	                localStream.close();
-	            }
+                localStream.close();
+                tempFile.delete();
 	        }
 	    }
 	}

@@ -34,14 +34,17 @@ class PhotoServiceImpl implements PhotoService
 	}
 
 	@Override
-	public List<FishingPhoto> load(List<Photo> photos)
-	{
+	public List<FishingPhoto> load(List<Photo> photos) {
 		requireNonNull(photos, "photos cannot be null");
-		LOG.atInfo().log("Loading %d photos", photos.size());
-		return photos
-				.stream()
-				.map(photo -> new FishingPhotoImpl(photo, fileName -> new DrivePhotoData(fileName, driveService)))
-				.collect(toList());
+		if (photos.isEmpty()) {
+		    return List.of();
+		} else {
+    		LOG.atInfo().log("Loading %d photos", photos.size());
+    		return photos
+    				.stream()
+    				.map(photo -> new FishingPhotoImpl(photo, fileName -> new DrivePhotoData(fileName, driveService)))
+    				.collect(toList());
+		}
 	}
 
 	@Override
