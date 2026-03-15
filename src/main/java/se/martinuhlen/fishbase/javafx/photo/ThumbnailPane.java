@@ -164,6 +164,14 @@ public class ThumbnailPane extends BorderPane
 		return pane;
 	}
 
+	public static ThumbnailPane forPicked(Collection<GooglePhoto> photos)
+	{
+		ThumbnailPane pane = new ThumbnailPane(true, true, false, null);
+		pane.setPhotos(photos);
+		pane.selectAll(true);
+		return pane;
+	}
+
 	private final ScrollPane scroll;
 	private final FlowPane photoPane;
 	private final ThumbnailLoader imageLoader;
@@ -457,7 +465,7 @@ public class ThumbnailPane extends BorderPane
         }
 	}
 
-	private void selectAll(boolean selected)
+	void selectAll(boolean selected)
 	{
 		streamThumbnails().forEach(t -> t.select(selected));
 	}

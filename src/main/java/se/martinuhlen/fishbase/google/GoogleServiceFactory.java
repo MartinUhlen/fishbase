@@ -12,29 +12,27 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.util.store.FileDataStoreFactory;
-import com.google.api.gax.core.FixedCredentialsProvider;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
-import com.google.auth.oauth2.UserCredentials;
-import com.google.photos.library.v1.PhotosLibraryClient;
-import com.google.photos.library.v1.PhotosLibrarySettings;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.io.UncheckedIOException;
 import java.security.GeneralSecurityException;
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
+
+import se.martinuhlen.fishbase.google.photos.PickerClient;
 
 public class GoogleServiceFactory
 {
-	private static final String USER_ID = "user";
+	private static final String USER_ID = "user_v3";
 	private static final java.io.File LOCAL_FOLDER = new java.io.File(System.getProperty("user.home"), "." + APPLICATION_NAME.toLowerCase());
 
 	private static final List<String> REQUIRED_SCOPES = Stream.concat(
-	        Stream.of("https://www.googleapis.com/auth/photoslibrary.readonly"),
+	        Stream.of("https://www.googleapis.com/auth/photospicker.mediaitems.readonly"),
 	        DriveScopes.all().stream()).toList();
 
 	public static GoogleServiceFactory get()
@@ -101,24 +99,23 @@ public class GoogleServiceFactory
 				.build();
 	}
 
-	public PhotosLibraryClient createPhotosLibraryClient()
+	public PickerClient createPickerClient()
 	{
-		UserCredentials userCredentials = UserCredentials.newBuilder()
-				.setClientId(clientSecrets.getDetails().getClientId())
-				.setClientSecret(clientSecrets.getDetails().getClientSecret())
-				.setRefreshToken(credential.getRefreshToken())
-				.build();
-
-		try
+		Supplier<String> accessToken = () ->
 		{
-			PhotosLibrarySettings settings = PhotosLibrarySettings.newBuilder()
-					.setCredentialsProvider(FixedCredentialsProvider.create(userCredentials))
-					.build();
-			return PhotosLibraryClient.initialize(settings);
-		}
-		catch (IOException e)
-		{
-			throw new UncheckedIOException(e);
-		}
+			try
+			{
+				if (credential.getAccessToken() == null || credential.getExpiresInSeconds() != null && credential.getExpiresInSeconds() <= 60)
+				{
+					credential.refreshToken();
+				}
+				return credential.getAccessToken();
+			}
+			catch (IOException e)
+			{
+				throw new RuntimeException("Failed to get access token", e);
+			}
+		};
+		return new PickerClient(accessToken);
 	}
 }

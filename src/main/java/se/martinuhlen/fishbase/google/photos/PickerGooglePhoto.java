@@ -1,27 +1,30 @@
 package se.martinuhlen.fishbase.google.photos;
 
 import java.time.LocalDateTime;
+import java.util.function.Supplier;
 
 /**
- * Default implementation of {@link GooglePhoto}.
+ * {@link GooglePhoto} implementation based on the Google Photos Picker API.
  *
- * @author martin
+ * @author Martin
  */
-final class GooglePhotoImpl implements GooglePhoto
+class PickerGooglePhoto implements GooglePhoto
 {
 	private final String id;
 	private final String filename;
-	private final LocalDateTime time;
+	private final LocalDateTime createTime;
 	private final boolean video;
 	private final String baseUrl;
+	private final Supplier<String> accessToken;
 
-	GooglePhotoImpl(String id, String filename, LocalDateTime time, boolean video, String baseUrl)
+	PickerGooglePhoto(String id, String filename, LocalDateTime createTime, boolean video, String baseUrl, Supplier<String> accessToken)
 	{
 		this.id = id;
 		this.filename = filename;
-		this.time = time;
+		this.createTime = createTime;
 		this.video = video;
 		this.baseUrl = baseUrl;
+		this.accessToken = accessToken;
 	}
 
 	@Override
@@ -39,7 +42,7 @@ final class GooglePhotoImpl implements GooglePhoto
 	@Override
 	public LocalDateTime getTime()
 	{
-		return time;
+		return createTime;
 	}
 
 	@Override
@@ -51,20 +54,12 @@ final class GooglePhotoImpl implements GooglePhoto
 	@Override
 	public PhotoData getThumbnail()
 	{
-		return new RemotePhotoData(baseUrl);
+		return new RemotePhotoData(baseUrl + "=w512-h512", accessToken);
 	}
 
 	@Override
 	public PhotoData getContent()
 	{
-		// See https://developers.google.com/photos/library/guides/access-media-items#base-urls
-		if (isImage())
-		{
-			return new RemotePhotoData(baseUrl + "=d");
-		}
-		else // Video
-		{
-			return new RemotePhotoData(baseUrl + "=dv");
-		}
+		return new RemotePhotoData(baseUrl + (video ? "=dv" : "=d"), accessToken);
 	}
 }
