@@ -5,8 +5,6 @@ import static se.martinuhlen.fishbase.utils.Checked.get;
 import java.io.InputStream;
 import java.net.URL;
 
-import se.martinuhlen.fishbase.google.photos.PhotoData;
-
 enum NotFoundPhotoData implements PhotoData {
     INSTANCE;
 

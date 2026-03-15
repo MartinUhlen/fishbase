@@ -9,7 +9,6 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 
 import se.martinuhlen.fishbase.google.drive.DriveService;
-import se.martinuhlen.fishbase.google.photos.PhotoData;
 
 /**
  * A photo stored on Google Drive.

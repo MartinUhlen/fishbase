@@ -3,6 +3,7 @@ package se.martinuhlen.fishbase.google.photos;
 import java.time.LocalDateTime;
 import java.util.function.Supplier;
 
+import se.martinuhlen.fishbase.google.photos.data.PhotoData;
 import se.martinuhlen.fishbase.google.photos.data.RemotePhotoData;
 
 /**

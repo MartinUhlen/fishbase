@@ -7,7 +7,6 @@ import java.net.URI;
 import java.net.URL;
 import java.util.function.Supplier;
 
-import se.martinuhlen.fishbase.google.photos.PhotoData;
 import se.martinuhlen.fishbase.utils.Checked;
 
 /**

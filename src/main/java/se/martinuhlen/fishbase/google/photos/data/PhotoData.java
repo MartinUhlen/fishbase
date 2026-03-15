@@ -1,4 +1,4 @@
-package se.martinuhlen.fishbase.google.photos;
+package se.martinuhlen.fishbase.google.photos.data;
 
 import java.io.InputStream;
 

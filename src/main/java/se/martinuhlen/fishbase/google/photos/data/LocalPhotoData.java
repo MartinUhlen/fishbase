@@ -15,8 +15,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.function.Supplier;
 
-import se.martinuhlen.fishbase.google.photos.PhotoData;
-
 /**
  * {@link PhotoData} implementation of locally stored data.
  *

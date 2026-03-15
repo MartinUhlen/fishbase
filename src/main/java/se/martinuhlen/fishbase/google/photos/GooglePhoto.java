@@ -4,6 +4,8 @@ import static org.apache.commons.io.FilenameUtils.getExtension;
 
 import java.time.LocalDateTime;
 
+import se.martinuhlen.fishbase.google.photos.data.PhotoData;
+
 /**
  * A photo in "Google Photos".
  *
