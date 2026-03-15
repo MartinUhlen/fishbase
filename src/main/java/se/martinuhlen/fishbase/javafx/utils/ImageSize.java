@@ -1,7 +1,6 @@
 package se.martinuhlen.fishbase.javafx.utils;
 
-public enum ImageSize
-{
+public enum ImageSize {
     SIZE_16(16),
     SIZE_32(32),
     SIZE_64(64),
@@ -9,13 +8,11 @@ public enum ImageSize
 
     private final int size;
 
-    private ImageSize(int size)
-    {
+    private ImageSize(int size) {
         this.size = size;
     }
 
-    int getSize()
-    {
+    int getSize() {
         return size;
     }
 }

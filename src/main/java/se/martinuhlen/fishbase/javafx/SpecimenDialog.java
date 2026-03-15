@@ -62,14 +62,12 @@ import se.martinuhlen.fishbase.javafx.data.SpecimenWrapper;
  *
  * @author Martin
  */
-class SpecimenDialog extends Dialog<Specimen>
-{
+class SpecimenDialog extends Dialog<Specimen> {
     private final SpecimenWrapper wrapper;
     private final ComboBox<Specie> specieCombo;
     private final Function<AutoCompleteField, SortedSet<String>> autoCompleter;
 
-    SpecimenDialog(boolean add, Collection<Specie> species, Function<AutoCompleteField, SortedSet<String>> autoCompleter, Specimen specimen)
-    {
+    SpecimenDialog(boolean add, Collection<Specie> species, Function<AutoCompleteField, SortedSet<String>> autoCompleter, Specimen specimen) {
         this.autoCompleter = autoCompleter;
         this.wrapper = new SpecimenWrapper(specimen, obs -> enableOkButton());
         specieCombo = new ComboBox<>(observableArrayList(species));
@@ -84,22 +82,19 @@ class SpecimenDialog extends Dialog<Specimen>
         setOnShowing(e -> onShowing());
     }
 
-    private void onShowing()
-    {
+    private void onShowing() {
         enableOkButton();
         runLater(() -> specieCombo.requestFocus());
     }
 
-    private void enableOkButton()
-    {
+    private void enableOkButton() {
         Node button = getDialogPane().lookupButton(OK);
         boolean hasErrors = wrapper.getWrapee().getValidationErrors().findAny().isPresent();
         boolean hasChanges = wrapper.hasChanges();
         button.setDisable(hasErrors || !hasChanges);
     }
 
-    private Node createForm()
-    {
+    private Node createForm() {
         GridPane grid = new GridPane();
         grid.setAlignment(CENTER);
         grid.setHgap(10);
@@ -121,15 +116,12 @@ class SpecimenDialog extends Dialog<Specimen>
         weightField.setTextFormatter(weightFormatter);
         weightField.setStyle(RIGHT_ALIGNMENT);
         grid.add(suffix(weightField, " g"), 0, 4);
-        weightField.textProperty().addListener(new InvalidationListener() // Commit weight value on any edit so error icon disappears.
-        {
+        weightField.textProperty().addListener(new InvalidationListener() // Commit weight value on any edit so error icon disappears. {
             private boolean syncing;
 
             @Override
-            public void invalidated(Observable observable)
-            {
-                if (!syncing && (isDigits(weightField.getText()) || isBlank(weightField.getText())))
-                {
+            public void invalidated(Observable observable) {
+                if (!syncing && (isDigits(weightField.getText()) || isBlank(weightField.getText()))) {
                     syncing = true;
                     weightField.commitValue();
                     syncing = false;
@@ -206,30 +198,24 @@ class SpecimenDialog extends Dialog<Specimen>
         return grid;
     }
 
-    private void addValidation(ValidationSupport vs, Control control, String message)
-    {
+    private void addValidation(ValidationSupport vs, Control control, String message) {
         vs.registerValidator(control, false, createPredicateValidator(x -> !wrapper.getWrapee().getValidationErrors().anyMatch(str -> str.equals(message)), message));
     }
 
-    private TextField textField(Property<String> property, AutoCompleteField autoCompleteField)
-    {
+    private TextField textField(Property<String> property, AutoCompleteField autoCompleteField) {
         TextField field = new TextField();
         field.textProperty().bindBidirectional(property);
         SortedSet<String> suggestions = autoCompleter.apply(autoCompleteField);
-        TextFields.bindAutoCompletion(field, request ->
-        {
+        TextFields.bindAutoCompletion(field, request -> {
             String text = request.getUserText().toLowerCase().trim();
-            if (text.isEmpty())
-            {
+            if (text.isEmpty()) {
                 return suggestions;
             }
-            else
-            {
+            else {
                 return suggestions
                         .stream()
                         .filter(str -> str.toLowerCase().contains(text))
-                        .sorted((String s1, String s2) ->
-                        {
+                        .sorted((String s1, String s2) -> {
                             String str1 = s1.toLowerCase();
                             String str2 = s2.toLowerCase();
                             return str1.startsWith(text) && str2.startsWith(text) 
@@ -247,15 +233,13 @@ class SpecimenDialog extends Dialog<Specimen>
         return field;
     }
 
-    private Node suffix(TextField field, String suffix)
-    {
+    private Node suffix(TextField field, String suffix) {
         HBox box = new HBox(field, new Label(suffix));
         box.setAlignment(BASELINE_LEFT);
         return box;
     }
 
-    private Node emptyRow()
-    {
+    private Node emptyRow() {
         Region row = new Label("");
         row.setMinHeight(10);
         row.setPrefHeight(10);

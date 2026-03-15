@@ -12,26 +12,21 @@ import org.apache.commons.lang3.StringUtils;
  *
  * @param <T> type of elements being filtered
  */
-abstract class TextPredicate<T> implements Predicate<T>
-{
+abstract class TextPredicate<T> implements Predicate<T> {
     private final String text;
     private final String[] parts;
 
-    TextPredicate(String text)
-    {
+    TextPredicate(String text) {
         this.text = defaultIfBlank(text, "").toLowerCase().trim();
         this.parts = StringUtils.split(text);
     }
 
     @Override
-    public final boolean test(T obj)
-    {
-        if (text.isEmpty())
-        {
+    public final boolean test(T obj) {
+        if (text.isEmpty()) {
             return true;
         }
-        else
-        {
+        else {
             return Stream.of(parts)
                     .allMatch(str -> matchesText(obj, str));
         }

@@ -49,16 +49,14 @@ import se.martinuhlen.fishbase.domain.Specimen;
 import se.martinuhlen.fishbase.domain.Trip;
 import se.martinuhlen.fishbase.javafx.data.SpecimenWrapper;
 
-class SpecimenTable extends TableView<SpecimenWrapper>
-{
+class SpecimenTable extends TableView<SpecimenWrapper> {
     private final ObservableList<SpecimenWrapper> specimens;
     private final Supplier<Collection<Specie>> specieSupplier;
     private final Function<AutoCompleteField, SortedSet<String>> autoCompleter;
     private final Supplier<Trip> tripSupplier;
     private final Consumer<String> tripOpener;
 
-    private SpecimenTable(ObservableList<SpecimenWrapper> sourceSpecimens, ObservableList<SpecimenWrapper> tableSpecimens, Supplier<Collection<Specie>> specieSupplier, Function<AutoCompleteField, SortedSet<String>> autoCompleter, Supplier<Trip> tripSupplier, Consumer<String> tripOpener)
-    {
+    private SpecimenTable(ObservableList<SpecimenWrapper> sourceSpecimens, ObservableList<SpecimenWrapper> tableSpecimens, Supplier<Collection<Specie>> specieSupplier, Function<AutoCompleteField, SortedSet<String>> autoCompleter, Supplier<Trip> tripSupplier, Consumer<String> tripOpener) {
         this.specimens = sourceSpecimens;
         this.specieSupplier = specieSupplier;
         this.autoCompleter = autoCompleter;
@@ -70,37 +68,30 @@ class SpecimenTable extends TableView<SpecimenWrapper>
         setEditable(true);
     }
 
-    SpecimenTable(ObservableList<SpecimenWrapper> specimens, Supplier<Collection<Specie>> species, Function<AutoCompleteField, SortedSet<String>> autoCompleter, Supplier<Trip> tripSupplier)
-    {
+    SpecimenTable(ObservableList<SpecimenWrapper> specimens, Supplier<Collection<Specie>> species, Function<AutoCompleteField, SortedSet<String>> autoCompleter, Supplier<Trip> tripSupplier) {
         this(specimens, specimens, species, autoCompleter, tripSupplier, null);
     }
 
     @SuppressWarnings("unchecked")
-    SpecimenTable(FilteredList<SpecimenWrapper> filteredSpecimens, Supplier<Collection<Specie>> species, Function<AutoCompleteField, SortedSet<String>> autoCompleter, Consumer<String> tripOpener)
-    {
+    SpecimenTable(FilteredList<SpecimenWrapper> filteredSpecimens, Supplier<Collection<Specie>> species, Function<AutoCompleteField, SortedSet<String>> autoCompleter, Consumer<String> tripOpener) {
         this((ObservableList<SpecimenWrapper>) filteredSpecimens.getSource(), filteredSpecimens, species, autoCompleter, null, tripOpener);
     }
 
-    private ContextMenu createContextMenu()
-    {
+    private ContextMenu createContextMenu() {
         List<MenuItem> items = new ArrayList<>();
         MenuItem openTrip = new MenuItem("Open trip", getImageView16("window_next.png"));
-        if (tripOpener != null)
-        {
+        if (tripOpener != null) {
             openTrip.setOnAction(e -> tripOpener.accept(getSelectedSpecimen().getTripId()));
             items.add(openTrip);
             items.add(new SeparatorMenuItem());
         }
 
         MenuItem add = new MenuItem("Add", getImageView16("add.png"));
-        if (tripSupplier != null)
-        {
+        if (tripSupplier != null) {
             add.setOnAction(e -> editSpecimen(true, createNewSpecimen(), s -> specimens.add(new SpecimenWrapper(s)))); // FIXME Must also add a listener (SpecimenView)?
             items.add(add);
-            setOnMouseClicked(e ->
-            {
-                if (e.getClickCount() >= 2)
-                {
+            setOnMouseClicked(e -> {
+                if (e.getClickCount() >= 2) {
                     add.fire();
                 }
             });
@@ -124,8 +115,7 @@ class SpecimenTable extends TableView<SpecimenWrapper>
         return menu;
     }
 
-    void removeSelected()
-    {
+    void removeSelected() {
         ButtonType delete = new ButtonType("Remove", OK_DONE);
         Alert alert = new Alert(CONFIRMATION);
         alert.setTitle("Confirm removal");
@@ -136,52 +126,43 @@ class SpecimenTable extends TableView<SpecimenWrapper>
             .ifPresent(b -> specimens.remove(getSelectedSpecimenWrapper()));
     }
 
-    private Specimen getSelectedSpecimen()
-    {
+    private Specimen getSelectedSpecimen() {
         return getSelectedSpecimenWrapper().getWrapee();
     }
 
-    private SpecimenWrapper getSelectedSpecimenWrapper()
-    {
+    private SpecimenWrapper getSelectedSpecimenWrapper() {
         return getSelectionModel().getSelectedItem();
     }
 
-    private void editSpecimen(boolean add, Specimen initialSpecimen, Consumer<Specimen> handler)
-    {
+    private void editSpecimen(boolean add, Specimen initialSpecimen, Consumer<Specimen> handler) {
         new SpecimenDialog(add, specieSupplier.get(), autoCompleter, initialSpecimen)
             .showAndWait()
-            .ifPresent(specimen ->
-            {
+            .ifPresent(specimen -> {
                 handler.accept(specimen);
                 requestFocus();
-                getItems().stream().filter(s -> s.getWrapee().equalsId(specimen)).findAny().ifPresent(sw ->
-                {
+                getItems().stream().filter(s -> s.getWrapee().equalsId(specimen)).findAny().ifPresent(sw -> {
                     getSelectionModel().select(sw);
                 });
             });
     }
 
-    private Specimen createNewSpecimen()
-    {
+    private Specimen createNewSpecimen() {
         Trip trip = tripSupplier.get();
         return Specimen.asNew(trip.getId())
                         .withInstant(trip.getStartDate().atStartOfDay());
     }
 
-    private void setSpecimens(ObservableList<SpecimenWrapper> tableSpecimens)
-    {
+    private void setSpecimens(ObservableList<SpecimenWrapper> tableSpecimens) {
         SortedList<SpecimenWrapper> sortedList = new SortedList<>(tableSpecimens);
         setItems(sortedList);
         sortedList.comparatorProperty().bind(comparatorProperty());
     }
 
-    private Collection<TableColumn<SpecimenWrapper, ?>> createColumns()
-    {
+    private Collection<TableColumn<SpecimenWrapper, ?>> createColumns() {
         Collection<Specie> species = specieSupplier.get();
         TableColumn<SpecimenWrapper, Specie> specieColumn = new TableColumn<>("Specie");
         specieColumn.setCellValueFactory(cdf -> cdf.getValue().specieProperty());
-        specieColumn.setCellFactory(c ->
-        {
+        specieColumn.setCellFactory(c -> {
             ComboBoxTableCell<SpecimenWrapper, Specie> cell = new ComboBoxTableCell<>();
             cell.getItems().setAll(species);
             cell.setConverter(specieConverter());
@@ -195,25 +176,19 @@ class SpecimenTable extends TableView<SpecimenWrapper>
 
         TableColumn<SpecimenWrapper, Double> ratioColumn = new TableColumn<>("Ratio");
         ratioColumn.setCellValueFactory(cdf -> cdf.getValue().ratioProperty());
-        ratioColumn.setCellFactory(column -> new ProgressBarTableCell<>()
-        {
+        ratioColumn.setCellFactory(column -> new ProgressBarTableCell<>() {
             @Override
-            public void updateItem(Double ratio, boolean empty)
-            {
+            public void updateItem(Double ratio, boolean empty) {
                 super.updateItem(ratio, empty);
                 setTooltip(empty ? null : new Tooltip(((int) (ratio * 100)) + "%"));
-                if (!empty)
-                {
-                    if (ratio >= 1.0)
-                    {
+                if (!empty) {
+                    if (ratio >= 1.0) {
                         getGraphic().setStyle(BACKGROUND_GREEN);
                     }
-                    else if (ratio <= 0.5)
-                    {
+                    else if (ratio <= 0.5) {
                         getGraphic().setStyle(BACKGROUND_RED);
                     }
-                    else
-                    {
+                    else {
                         getGraphic().setStyle(null);
                     }
                 }
@@ -278,8 +253,7 @@ class SpecimenTable extends TableView<SpecimenWrapper>
      *         http://dlsc.com/2015/12/10/javafx-tip-22-autosize-tree-table-columns/
      *        Google "javafx tableview autosize columns"
      */
-    private void resizeTextColumn()
-    {
+    private void resizeTextColumn() {
         TableColumn<?, ?> textColumn = getColumns().get(getColumns().size() - 1);
         double occupiedWidth = getColumns().stream().filter(c -> c != textColumn).mapToDouble(TableColumn::getWidth).sum();
         double columnWidth = Math.max(getWidth() - occupiedWidth - 16, 80);
@@ -291,16 +265,13 @@ class SpecimenTable extends TableView<SpecimenWrapper>
      * 
      * @param hasPhoto tests whether a specimen has photo(s) or not
      */
-    void addPhotoColumn(Predicate<SpecimenWrapper> hasPhoto)
-    {
+    void addPhotoColumn(Predicate<SpecimenWrapper> hasPhoto) {
         TableColumn<SpecimenWrapper, Boolean> column = new TableColumn<>("");
         column.setEditable(false);
         column.setCellValueFactory(cdf -> new SimpleBooleanProperty(hasPhoto.test(cdf.getValue())));
-        column.setCellFactory(c -> new TableCell<>()
-        {
+        column.setCellFactory(c -> new TableCell<>() {
             @Override
-            protected void updateItem(Boolean hasPhoto, boolean empty)
-            {
+            protected void updateItem(Boolean hasPhoto, boolean empty) {
                 super.updateItem(hasPhoto, empty);
                 setGraphic(TRUE.equals(hasPhoto) ? getImageView16("photo.png") : null);
                 setAlignment(CENTER);

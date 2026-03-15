@@ -13,14 +13,12 @@ import java.util.logging.LogRecord;
  *
  * @author Martin
  */
-public class LogFormatter extends Formatter
-{
+public class LogFormatter extends Formatter {
     private static final DateTimeFormatter TIMESTAMP =
             DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS").withZone(ZoneId.systemDefault());
 
     @Override
-    public String format(LogRecord record)
-    {
+    public String format(LogRecord record) {
         String timestamp = TIMESTAMP.format(Instant.ofEpochMilli(record.getMillis()));
         String level = String.format("%-7s", record.getLevel().getName());
         String name = simpleName(record.getLoggerName());
@@ -29,20 +27,16 @@ public class LogFormatter extends Formatter
         return timestamp + " " + level + " [" + name + "] " + message + thrown + "\n";
     }
 
-    private static String simpleName(String loggerName)
-    {
-        if (loggerName == null)
-        {
+    private static String simpleName(String loggerName) {
+        if (loggerName == null) {
             return "";
         }
         int dot = loggerName.lastIndexOf('.');
         return dot >= 0 ? loggerName.substring(dot + 1) : loggerName;
     }
 
-    private static String formatThrown(LogRecord record)
-    {
-        if (record.getThrown() == null)
-        {
+    private static String formatThrown(LogRecord record) {
+        if (record.getThrown() == null) {
             return "";
         }
         StringWriter sw = new StringWriter();

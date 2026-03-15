@@ -19,41 +19,34 @@ import se.martinuhlen.fishbase.domain.Specie;
 /**
  * Unit tests of {@link SpecieWrapper}.
  */
-public class SpecieWrapperTest extends WrapperTestCase<Specie, SpecieWrapper>
-{
+public class SpecieWrapperTest extends WrapperTestCase<Specie, SpecieWrapper> {
     @Override
-    protected SpecieWrapper createWrapper()
-    {
+    protected SpecieWrapper createWrapper() {
         return new SpecieWrapper(bream(), listener);
     }
 
     @Test
-    public void nameProperty()
-    {
+    public void nameProperty() {
         testProperty("name", wrapper::nameProperty, Specie::getName, "A", "B", "C");
     }
 
     @Test
-    public void regWeightProperty()
-    {
+    public void regWeightProperty() {
         testProperty("regWeight", wrapper::regWeightProperty, Specie::getRegWeight, 1000, 2000, 3000);
     }
 
     @Test
-    public void freshWaterProperty()
-    {
+    public void freshWaterProperty() {
         testProperty("freshWater", wrapper::freshWaterProperty, Specie::isFreshWater, false, true, false, true);
     }
 
     @Test
-    public void wrapeeEquals()
-    {
+    public void wrapeeEquals() {
         assertEquals(bream(), wrapper.getWrapee());
     }
 
     @Test
-    public void hasChanges()
-    {
+    public void hasChanges() {
         wrapper.setWrapee(tench());
         assertFalse(wrapper.hasChanges());
 
@@ -72,8 +65,7 @@ public class SpecieWrapperTest extends WrapperTestCase<Specie, SpecieWrapper>
 
     @Test
     @SuppressWarnings("unchecked")
-    public void removeAllListeners()
-    {
+    public void removeAllListeners() {
         Property<String> property = wrapper.nameProperty();
 
         InvalidationListener invalidationListener = mock(InvalidationListener.class);

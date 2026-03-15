@@ -17,20 +17,17 @@ import se.martinuhlen.fishbase.javafx.action.Action;
 import se.martinuhlen.fishbase.javafx.action.RunnableAction;
 import se.martinuhlen.fishbase.javafx.data.SpecieWrapper;
 
-class SpecieView extends AbstractTableView<SpecieWrapper, Specie>
-{
+class SpecieView extends AbstractTableView<SpecieWrapper, Specie> {
     private final FishBaseDao dao;
     private final RunnableAction addAction = new RunnableAction(true, () -> add());
 
-    SpecieView(FishBaseDao dao)
-    {
+    SpecieView(FishBaseDao dao) {
         super("Species", dao::getSpecies, dao::saveSpecies, dao::deleteSpecies);
         this.dao = dao;
     }
 
     @Override
-    TableView<SpecieWrapper> createTable()
-    {
+    TableView<SpecieWrapper> createTable() {
         SortedList<SpecieWrapper> sortedList = new SortedList<>(list);
         TableView<SpecieWrapper> table = new TableView<>(sortedList);
         sortedList.comparatorProperty().bind(table.comparatorProperty());
@@ -59,36 +56,30 @@ class SpecieView extends AbstractTableView<SpecieWrapper, Specie>
     }
 
     @Override
-    boolean isRemovable(Specie specie)
-    {
-        if (!dao.isSpecieDeletable(specie))
-        {
+    boolean isRemovable(Specie specie) {
+        if (!dao.isSpecieDeletable(specie)) {
             Alert alert = new Alert(ERROR);
             alert.setTitle("Cannot delete");
             alert.setHeaderText("Cannot delete the specie '" + specie.getLabel() + "' because it has specimens.");
             alert.showAndWait();
             return false;
         }
-        else
-        {
+        else {
             return true;
         }
     }
 
     @Override
-    SpecieWrapper wrap(Specie specie)
-    {
+    SpecieWrapper wrap(Specie specie) {
         return new SpecieWrapper(specie);
     }
 
     @Override
-    public Action addAction()
-    {
+    public Action addAction() {
         return addAction;
     }
 
-    private void add()
-    {
+    private void add() {
         TableView<SpecieWrapper> table = getTable();
         list.add(new SpecieWrapper(Specie.asNew(), this::tableChange));
         int lastRow = list.size() - 1;

@@ -9,42 +9,36 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
-public class TestData
-{
-    public static Specie bream()
-    {
+public class TestData {
+    public static Specie bream() {
         return Specie.asPersisted("#bream")
                 .name("Bream")
                 .regWeight(4400)
                 .freshWater(true);
     }
 
-    public static Specie tench()
-    {
+    public static Specie tench() {
         return Specie.asPersisted("#tench")
                 .name("Tench")
                 .regWeight(3200)
                 .freshWater(true);
     }
 
-    public static Specie perch()
-    {
+    public static Specie perch() {
         return Specie.asPersisted("#perch")
                 .name("Perch")
                 .regWeight(1600)
                 .freshWater(true);
     }
 
-    public static Specie newSpecie()
-    {
+    public static Specie newSpecie() {
         return Specie.asNew()
                 .withName("NewSpecie")
                 .withRegWeight(1337)
                 .withFreshWater(false);
     }
 
-    public static Specimen bream5120()
-    {
+    public static Specimen bream5120() {
         return Specimen.asPersisted("#bream5120")
                 .tripId("#trip1")
                 .specie(bream())
@@ -58,8 +52,7 @@ public class TestData
                 .text("Nytt PB!");
     }
 
-    public static Specimen perch1000()
-    {
+    public static Specimen perch1000() {
         return Specimen.asPersisted("#perch1000")
                 .tripId("#trip2")
                 .specie(perch())
@@ -73,8 +66,7 @@ public class TestData
                 .text("");
     }
 
-    public static Specimen tench3540()
-    {
+    public static Specimen tench3540() {
         return Specimen.asPersisted("#tench3540")
                 .tripId("#trip2")
                 .specie(tench())
@@ -88,8 +80,7 @@ public class TestData
                 .text("");
     }
 
-    public static Specimen newSpecimen(String tripId)
-    {
+    public static Specimen newSpecimen(String tripId) {
         return Specimen.asNew(tripId)
                 .withSpecie(perch())
                 .withWeight(1460)
@@ -102,8 +93,7 @@ public class TestData
                 .withText("");
     }
 
-    public static Trip trip1()
-    {
+    public static Trip trip1() {
         return Trip.asPersisted("#trip1")
                 .description("Första besöket i Hossmoån")
                 .startDate(LocalDate.parse("2014-09-20"))
@@ -113,8 +103,7 @@ public class TestData
                 .photos(List.of(photo1InTrip1(), photo2InTrip1()));
     }
 
-    public static Trip trip2()
-    {
+    public static Trip trip2() {
         return Trip.asPersisted("#trip2")
                 .description("Första besöket i Öxneredsjön")
                 .startDate(LocalDate.parse("2015-07-03"))
@@ -124,8 +113,7 @@ public class TestData
                 .photos(List.of(photo1InTrip2()));
     }
 
-    public static Trip trip3()
-    {
+    public static Trip trip3() {
         return Trip.asPersisted("#trip3")
                 .description("A trip without specimens")
                 .startDate(LocalDate.parse("2018-04-17"))
@@ -135,8 +123,7 @@ public class TestData
                 .photos(List.of());
     }
 
-    public static Trip newTrip()
-    {
+    public static Trip newTrip() {
         return Trip.asNew()
             .withDescription("The description")
             .withStartDate(LocalDate.now().minusDays(1))
@@ -144,13 +131,11 @@ public class TestData
             .withText("The text");
     }
 
-    public static Photo newPhoto(String id, String tripId)
-    {
+    public static Photo newPhoto(String id, String tripId) {
         return newPhoto(id, tripId, LocalDateTime.now());
     }
 
-    public static Photo newPhoto(String id, String tripId, LocalDateTime time)
-    {
+    public static Photo newPhoto(String id, String tripId, LocalDateTime time) {
         return Photo.asNew(id)
                 .tripId(tripId)
                 .specimens(emptySet())
@@ -159,8 +144,7 @@ public class TestData
                 .starred(false);
     }
 
-    public static Photo photo1InTrip1()
-    {
+    public static Photo photo1InTrip1() {
         return Photo.asPersisted("#photo1InTrip1")
                 .tripId("#trip1")
                 .specimens(Set.of())
@@ -169,8 +153,7 @@ public class TestData
                 .starred(false);
     }
 
-    public static Photo photo2InTrip1()
-    {
+    public static Photo photo2InTrip1() {
         return Photo.asPersisted("#photo2InTrip1")
                 .tripId("#trip1")
                 .specimens(Set.of("#bream5120"))
@@ -179,8 +162,7 @@ public class TestData
                 .starred(true);
     }
 
-    public static Photo photo1InTrip2()
-    {
+    public static Photo photo1InTrip2() {
         return Photo.asPersisted("#photo1InTrip2")
                 .tripId("#trip2")
                 .specimens(Set.of("#tench3540"))

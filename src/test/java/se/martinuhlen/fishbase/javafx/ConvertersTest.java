@@ -19,19 +19,16 @@ import se.martinuhlen.fishbase.javafx.utils.Converters;
  *
  * @author Martin
  */
-public class ConvertersTest
-{
+public class ConvertersTest {
     @Test
-    public void specie()
-    {
+    public void specie() {
         StringConverter<Specie> c = Converters.specieConverter();
         assertEquals(tench().getName(), c.toString(tench()));
         assertThrows(RuntimeException.class, () -> c.fromString(""));
     }
 
     @Test
-    public void weight()
-    {
+    public void weight() {
         StringConverter<Integer> c = Converters.weightConverter();
         assertEquals(Integer.valueOf(0),  c.fromString(""));
         assertEquals(Integer.valueOf(0),  c.fromString(" "));
@@ -46,8 +43,7 @@ public class ConvertersTest
     }
 
     @Test
-    public void length()
-    {
+    public void length() {
         StringConverter<Float> c = Converters.lengthConverter();
         assertEquals(Float.valueOf(0.0F),  c.fromString(""));
         assertEquals(Float.valueOf(0.0F),  c.fromString(" "));
@@ -65,8 +61,7 @@ public class ConvertersTest
     }
    
     @Test
-    public void date()
-    {
+    public void date() {
         StringConverter<LocalDate> c = Converters.dateConverter();
         assertEquals(LocalDate.parse("2018-05-04"), c.fromString("2018-05-04"));
         assertEquals(LocalDate.parse("2018-05-04"), c.fromString(" 2018-05-04 "), "Expect input trimmed");
@@ -74,8 +69,7 @@ public class ConvertersTest
     }
 
     @Test
-    public void time()
-    {
+    public void time() {
         StringConverter<LocalTime> c = Converters.timeConverter();
         assertEquals(MIDNIGHT, c.fromString(""));
         assertEquals(MIDNIGHT, c.fromString(" "));

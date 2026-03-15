@@ -8,8 +8,7 @@ import java.util.function.Supplier;
  *
  * @author Martin
  */
-class PickerGooglePhoto implements GooglePhoto
-{
+class PickerGooglePhoto implements GooglePhoto {
     private final String id;
     private final String filename;
     private final LocalDateTime createTime;
@@ -17,8 +16,7 @@ class PickerGooglePhoto implements GooglePhoto
     private final String baseUrl;
     private final Supplier<String> accessToken;
 
-    PickerGooglePhoto(String id, String filename, LocalDateTime createTime, boolean video, String baseUrl, Supplier<String> accessToken)
-    {
+    PickerGooglePhoto(String id, String filename, LocalDateTime createTime, boolean video, String baseUrl, Supplier<String> accessToken) {
         this.id = id;
         this.filename = filename;
         this.createTime = createTime;
@@ -28,38 +26,32 @@ class PickerGooglePhoto implements GooglePhoto
     }
 
     @Override
-    public String getId()
-    {
+    public String getId() {
         return id;
     }
 
     @Override
-    public String getName()
-    {
+    public String getName() {
         return filename;
     }
 
     @Override
-    public LocalDateTime getTime()
-    {
+    public LocalDateTime getTime() {
         return createTime;
     }
 
     @Override
-    public boolean isVideo()
-    {
+    public boolean isVideo() {
         return video;
     }
 
     @Override
-    public PhotoData getThumbnail()
-    {
+    public PhotoData getThumbnail() {
         return new RemotePhotoData(baseUrl + "=w512-h512", accessToken);
     }
 
     @Override
-    public PhotoData getContent()
-    {
+    public PhotoData getContent() {
         return new RemotePhotoData(baseUrl + (video ? "=dv" : "=d"), accessToken);
     }
 }

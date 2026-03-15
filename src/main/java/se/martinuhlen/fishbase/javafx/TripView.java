@@ -57,8 +57,7 @@ import se.martinuhlen.fishbase.javafx.controls.DatePicker;
 import se.martinuhlen.fishbase.javafx.data.TripWrapper;
 import se.martinuhlen.fishbase.javafx.photo.PhotoPane;
 
-class TripView implements View
-{
+class TripView implements View {
     private final RunnableAction addAction = new RunnableAction(true, () -> add());
     private final RunnableAction refreshAction = new RunnableAction(true, () -> refreshOrRollback());
     private final RunnableAction saveAction = new RunnableAction(false, () -> save());
@@ -74,8 +73,7 @@ class TripView implements View
     private final TextField descriptionField;
     private final ObservableList<FishingPhoto> photos = observableArrayList();
 
-    TripView(FishBaseDao dao, PhotoService photoService)
-    {
+    TripView(FishBaseDao dao, PhotoService photoService) {
         this.dao = dao;
         this.photoService = photoService;
         this.wrapper = new TripWrapper();
@@ -88,63 +86,48 @@ class TripView implements View
         bindButtons();
     }
 
-    private void bindButtons()
-    {
-        wrapper.addListener(obs ->
-        {
+    private void bindButtons() {
+        wrapper.addListener(obs -> {
             saveAction.setEnabled(wrapper.hasChanges());
             deleteAction.setEnabled(!wrapper.isEmpty());
         });
     }
 
-    private void bindPhotos()
-    {
+    private void bindPhotos() {
         AtomicBoolean sync = new AtomicBoolean(true);
-        Consumer<List<FishingPhoto>> resetter = fishingPhotos ->
-        {
+        Consumer<List<FishingPhoto>> resetter = fishingPhotos -> {
             sync.set(false);
-            try
-            {
+            try {
                 photos.setAll(fishingPhotos);
             }
-            finally
-            {
+            finally {
                 sync.set(true);
             }            
         };
 
-        photos.addListener(new ListChangeListener<FishingPhoto>()
-        {
+        photos.addListener(new ListChangeListener<FishingPhoto>() {
             @Override
-            public void onChanged(Change<? extends FishingPhoto> change)
-            {
-                while(change.next())
-                {
+            public void onChanged(Change<? extends FishingPhoto> change) {
+                while(change.next()) {
                     change.getAddedSubList().forEach(photo -> photo.addListener(p -> sync()));
                 }
                 sync();
             }
 
-            private void sync()
-            {
-                if (sync.get())
-                {
+            private void sync() {
+                if (sync.get()) {
                     List<Photo> domains = photos.stream().map(p -> p.getDomain()).collect(Collectors.toList());
                     wrapper.photos().setValue(domains);
                 }
             }
         });
 
-        Service<List<FishingPhoto>> loader = new Service<List<FishingPhoto>>()
-        {
+        Service<List<FishingPhoto>> loader = new Service<List<FishingPhoto>>() {
             @Override
-            protected Task<List<FishingPhoto>> createTask()
-            {
-                return new Task<>()
-                {
+            protected Task<List<FishingPhoto>> createTask() {
+                return new Task<>() {
                     @Override
-                    protected List<FishingPhoto> call() throws Exception
-                    {
+                    protected List<FishingPhoto> call() throws Exception {
                         Thread.sleep(10);
                         List<Photo> photosToLoad = wrapper.photos().getValue();
                         List<FishingPhoto> loadedPhotos = photoService.load(photosToLoad);
@@ -154,46 +137,37 @@ class TripView implements View
             }
 
             @Override
-            protected void succeeded()
-            {
+            protected void succeeded() {
                 resetter.accept(getValue());
             }
         };
 
-        wrapper.id().addListener(change ->
-        {
+        wrapper.id().addListener(change -> {
             resetter.accept(emptyList());
             loader.restart();
         });
     }
 
-    void selectTrip(String tripId)
-    {
+    void selectTrip(String tripId) {
         list.selectTrip(tripId);
         descriptionField.requestFocus();
     }
 
-    private void selectTrip(Trip trip)
-    {
-        if (!wrapper.getWrapee().equalsId(trip))
-        {
-            if (discardChanges())
-            {
+    private void selectTrip(Trip trip) {
+        if (!wrapper.getWrapee().equalsId(trip)) {
+            if (discardChanges()) {
                 setTrip(trip.isNew() ? trip : dao.getTrip(trip.getId()));
             }
-            else
-            {
+            else {
                 runLater(() -> list.selectTrip(wrapper.id().getValue()));
             }
         }
     }
 
-    private ReadOnlyStringProperty createTitleProperty()
-    {
+    private ReadOnlyStringProperty createTitleProperty() {
         String defaultTitle = "Trips";
         ReadOnlyStringWrapper property = new ReadOnlyStringWrapper(defaultTitle);
-        wrapper.addListener(obs ->
-        {
+        wrapper.addListener(obs -> {
             Trip trip = wrapper.getWrapee();
             String title = trip == EMPTY_TRIP
                     ? defaultTitle
@@ -203,8 +177,7 @@ class TripView implements View
         return property.getReadOnlyProperty();
     }
 
-    private Node createTripPane()
-    {
+    private Node createTripPane() {
         VBox overviewBox = new VBox();
         overviewBox.setPadding(new Insets(8));
         descriptionField.textProperty().bindBidirectional(wrapper.description());
@@ -243,38 +216,32 @@ class TripView implements View
         return vSplit;
     }
 
-    private void addValidation(ValidationSupport vs, Control control, String message)
-    {
+    private void addValidation(ValidationSupport vs, Control control, String message) {
         vs.registerValidator(control, false, createPredicateValidator(x -> !wrapper.getWrapee().getValidationErrors().anyMatch(str -> str.equals(message)), message));
     }
 
-    private void bindPersistedDividerLocation(SplitPane split, String key, double defaultValue)
-    {
+    private void bindPersistedDividerLocation(SplitPane split, String key, double defaultValue) {
         Preferences preferences = Preferences.userRoot();
         Divider divider = split.getDividers().get(0);
         divider.setPosition(preferences.getDouble(key, defaultValue));
         divider.positionProperty().addListener((obs, oldValue, newValue) -> preferences.putDouble(key, newValue.doubleValue()));
     }
 
-    private DatePicker createDatePicker(Property<LocalDate> property)
-    {
+    private DatePicker createDatePicker(Property<LocalDate> property) {
         DatePicker picker = new DatePicker(property);
         picker.setPrefWidth(130);
         return picker;
     }
 
-    private SpecimenTable createSpecimenTable()
-    {
+    private SpecimenTable createSpecimenTable() {
         return new SpecimenTable(wrapper.specimenWrappers(), dao::getSpecies, dao::getAutoCompletions, () -> wrapper.getWrapee());
     }
 
-    private PhotoPane createPhotoPane()
-    {
+    private PhotoPane createPhotoPane() {
         return new PhotoPane(photoService, wrapper.startDate(), wrapper.endDate(), wrapper.id(), wrapper.specimens(), photos);
     }
 
-    private SplitPane createSplitPane()
-    {
+    private SplitPane createSplitPane() {
         SplitPane split = new SplitPane(list, tripPane);
         bindPersistedDividerLocation(split, "TripView.horizontalSplit.left.dividerLocation", 0.20);
         list.setMinWidth(50);
@@ -284,45 +251,37 @@ class TripView implements View
     }
 
     @Override
-    public Node getContent()
-    {
+    public Node getContent() {
         return splitPane;
     }
 
     @Override
-    public ReadOnlyStringProperty titleProperty()
-    {
+    public ReadOnlyStringProperty titleProperty() {
         return titleProperty;
     }
 
     @Override
-    public Action addAction()
-    {
+    public Action addAction() {
         return addAction;
     }
 
-    private void add()
-    {
+    private void add() {
         selectTrip(Trip.asNew());
         descriptionField.requestFocus();
     }
 
     @Override
-    public Action refreshAction()
-    {
+    public Action refreshAction() {
         return refreshAction;
     }
 
-    private void refreshOrRollback()
-    {
-        if (discardChanges())
-        {
+    private void refreshOrRollback() {
+        if (discardChanges()) {
             refresh();
         }
     }
 
-    private void refresh()
-    {
+    private void refresh() {
         Trip trip = wrapper.getWrapee();
         List<Trip> trips = dao.getTrips();
         list.setTrips(trips);
@@ -334,44 +293,37 @@ class TripView implements View
         list.selectTrip(refreshedTrip.getId());
     }
 
-    private void setTrip(Trip trip)
-    {
+    private void setTrip(Trip trip) {
         wrapper.setWrapee(trip);
     }
 
     @Override
-    public Action saveAction()
-    {
+    public Action saveAction() {
         return saveAction;
     }
 
-    private void save()
-    {
+    private void save() {
         Trip trip = wrapper.getWrapee();
         String errorMessage = trip.getValidationErrors().collect(joining("\n"));
-        if (isNotBlank(errorMessage))
-        {
+        if (isNotBlank(errorMessage)) {
             Alert alert = new Alert(ERROR);
             alert.setTitle("Can not save");
             alert.setHeaderText("Can not save due to validation errors.");
             alert.setContentText(errorMessage);
             alert.showAndWait();
         }
-        else
-        {
+        else {
             dao.saveTrip(trip);
             refresh();
         }
     }
 
     @Override
-    public Action deleteAction()
-    {
+    public Action deleteAction() {
         return deleteAction;
     }
 
-    private void delete()
-    {
+    private void delete() {
         ButtonType delete = new ButtonType("Delete", OK_DONE);
         Alert alert = new Alert(CONFIRMATION);
         alert.setTitle("Confirm deletion");
@@ -382,8 +334,7 @@ class TripView implements View
             .ifPresent(b -> deleteImpl());
     }
 
-    private void deleteImpl()
-    {
+    private void deleteImpl() {
         dao.deleteTrip(wrapper.getWrapee());
         wrapper.setWrapee(EMPTY_TRIP);
         refresh();

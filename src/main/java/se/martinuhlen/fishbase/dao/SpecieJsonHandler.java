@@ -10,16 +10,13 @@ import com.google.gson.JsonSerializationContext;
 
 import se.martinuhlen.fishbase.domain.Specie;
 
-class SpecieJsonHandler extends JsonHandler<Specie>
-{
-    SpecieJsonHandler(Persistence persistence)
-    {
+class SpecieJsonHandler extends JsonHandler<Specie> {
+    SpecieJsonHandler(Persistence persistence) {
         super(Specie.class, persistence);
     }
 
     @Override
-    public JsonElement serialize(Specie specie, Type typeOfSrc, JsonSerializationContext context)
-    {
+    public JsonElement serialize(Specie specie, Type typeOfSrc, JsonSerializationContext context) {
         JsonObject json = new JsonObject();
         json.addProperty("id", specie.getId());
         json.addProperty("name", specie.getName());
@@ -29,8 +26,7 @@ class SpecieJsonHandler extends JsonHandler<Specie>
     }
 
     @Override
-    public Specie deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException
-    {
+    public Specie deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
         JsonObject obj = json.getAsJsonObject();
         return Specie.asPersisted(obj.get("id").getAsString())
                 .name(obj.get("name").getAsString())

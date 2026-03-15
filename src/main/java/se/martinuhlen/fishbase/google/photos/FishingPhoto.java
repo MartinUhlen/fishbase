@@ -12,8 +12,7 @@ import se.martinuhlen.fishbase.domain.Trip;
  * 
  * @author Martin
  */
-public interface FishingPhoto extends GooglePhoto
-{
+public interface FishingPhoto extends GooglePhoto {
     /**
      * Gets the ID of the {@link Trip} this photo refers to.
      * 

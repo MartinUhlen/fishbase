@@ -21,55 +21,44 @@ import com.google.common.flogger.FluentLogger;
  *
  * @author Martin
  */
-class LocalPhotoData implements PhotoData
-{
+class LocalPhotoData implements PhotoData {
     private static final FluentLogger LOG = FluentLogger.forEnclosingClass();
     private static final URL PHOTO_NOT_FOUND = LocalPhotoData.class.getResource("/images/PhotoNotFound.png");
 
     private final File localFile;
     private final Supplier<PhotoData> remote;
 
-    LocalPhotoData(File localFile, Supplier<PhotoData> remote)
-    {
+    LocalPhotoData(File localFile, Supplier<PhotoData> remote) {
         this.localFile = localFile;
         this.remote = remote;
     }
 
     @Override
-    public String getUrl()
-    {
-        if (!localFile.exists())
-        {
-            try
-            {
+    public String getUrl() {
+        if (!localFile.exists()) {
+            try {
                 InputStream stream = getStream();
                 stream.transferTo(OutputStream.nullOutputStream());
                 stream.close();
             }
-            catch (Exception e)
-            {
+            catch (Exception e) {
                 LOG.atWarning().withCause(e).log("Failed to download remote photo for URL");
             }
         }
-        if (localFile.exists())
-        {
+        if (localFile.exists()) {
             return get(() -> localFile.toURI().toURL().toExternalForm());
         }
-        else
-        {
+        else {
             return PHOTO_NOT_FOUND.toExternalForm();
         }
     }
 
     @Override
-    public InputStream getStream()
-    {
-        if (localFile.exists())
-        {
+    public InputStream getStream() {
+        if (localFile.exists()) {
             return get(() -> new BufferedInputStream(new FileInputStream(localFile)));
         }
-        else
-        {
+        else {
             return new RemoteOrNotFoundInputStream();
         }
     }
@@ -79,38 +68,30 @@ class LocalPhotoData implements PhotoData
      *
      * @author Martin
      */
-    private class RemoteOrNotFoundInputStream extends InputStream
-    {
+    private class RemoteOrNotFoundInputStream extends InputStream {
         private InputStream inputStream;
 
         @Override
-        public int read() throws IOException
-        {
-            if (inputStream == null)
-            {
+        public int read() throws IOException {
+            if (inputStream == null) {
                 createInputStream();
             }
             return inputStream.read();
         }
 
-        private void createInputStream() throws IOException
-        {
-            try
-            {
+        private void createInputStream() throws IOException {
+            try {
                 inputStream = new DownloadingInputStream(remote.get().getStream());
             }
-            catch (Exception e)
-            {
+            catch (Exception e) {
                 LOG.atWarning().withCause(e).log("Failed to get remote photo stream");
                 inputStream = PHOTO_NOT_FOUND.openStream();
             }
         }
 
         @Override
-        public void close() throws IOException
-        {
-            if (inputStream != null)
-            {
+        public void close() throws IOException {
+            if (inputStream != null) {
                 inputStream.close();
                 inputStream = null;
             }
@@ -122,15 +103,13 @@ class LocalPhotoData implements PhotoData
      *
      * @author Martin
      */
-    private class DownloadingInputStream extends InputStream
-    {
+    private class DownloadingInputStream extends InputStream {
         private final InputStream remoteStream;
         private final OutputStream localStream;
         private final File tempFile;
         private boolean closed;
 
-        DownloadingInputStream(InputStream remoteStream) throws IOException
-        {
+        DownloadingInputStream(InputStream remoteStream) throws IOException {
             this.remoteStream = remoteStream;
             String tempSuffix = "." + randomUUID() + ".temp";
             String tempFileName = localFile.getName() + tempSuffix;
@@ -141,21 +120,16 @@ class LocalPhotoData implements PhotoData
         }
 
         @Override
-        public int read() throws IOException
-        {
-            if (closed)
-            {
+        public int read() throws IOException {
+            if (closed) {
                 return -1;
             }
-            else
-            {
+            else {
                 int read = remoteStream.read();
-                if (read != -1)
-                {
+                if (read != -1) {
                     localStream.write(read);
                 }
-                else
-                {
+                else {
                     close();
                     tempFile.renameTo(localFile);
                     tempFile.delete();
@@ -165,10 +139,8 @@ class LocalPhotoData implements PhotoData
         }
 
         @Override
-        public void close() throws IOException
-        {
-            if (!closed)
-            {
+        public void close() throws IOException {
+            if (!closed) {
                 closed = true;
                 super.close();
                 remoteStream.close();

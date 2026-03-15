@@ -14,43 +14,35 @@ import se.martinuhlen.fishbase.utils.Checked;
  *
  * @author Martin
  */
-class RemotePhotoData implements PhotoData
-{
+class RemotePhotoData implements PhotoData {
     private final String url;
     private final Supplier<String> accessToken;
 
-    RemotePhotoData(String url)
-    {
+    RemotePhotoData(String url) {
         this.url = url;
         this.accessToken = null;
     }
 
-    RemotePhotoData(String url, Supplier<String> accessToken)
-    {
+    RemotePhotoData(String url, Supplier<String> accessToken) {
         this.url = url;
         this.accessToken = accessToken;
     }
 
     @Override
-    public String getUrl()
-    {
+    public String getUrl() {
         return url;
     }
 
     @Override
-    public InputStream getStream()
-    {
-        return Checked.get(() ->
-        {
+    public InputStream getStream() {
+        return Checked.get(() -> {
             URL urlToStream = URI.create(url).toURL();
-            if (accessToken != null)
-            {
+            if (accessToken != null) {
                 HttpURLConnection conn = (HttpURLConnection) urlToStream.openConnection();
                 conn.setRequestProperty("Authorization", "Bearer " + accessToken.get());
                 return new BufferedInputStream(conn.getInputStream());
             }
-            else
-            {
+            else {
                 return new BufferedInputStream(urlToStream.openStream());
             }
         });

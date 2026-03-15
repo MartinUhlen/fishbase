@@ -13,16 +13,13 @@ import com.google.gson.JsonSerializationContext;
 
 import se.martinuhlen.fishbase.domain.Photo;
 
-class PhotoJsonHandler extends JsonHandler<Photo>
-{
-    PhotoJsonHandler(Persistence persistence)
-    {
+class PhotoJsonHandler extends JsonHandler<Photo> {
+    PhotoJsonHandler(Persistence persistence) {
         super(Photo.class, persistence);
     }
 
     @Override
-    public JsonElement serialize(Photo photo, Type typeOfSrc, JsonSerializationContext context)
-    {
+    public JsonElement serialize(Photo photo, Type typeOfSrc, JsonSerializationContext context) {
         JsonObject json = new JsonObject();
         json.addProperty("id", photo.getId());
         json.addProperty("trip", photo.getTripId());
@@ -34,8 +31,7 @@ class PhotoJsonHandler extends JsonHandler<Photo>
     }
 
     @Override
-    public Photo deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException
-    {
+    public Photo deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
         JsonObject obj = json.getAsJsonObject();
         return Photo.asPersisted(obj.get("id").getAsString())
                 .tripId(obj.get("trip").getAsString())

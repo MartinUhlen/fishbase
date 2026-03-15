@@ -19,16 +19,14 @@ import com.google.common.flogger.FluentLogger;
  *
  * @author martin
  */
-class PhotoServiceImpl implements PhotoService
-{
+class PhotoServiceImpl implements PhotoService {
     private static final FluentLogger LOG = FluentLogger.forEnclosingClass();
     private static final long TIMEOUT_MS = 30L * 60L * 1000L; // 30 minutes
 
     private final PickerClient pickerClient;
     private final DriveService driveService;
 
-    PhotoServiceImpl(PickerClient pickerClient, DriveService driveService)
-    {
+    PhotoServiceImpl(PickerClient pickerClient, DriveService driveService) {
         this.pickerClient = pickerClient;
         this.driveService = driveService;
     }
@@ -48,10 +46,8 @@ class PhotoServiceImpl implements PhotoService
     }
 
     @Override
-    public List<GooglePhoto> pick()
-    {
-        try
-        {
+    public List<GooglePhoto> pick() {
+        try {
             LOG.atInfo().log("Creating picker session");
             PickerSession session = pickerClient.createSession();
             LOG.atInfo().log("Picker session created: %s, opening browser at %s", session.id(), session.pickerUri());
@@ -61,54 +57,45 @@ class PhotoServiceImpl implements PhotoService
             long pollIntervalMs = session.pollIntervalMs();
             long deadline = System.currentTimeMillis() + TIMEOUT_MS;
 
-            while (System.currentTimeMillis() < deadline)
-            {
+            while (System.currentTimeMillis() < deadline) {
                 Thread.sleep(pollIntervalMs);
                 LOG.atInfo().log("Polling picker session %s", session.id());
-                if (pickerClient.isSelectionDone(session.id()))
-                {
+                if (pickerClient.isSelectionDone(session.id())) {
                     LOG.atInfo().log("Selection done, listing media items");
                     List<PickerGooglePhoto> items = pickerClient.listMediaItems(session.id());
                     LOG.atInfo().log("Got %d media items", items.size());
-                    try
-                    {
+                    try {
                         pickerClient.deleteSession(session.id());
                         LOG.atInfo().log("Picker session deleted");
                     }
-                    catch (Exception e)
-                    {
+                    catch (Exception e) {
                         LOG.atWarning().withCause(e).log("Failed to delete picker session");
                     }
                     return List.copyOf(items);
                 }
             }
             LOG.atWarning().log("Picker session timed out after 30 minutes");
-            try
-            {
+            try {
                 pickerClient.deleteSession(session.id());
             }
-            catch (Exception e)
-            {
+            catch (Exception e) {
                 LOG.atWarning().withCause(e).log("Failed to delete timed-out picker session");
             }
             return emptyList();
         }
-        catch (InterruptedException e)
-        {
+        catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             LOG.atInfo().log("Picker interrupted");
             return emptyList();
         }
-        catch (Exception e)
-        {
+        catch (Exception e) {
             LOG.atSevere().withCause(e).log("Picker failed");
             throw new RuntimeException("Failed to pick photos", e);
         }
     }
 
     @Override
-    public FishingPhoto create(GooglePhoto photo, String tripId)
-    {
+    public FishingPhoto create(GooglePhoto photo, String tripId) {
         Photo domain = Photo.asNew(photo.getId())
                 .tripId(tripId)
                 .specimens(emptySet())

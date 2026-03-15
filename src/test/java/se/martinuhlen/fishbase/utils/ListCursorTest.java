@@ -14,11 +14,9 @@ import org.junit.jupiter.api.Test;
 /**
  * Unit tests of {@link ListCursor}.
  */
-public class ListCursorTest
-{
+public class ListCursorTest {
     @Test
-    public void indexInTheMiddleAndMoveBackwards()
-    {
+    public void indexInTheMiddleAndMoveBackwards() {
         ListCursor<String> cursor = new ListCursor<>(asList("0", "1", "2", "3", "4"), 2);
         assertTrue(cursor.hasPrevious());
         assertTrue(cursor.hasCurrent());
@@ -50,8 +48,7 @@ public class ListCursorTest
     }
 
     @Test
-    public void indexInTheMiddleAndMoveForward()
-    {
+    public void indexInTheMiddleAndMoveForward() {
         ListCursor<String> cursor = new ListCursor<>(asList("0", "1", "2", "3", "4"), 2);
         assertTrue(cursor.hasPrevious());
         assertTrue(cursor.hasNext());
@@ -79,8 +76,7 @@ public class ListCursorTest
     }
 
     @Test
-    public void firstIndex()
-    {
+    public void firstIndex() {
         ListCursor<String> cursor = new ListCursor<>(asList("0", "1", "2", "3", "4"), 0);
 
         assertEquals("0", cursor.current());
@@ -108,8 +104,7 @@ public class ListCursorTest
     }
 
     @Test
-    public void lastIndex()
-    {
+    public void lastIndex() {
         ListCursor<String> cursor = new ListCursor<>(asList("0", "1", "2", "3", "4"), 4);
 
         assertEquals("4", cursor.current());
@@ -136,8 +131,7 @@ public class ListCursorTest
     }
 
     @Test
-    public void beforeFirstElement()
-    {
+    public void beforeFirstElement() {
         ListCursor<String> cursor = new ListCursor<>(asList("0", "1", "2", "3", "4"), -1);
 
         assertFalse(cursor.hasPrevious());
@@ -154,8 +148,7 @@ public class ListCursorTest
     }
 
     @Test
-    public void first()
-    {
+    public void first() {
         ListCursor<String> cursor = new ListCursor<>(asList("0", "1", "2", "3", "4"), 2);
 
         cursor.first();
@@ -167,8 +160,7 @@ public class ListCursorTest
     }
 
     @Test
-    public void last()
-    {
+    public void last() {
         ListCursor<String> cursor = new ListCursor<>(asList("0", "1", "2", "3", "4"), 2);
 
         cursor.last();
@@ -180,8 +172,7 @@ public class ListCursorTest
     }
 
     @Test
-    public void oneElement()
-    {
+    public void oneElement() {
         ListCursor<String> cursor = new ListCursor<>(asList("0"), 0);
 
         assertEquals("0", cursor.current());
@@ -190,22 +181,19 @@ public class ListCursorTest
     }
 
     @Test
-    public void size()
-    {
+    public void size() {
         assertEquals(1, new ListCursor<>(asList("_"), 0).size());
         assertEquals(3, new ListCursor<>(asList("a", "b", "c"), 2).size());
     }
 
     @Test
-    public void containsAtLeastOneElement()
-    {
+    public void containsAtLeastOneElement() {
         assertThrows(RuntimeException.class, () -> new ListCursor<>(null, -1));
         assertThrows(RuntimeException.class, () -> new ListCursor<>(emptySet(), -1));
     }
 
     @Test
-    public void indexIsInRange()
-    {
+    public void indexIsInRange() {
         assertThrows(RuntimeException.class, () -> new ListCursor<>(asList("0, 1, 2"), -2));
         assertThrows(RuntimeException.class, () -> new ListCursor<>(asList("0, 1, 2"), 3));
     }

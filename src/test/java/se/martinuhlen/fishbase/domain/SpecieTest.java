@@ -12,11 +12,9 @@ import static se.martinuhlen.fishbase.domain.TestData.tench;
 
 import org.junit.jupiter.api.Test;
 
-public class SpecieTest
-{
+public class SpecieTest {
     @Test
-    public void properties()
-    {
+    public void properties() {
         Specie specie = Specie.asNew()
                 .withName("Chub")
                 .withRegWeight(2500)
@@ -36,8 +34,7 @@ public class SpecieTest
     }
 
     @Test
-    public void equalsAndHashCode()
-    {
+    public void equalsAndHashCode() {
         assertEquals(bream(), bream());
         assertEquals(bream().hashCode(), bream().hashCode());
 
@@ -53,8 +50,7 @@ public class SpecieTest
     }
 
     @Test
-    public void asPersisted()
-    {
+    public void asPersisted() {
         Specie s = TestData.perch();
         assertTrue(s.isPersisted());
         assertFalse(s.isNew());
@@ -65,8 +61,7 @@ public class SpecieTest
     }
 
     @Test
-    public void asNew()
-    {
+    public void asNew() {
         Specie s = Specie.asNew();
         assertNotNull(s.getId());
         assertFalse(s.isPersisted());
@@ -78,8 +73,7 @@ public class SpecieTest
     }
 
     @Test
-    public void invariants()
-    {
+    public void invariants() {
         Specie s = Specie.asNew();
         assertThrows(IllegalArgumentException.class, () -> s.withName(null));
         assertThrows(IllegalArgumentException.class, () -> s.withRegWeight(-500));

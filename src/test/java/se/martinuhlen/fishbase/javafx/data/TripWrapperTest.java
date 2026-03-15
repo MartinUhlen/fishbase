@@ -28,11 +28,9 @@ import se.martinuhlen.fishbase.domain.Trip;
 /**
  * Unit tests of {@link TripWrapper}.
  */
-public class TripWrapperTest extends WrapperTestCase<Trip, TripWrapper>
-{
+public class TripWrapperTest extends WrapperTestCase<Trip, TripWrapper> {
     @Override
-    protected TripWrapper createWrapper()
-    {
+    protected TripWrapper createWrapper() {
         TripWrapper w = new TripWrapper();
         w.setWrapee(trip1());
         w.addListener(listener);
@@ -40,8 +38,7 @@ public class TripWrapperTest extends WrapperTestCase<Trip, TripWrapper>
     }
 
     @Test
-    public void isEmpty()
-    {
+    public void isEmpty() {
         wrapper.setWrapee(trip1());
         assertFalse(wrapper.isEmpty());
 
@@ -50,8 +47,7 @@ public class TripWrapperTest extends WrapperTestCase<Trip, TripWrapper>
     }
 
     @Test
-    public void id()
-    {
+    public void id() {
         ObservableValue<String> id = wrapper.id();
         assertEquals(trip1().getId(), id.getValue());
 
@@ -64,32 +60,27 @@ public class TripWrapperTest extends WrapperTestCase<Trip, TripWrapper>
     }
 
     @Test
-    public void descriptionProperty()
-    {
+    public void descriptionProperty() {
         testProperty("description", wrapper::description, Trip::getDescription, "A", "B", "C");
     }
 
     @Test
-    public void textProperty()
-    {
+    public void textProperty() {
         testProperty("text", wrapper::text, Trip::getText, "A", "B", "C");
     }
 
     @Test
-    public void startDateProperty()
-    {
+    public void startDateProperty() {
         testProperty("startDate", wrapper::startDate, Trip::getStartDate, LocalDate.parse("2017-02-02"), LocalDate.parse("2017-04-10"), LocalDate.parse("2017-08-24"));
     }
 
     @Test
-    public void endDateProperty()
-    {
+    public void endDateProperty() {
         testProperty("endDate", wrapper::endDate, Trip::getEndDate, LocalDate.parse("2017-02-02"), LocalDate.parse("2017-04-10"), LocalDate.parse("2017-08-24"));
     }
 
     @Test
-    public void endDateFollowsStartDate()
-    {
+    public void endDateFollowsStartDate() {
         wrapper.startDate().setValue(LocalDate.parse("2017-02-02"));
         assertEquals(LocalDate.parse("2017-02-02"), wrapper.startDate().getValue());
         assertEquals(LocalDate.parse("2017-02-02"), wrapper.endDate().getValue());
@@ -100,8 +91,7 @@ public class TripWrapperTest extends WrapperTestCase<Trip, TripWrapper>
     }
 
     @Test
-    public void specimens()
-    {
+    public void specimens() {
         ObservableList<SpecimenWrapper> specimens = wrapper.specimenWrappers();
         wrapper.setWrapee(trip2());
         assertEquals(2, specimens.size());
@@ -135,8 +125,7 @@ public class TripWrapperTest extends WrapperTestCase<Trip, TripWrapper>
     }
 
     @Test
-    public void removeSpecimenWhenContainedInPhoto()
-    {
+    public void removeSpecimenWhenContainedInPhoto() {
         String tripId = wrapper.id().getValue();
         Specimen specimen0 = Specimen.asNew(tripId);
         Specimen specimen1 = Specimen.asNew(tripId);
@@ -153,8 +142,7 @@ public class TripWrapperTest extends WrapperTestCase<Trip, TripWrapper>
     }
 
     @Test
-    public void removeSpecimenWhenNotContainedInPhoto()
-    {
+    public void removeSpecimenWhenNotContainedInPhoto() {
         String tripId = wrapper.id().getValue();
         Specimen specimen0 = Specimen.asNew(tripId);
         Specimen specimen1 = Specimen.asNew(tripId);

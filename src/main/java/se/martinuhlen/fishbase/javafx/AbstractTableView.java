@@ -32,8 +32,7 @@ import se.martinuhlen.fishbase.javafx.action.RunnableAction;
 import se.martinuhlen.fishbase.javafx.data.Wrapper;
 import com.google.common.flogger.FluentLogger;
 
-abstract class AbstractTableView<W extends Wrapper<D>, D extends Domain<D>> implements View
-{
+abstract class AbstractTableView<W extends Wrapper<D>, D extends Domain<D>> implements View {
     private static final FluentLogger LOG = FluentLogger.forEnclosingClass();
     private final ReadOnlyStringProperty titleProperty;
     private final Supplier<List<D>> loader;
@@ -50,8 +49,7 @@ abstract class AbstractTableView<W extends Wrapper<D>, D extends Domain<D>> impl
 
     private Node content;
 
-    AbstractTableView(String title, Supplier<List<D>> loader, Consumer<Collection<D>> saver, Consumer<Collection<D>> deleter)
-    {
+    AbstractTableView(String title, Supplier<List<D>> loader, Consumer<Collection<D>> saver, Consumer<Collection<D>> deleter) {
         this.titleProperty = new ReadOnlyStringWrapper(title).getReadOnlyProperty();
         this.loader = loader;
         this.saver = saver;
@@ -61,16 +59,13 @@ abstract class AbstractTableView<W extends Wrapper<D>, D extends Domain<D>> impl
     }
 
     @Override
-    public ReadOnlyStringProperty titleProperty()
-    {
+    public ReadOnlyStringProperty titleProperty() {
         return titleProperty;
     }
 
     @Override
-    public final Node getContent()
-    {
-        if (content == null)
-        {
+    public final Node getContent() {
+        if (content == null) {
             BorderPane pane = new BorderPane();
             pane.setTop(createTopNode());
             pane.setCenter(createTableNode());
@@ -79,20 +74,16 @@ abstract class AbstractTableView<W extends Wrapper<D>, D extends Domain<D>> impl
         return content;
     }
 
-    Node createTopNode()
-    {
+    Node createTopNode() {
         return null;
     }
 
-    Node createTableNode()
-    {
+    Node createTableNode() {
         return getTable();
     }
 
-    TableView<W> getTable()
-    {
-        if (table == null)
-        {
+    TableView<W> getTable() {
+        if (table == null) {
             table = createTable();
             table.setEditable(true);
             table.getSelectionModel().selectedItemProperty().addListener((obs, oldValue, newValue) -> deleteAction.setEnabled(newValue != null));
@@ -102,45 +93,38 @@ abstract class AbstractTableView<W extends Wrapper<D>, D extends Domain<D>> impl
 
     abstract TableView<W> createTable();
 
-    void tableChange(@SuppressWarnings("unused") Observable obs)
-    {
+    void tableChange(@SuppressWarnings("unused") Observable obs) {
         tableChange();
     }
 
-    void tableChange()
-    {
+    void tableChange() {
         boolean hasChanges = !unchangedList.equals(currentList());
         LOG.atFine().log("Has changes: %b", hasChanges);
         saveAction.setEnabled(hasChanges);
     }
 
-    List<D> currentList()
-    {
+    List<D> currentList() {
         return list.stream().map(Wrapper::getWrapee).collect(toList());
     }
 
     @Override
-    public final Action saveAction()
-    {
+    public final Action saveAction() {
         return saveAction;
     }
 
-    private void save()
-    {
+    private void save() {
         String message = currentList()
                 .stream()
                 .flatMap(Domain::getValidationErrors)
                 .collect(Collectors.joining("\n"));
-        if (isNotBlank(message))
-        {
+        if (isNotBlank(message)) {
             Alert alert = new Alert(ERROR);
             alert.setTitle("Can not save");
             alert.setHeaderText("Can not save due to validation errors.");
             alert.setContentText(message);
             alert.showAndWait();
         }
-        else
-        {
+        else {
             List<D> rowsToSave = currentList();
             rowsToSave.removeAll(unchangedList);
             saver.accept(rowsToSave);
@@ -155,27 +139,22 @@ abstract class AbstractTableView<W extends Wrapper<D>, D extends Domain<D>> impl
         }
     }
 
-    void deleteRows(List<D> rowsToDelete)
-    {
+    void deleteRows(List<D> rowsToDelete) {
         deleter.accept(rowsToDelete);
     }
 
     @Override
-    public final Action refreshAction()
-    {
+    public final Action refreshAction() {
         return refreshAction;
     }
 
-    private void refreshOrRollback()
-    {
-        if (discardChanges())
-        {
+    private void refreshOrRollback() {
+        if (discardChanges()) {
             refresh();
         }
     }
 
-    private void refresh()
-    {
+    private void refresh() {
         list.forEach(s -> s.removeAllListeners());
         unchangedList = loader.get();
         list.setAll(unchangedList.stream().map(t -> wrap(t)).peek(w -> w.addListener(this::tableChange)).collect(toList()));
@@ -184,23 +163,19 @@ abstract class AbstractTableView<W extends Wrapper<D>, D extends Domain<D>> impl
     abstract W wrap(D d);
 
     @Override
-    public final Action deleteAction()
-    {
+    public final Action deleteAction() {
         return deleteAction;
     }
 
-    private void delete()
-    {
+    private void delete() {
         W wrapper = table.getSelectionModel().getSelectedItem();
         D wrapee = wrapper.getWrapee();
-        if (isRemovable(wrapee))
-        {
+        if (isRemovable(wrapee)) {
             removeSelected();
         }
     }
 
-    void removeSelected()
-    {
+    void removeSelected() {
         W wrapper = table.getSelectionModel().getSelectedItem();
         D wrapee = wrapper.getWrapee();
 
@@ -220,8 +195,7 @@ abstract class AbstractTableView<W extends Wrapper<D>, D extends Domain<D>> impl
      * @param wrapee to check
      * @return {@code true} if OK to remove
      */
-    boolean isRemovable(D wrapee)
-    {
+    boolean isRemovable(D wrapee) {
         return true;
     }
 }

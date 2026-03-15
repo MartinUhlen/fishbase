@@ -30,8 +30,7 @@ import se.martinuhlen.fishbase.javafx.action.RunnableAction;
 import se.martinuhlen.fishbase.javafx.photo.HasPhoto;
 import se.martinuhlen.fishbase.javafx.photo.ThumbnailPane;
 
-class PhotoView implements View
-{
+class PhotoView implements View {
     private final ReadOnlyStringProperty titleProperty = new ReadOnlyStringWrapper("Photos").getReadOnlyProperty();
     private final RunnableAction refreshAction = new RunnableAction(true, () -> refresh());
 
@@ -43,8 +42,7 @@ class PhotoView implements View
     private final ProgressIndicator progressIndicator;
     private final PhotoLoader photoLoader;
 
-    PhotoView(PhotoService service, FishBaseDao dao, Consumer<String> tripOpener)
-    {
+    PhotoView(PhotoService service, FishBaseDao dao, Consumer<String> tripOpener) {
         this.service = service;
         this.dao = dao;
         this.tripOpener = tripOpener;
@@ -54,14 +52,12 @@ class PhotoView implements View
         this.photoLoader = new PhotoLoader();
     }
 
-    private ThumbnailPane createThumbnailPane()
-    {
+    private ThumbnailPane createThumbnailPane() {
         ThumbnailPane pane = ThumbnailPane.forTimeline(dao::getTrip);
         MenuItem openTrip = new MenuItem("Open trip", getImageView16("window_next.png"));
         openTrip.setOnAction(e -> tripOpener.accept(openTrip.getUserData().toString()));
         ContextMenu contextMenu = new ContextMenu(openTrip);
-        pane.setPhotoContextMenuHandler(e ->
-        {
+        pane.setPhotoContextMenuHandler(e -> {
             HasPhoto owner = (HasPhoto) e.getSource();
             FishingPhoto photo = (FishingPhoto) owner.getPhoto();
             openTrip.setUserData(photo.getTripId());
@@ -71,8 +67,7 @@ class PhotoView implements View
     }
 
     @Override
-    public Node getContent()
-    {
+    public Node getContent() {
         progressIndicator.prefHeightProperty().bind(stackPane.heightProperty().multiply(0.3));
         progressIndicator.prefWidthProperty().bind(progressIndicator.heightProperty());
         progressIndicator.setMaxSize(USE_PREF_SIZE, USE_PREF_SIZE);
@@ -80,38 +75,31 @@ class PhotoView implements View
     }
 
     @Override
-    public Action refreshAction()
-    {
+    public Action refreshAction() {
         return refreshAction;
     }
 
-    private void refresh()
-    {
+    private void refresh() {
         photoLoader.restart();
     }
 
     @Override
-    public ReadOnlyStringProperty titleProperty()
-    {
+    public ReadOnlyStringProperty titleProperty() {
         return titleProperty;
     }
 
-    private class PhotoLoader extends Service<List<FishingPhoto>>
-    {
+    private class PhotoLoader extends Service<List<FishingPhoto>> {
         private final Timeline batchTimeline = new Timeline(new KeyFrame(Duration.millis(100), e -> addNextBatchOfPhotos()));
         private List<FishingPhoto> loadedPhotos = emptyList();
 
         @Override
-        protected Task<List<FishingPhoto>> createTask()
-        {
+        protected Task<List<FishingPhoto>> createTask() {
             loadedPhotos = emptyList();
             thumbnailPane.setPhotos(emptySet());
             progressIndicator.setVisible(true);
-            return new Task<>()
-            {
+            return new Task<>() {
                 @Override
-                protected List<FishingPhoto> call() throws Exception
-                {
+                protected List<FishingPhoto> call() throws Exception {
                     List<FishingPhoto> photos = service.load(dao.getPhotos());
                     photos.sort(thumbnailPane.getPhotoComparator());
                     return photos;
@@ -120,17 +108,14 @@ class PhotoView implements View
         }
 
         @Override
-        protected void succeeded()
-        {
+        protected void succeeded() {
             progressIndicator.setVisible(false);
             loadedPhotos = getValue();
             addNextBatchOfPhotos();
         }
 
-        private void addNextBatchOfPhotos()
-        {
-            if (!loadedPhotos.isEmpty())
-            {
+        private void addNextBatchOfPhotos() {
+            if (!loadedPhotos.isEmpty()) {
                 List<FishingPhoto> subList = loadedPhotos.subList(0, min(100, loadedPhotos.size()));
                 List<FishingPhoto> photos = new ArrayList<>(subList);
                 thumbnailPane.addPhotos(photos);

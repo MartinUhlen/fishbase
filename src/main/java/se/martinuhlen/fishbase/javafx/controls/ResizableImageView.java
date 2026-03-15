@@ -10,60 +10,51 @@ import javafx.scene.image.ImageView;
  *
  * @author Martin
  */
-public class ResizableImageView extends ImageView
-{
+public class ResizableImageView extends ImageView {
     private static final double MIN_SIZE = 40;
     private static final double MAX_SIZE = 16384;
 
     @Override
-    public double minWidth(double height)
-    {
+    public double minWidth(double height) {
         return MIN_SIZE;
     }
 
     @Override
-    public double prefWidth(double height)
-    {
+    public double prefWidth(double height) {
         return getImage() != null
                 ? getImage().getWidth()
                 : minWidth(height);
     }
 
     @Override
-    public double maxWidth(double height)
-    {
+    public double maxWidth(double height) {
         return MAX_SIZE;
     }
 
     @Override
-    public double minHeight(double width)
-    {
+    public double minHeight(double width) {
         return MIN_SIZE;
     }
 
     @Override
-    public double prefHeight(double width)
-    {
+    public double prefHeight(double width) {
         return getImage() != null
                 ? getImage().getHeight()
                 : minHeight(width);
     }
 
     @Override
-    public double maxHeight(double width)
-    {
+    public double maxHeight(double width) {
         return MAX_SIZE;
     }
 
     @Override
-    public boolean isResizable()
-    {
+    public boolean isResizable() {
         return true;
     }
 
     @Override
-    public void resize(double width, double height)
-    {
+    public void resize(double width, double height) {
         setFitWidth(width);
         setFitHeight(height);
     }

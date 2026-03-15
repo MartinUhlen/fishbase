@@ -29,14 +29,12 @@ import se.martinuhlen.fishbase.domain.Domain;
  * @param <D> type of wrapped domain object
  * @param <W> type of wrapper
  */
-public abstract class WrapperTestCase<D extends Domain<D>, W extends Wrapper<D>>
-{
+public abstract class WrapperTestCase<D extends Domain<D>, W extends Wrapper<D>> {
     protected InvalidationListener listener;
     protected W wrapper;
 
     @BeforeEach
-    public void setUp()
-    {
+    public void setUp() {
         listener = mock(InvalidationListener.class);
         wrapper = createWrapper();
     }
@@ -45,8 +43,7 @@ public abstract class WrapperTestCase<D extends Domain<D>, W extends Wrapper<D>>
 
     @SafeVarargs
     @SuppressWarnings("unchecked")
-    protected final <P> void testProperty(String name, Supplier<Property<P>> propertyGetter, Function<D, P> valueGetter, P... values)
-    {
+    protected final <P> void testProperty(String name, Supplier<Property<P>> propertyGetter, Function<D, P> valueGetter, P... values) {
         Property<P> property = propertyGetter.get();
         assertNotNull(property);
         assertSame(property, propertyGetter.get());
@@ -59,8 +56,7 @@ public abstract class WrapperTestCase<D extends Domain<D>, W extends Wrapper<D>>
         property.addListener(invalidationListener);
         property.addListener(changeListener);
 
-        asList(values).forEach(value ->
-        {
+        asList(values).forEach(value -> {
             reset(listener, invalidationListener, changeListener);
             P oldValue = property.getValue();
             property.setValue(value);

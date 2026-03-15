@@ -13,13 +13,11 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 
-class ProgressDisplayer
-{
+class ProgressDisplayer {
     private final Stage stage;
     private final Service<?> service;
 
-    ProgressDisplayer(Window owner, Service<?> service)
-    {
+    ProgressDisplayer(Window owner, Service<?> service) {
         this.service = service;
         stage = new Stage(UTILITY);
         stage.initOwner(owner);
@@ -37,18 +35,14 @@ class ProgressDisplayer
         stage.setScene(new Scene(new VBox(message, progress)));
     }
 
-    void startAndThen(Runnable postAction)
-    {
+    void startAndThen(Runnable postAction) {
         service.start();
-        service.stateProperty().addListener((Observable obs) ->
-        {
-            if (service.getState().compareTo(State.RUNNING) <= 0)
-            {
+        service.stateProperty().addListener((Observable obs) -> {
+            if (service.getState().compareTo(State.RUNNING) <= 0) {
                 stage.show();
                 stage.requestFocus();
             }
-            else
-            {
+            else {
                 stage.hide();
                 postAction.run();
             }

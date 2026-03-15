@@ -23,11 +23,9 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
-public class SpecimenTest
-{
+public class SpecimenTest {
     @Test
-    public void properties()
-    {
+    public void properties() {
         LocalDateTime instant = parse("2018-05-13T05:15");
         Specimen s = Specimen.asPersisted("1")
                 .tripId("2")
@@ -75,8 +73,7 @@ public class SpecimenTest
     }
 
     @Test
-    public void equalsAndHashCode()
-    {
+    public void equalsAndHashCode() {
         Specimen bream = bream5120();
         assertEquals(bream, bream);
         assertEquals(bream.hashCode(), bream.hashCode());
@@ -98,8 +95,7 @@ public class SpecimenTest
     }
 
     @Test
-    public void asPersisted()
-    {
+    public void asPersisted() {
         Specimen s = perch1000();
         assertTrue(s.isPersisted());
         assertFalse(s.isNew());
@@ -110,8 +106,7 @@ public class SpecimenTest
     }
 
     @Test
-    public void asNew()
-    {
+    public void asNew() {
         Specimen s = Specimen.asNew("A");
         assertNotNull(s.getId());
         assertEquals("A", s.getTripId());
@@ -124,8 +119,7 @@ public class SpecimenTest
     }
 
     @Test
-    public void invariants()
-    {
+    public void invariants() {
         Specimen s = Specimen.asNew("tripId");
         assertThrows(IllegalArgumentException.class, () -> s.withSpecie(null));
         assertThrows(IllegalArgumentException.class, () -> s.withLocation(null));
@@ -139,8 +133,7 @@ public class SpecimenTest
     }
 
     @Test
-    public void autoCompletions()
-    {
+    public void autoCompletions() {
         Specimen s = Specimen.asNew("tripId")
                 .withLocation("loc")
                 .withMethod("meth")

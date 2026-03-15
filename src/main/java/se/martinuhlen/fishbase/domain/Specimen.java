@@ -20,8 +20,7 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
  *
  * @author Martin
  */
-public final class Specimen extends Domain<Specimen>
-{
+public final class Specimen extends Domain<Specimen> {
     public static final String SPECIE_IS_REQUIRED = "Specie is required";
     public static final String DATE_IS_REQUIRED = "Date is required";
     public static final String WEIGHT_IS_REQUIRED = "Weight is required";
@@ -30,20 +29,17 @@ public final class Specimen extends Domain<Specimen>
     public static final String BAIT_IS_REQUIRED = "Bait is required";
     public static final String WEATHER_IS_REQUIRED = "Weather is required";
 
-    public static TripBuilder asPersisted(String id)
-    {
+    public static TripBuilder asPersisted(String id) {
         return new Builder(id, true);
     }
 
-    public static Specimen asNew(String tripId)
-    {
+    public static Specimen asNew(String tripId) {
         return new Builder(UUID.randomUUID().toString(), false)
                 .tripId(tripId)
                 .build();
     }
 
-    private Specimen(String id, boolean persisted, String tripId, Specie specie, int weight, float length, String location, LocalDateTime instant, String method, String bait, String weather, String text)
-    {
+    private Specimen(String id, boolean persisted, String tripId, Specie specie, int weight, float length, String location, LocalDateTime instant, String method, String bait, String weather, String text) {
         super(id, persisted);
         this.tripId = requireNonNull(tripId, "tripId can't be null");
         this.specie = requireNonNull(specie, "specie can't be null");
@@ -57,8 +53,7 @@ public final class Specimen extends Domain<Specimen>
         this.text = requireNonNull(text, "text can't be null");
     }
 
-    private Specimen(Specimen s)
-    {
+    private Specimen(Specimen s) {
         this(s.getId(), s.isPersisted(), s.tripId, s.specie, s.weight, s.length, s.location, s.instant, s.method, s.bait, s.weather, s.text);
     }
 
@@ -103,21 +98,18 @@ public final class Specimen extends Domain<Specimen>
     public Specimen withText(String text){return with(this.text, text, tripId, specie, weight, length, location, instant, method, bait, weather, text);}
     //@formatter:on
 
-    private <T> Specimen with(T currentValue, T newValue, String tripId, Specie specie, int weight, float length, String location, LocalDateTime instant, String method, String bait, String weather, String text)
-    {
+    private <T> Specimen with(T currentValue, T newValue, String tripId, Specie specie, int weight, float length, String location, LocalDateTime instant, String method, String bait, String weather, String text) {
         return currentValue.equals(newValue)
                 ? this
                 : new Specimen(getId(), isPersisted(), tripId, specie, weight, length, location, instant, method, bait, weather, text);
     }
     
-    public double getRatio()
-    {
+    public double getRatio() {
         return (double) weight / (double) specie.getRegWeight();
     }
 
     @Override
-    public Stream<String> getValidationErrors()
-    {
+    public Stream<String> getValidationErrors() {
         return Stream.of(
                 specie == EMPTY_SPECIE ? SPECIE_IS_REQUIRED : "",
                 instant == LocalDateTime.MIN ? DATE_IS_REQUIRED : "",
@@ -130,13 +122,11 @@ public final class Specimen extends Domain<Specimen>
     }
 
     @Override
-    public String getLabel()
-    {
+    public String getLabel() {
         return specie.getName() + " " + weight + "g";
     }
 
-    public Map<AutoCompleteField, String> getAutoCompletions()
-    {
+    public Map<AutoCompleteField, String> getAutoCompletions() {
         return Map.of(
                 LOCATION, location,
                 METHOD, method,
@@ -145,8 +135,7 @@ public final class Specimen extends Domain<Specimen>
     }
     
     @Override
-    protected boolean equalsData(Specimen that)
-    {
+    protected boolean equalsData(Specimen that) {
         return new EqualsBuilder()
                 .append(this.tripId, that.tripId)
                 .append(this.specie, that.specie)
@@ -162,18 +151,15 @@ public final class Specimen extends Domain<Specimen>
     }
 
     @Override
-    public Specimen copy()
-    {
+    public Specimen copy() {
         return new Specimen(this);
     }
 
-    public Specimen copyAsNew()
-    {
+    public Specimen copyAsNew() {
         return new Specimen(UUID.randomUUID().toString(), false, tripId, specie, weight, length, location, instant, method, bait, weather, text);
     }
 
-    private static class Builder extends Domain.Builder<Specimen> implements TripBuilder, SpecieBuilder, WeightBuilder, LengthBuilder, LocationBuilder, InstantBuilder, MethodBuilder, BaitBuilder, WeatherBuilder, TextBuilder
-    {
+    private static class Builder extends Domain.Builder<Specimen> implements TripBuilder, SpecieBuilder, WeightBuilder, LengthBuilder, LocationBuilder, InstantBuilder, MethodBuilder, BaitBuilder, WeatherBuilder, TextBuilder {
         private String tripId;
         private Specie specie = EMPTY_SPECIE;
         private int weight;
@@ -185,134 +171,112 @@ public final class Specimen extends Domain<Specimen>
         private String weather = "";
         private String text = "";
 
-        Builder(String id, boolean persisted)
-        {
+        Builder(String id, boolean persisted) {
             super(id, persisted);
         }
 
         @Override
-        public Builder tripId(String tripId)
-        {
+        public Builder tripId(String tripId) {
             this.tripId = tripId;
             return this;
         }
 
         @Override
-        public WeightBuilder specie(Specie specie)
-        {
+        public WeightBuilder specie(Specie specie) {
             this.specie = specie;
             return this;
         }
 
         @Override
-        public LengthBuilder weight(int weight)
-        {
+        public LengthBuilder weight(int weight) {
             this.weight = weight;
             return this;
         }
 
         @Override
-        public LocationBuilder length(float length)
-        {
+        public LocationBuilder length(float length) {
             this.length = length;
             return this;
         }
 
         @Override
-        public InstantBuilder location(String location)
-        {
+        public InstantBuilder location(String location) {
             this.location = location;
             return this;
         }
 
         @Override
-        public MethodBuilder instant(LocalDateTime instant)
-        {
+        public MethodBuilder instant(LocalDateTime instant) {
             this.instant = instant;
             return this;
         }
 
         @Override
-        public BaitBuilder method(String method)
-        {
+        public BaitBuilder method(String method) {
             this.method = method;
             return this;
         }
 
         @Override
-        public WeatherBuilder bait(String bait)
-        {
+        public WeatherBuilder bait(String bait) {
             this.bait = bait;
             return this;
         }
 
         @Override
-        public TextBuilder weather(String weather)
-        {
+        public TextBuilder weather(String weather) {
             this.weather = weather;
             return this;
         }
 
         @Override
-        public Specimen text(String text)
-        {
+        public Specimen text(String text) {
             this.text = text;
             return build();
         }
 
-        Specimen build()
-        {
+        Specimen build() {
             return new Specimen(id, persisted, tripId, specie, weight, length, location, instant, method, bait, weather, text);
         }
     }
 
-    public interface TripBuilder
-    {
+    public interface TripBuilder {
         SpecieBuilder tripId(String tripId);
     }
 
-    public interface SpecieBuilder
-    {
+    public interface SpecieBuilder {
         WeightBuilder specie(Specie specie);
     }
 
-    public interface WeightBuilder
-    {
+    public interface WeightBuilder {
         LengthBuilder weight(int weight);
     }
 
-    public interface LengthBuilder
-    {
+    public interface LengthBuilder {
         LocationBuilder length(float length);
     }
 
-    public interface LocationBuilder
-    {
+    public interface LocationBuilder {
         InstantBuilder location(String location);
     }
 
-    public interface InstantBuilder
-    {
+    public interface InstantBuilder {
         MethodBuilder instant(LocalDateTime instant);
     }
 
-    public interface MethodBuilder
-    {
+    public interface MethodBuilder {
         BaitBuilder method(String method);
     }
 
-    public interface BaitBuilder
-    {
+    public interface BaitBuilder {
         WeatherBuilder bait(String bait);
     }
 
-    public interface WeatherBuilder
-    {
+    public interface WeatherBuilder {
         TextBuilder weather(String weather);
     }
 
-    public interface TextBuilder
-    {
+    public interface TextBuilder {
         Specimen text(String text);
     }
 }

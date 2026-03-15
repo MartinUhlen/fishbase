@@ -24,91 +24,70 @@ import se.martinuhlen.fishbase.domain.Specie;
  * 
  * @author Martin
  */
-public final class Converters
-{
-    private Converters()
-    {}
+public final class Converters {
+    private Converters() {}
 
-    private static abstract class ReadOnlyStringConverter<T> extends StringConverter<T>
-    {
+    private static abstract class ReadOnlyStringConverter<T> extends StringConverter<T> {
         @Override
-        public T fromString(String string)
-        {
+        public T fromString(String string) {
             throw new IllegalStateException(getClass().getSimpleName() + "is read only");
         }
     }
 
-    public static <T> ReadOnlyStringConverter<T> converter(Function<T, String> function)
-    {
-        return new ReadOnlyStringConverter<>()
-        {
+    public static <T> ReadOnlyStringConverter<T> converter(Function<T, String> function) {
+        return new ReadOnlyStringConverter<>() {
             @Override
-            public String toString(T value)
-            {
+            public String toString(T value) {
                 return function.apply(value);
             }
         };
     }
 
-    public static StringConverter<Specie> specieConverter()
-    {
+    public static StringConverter<Specie> specieConverter() {
         return converter(Specie::getName);
     }
 
-    public static StringConverter<Integer> weightConverter()
-    {
-        return new IntegerStringConverter()
-        {
+    public static StringConverter<Integer> weightConverter() {
+        return new IntegerStringConverter() {
             @Override
-            public String toString(Integer value)
-            {
+            public String toString(Integer value) {
                 return value.intValue() <= 0 ? "" : super.toString(value);
             }
 
             @Override
-            public Integer fromString(String value)
-            {
+            public Integer fromString(String value) {
                 return defaultIfNull(super.fromString(value), 0);
             }
         };
     }
 
-    public static StringConverter<Float> lengthConverter()
-    {
-        return new FloatStringConverter()
-        {
+    public static StringConverter<Float> lengthConverter() {
+        return new FloatStringConverter() {
             @Override
-            public String toString(Float value)
-            {
+            public String toString(Float value) {
                 return value.intValue() <= 0 ? "" : removeEnd(super.toString(value), ".0");
             }
 
             @Override
-            public Float fromString(String value)
-            {
+            public Float fromString(String value) {
                 return defaultIfNull(super.fromString(value), 0f);
             }
         };
     }
 
-    public static StringConverter<LocalDate> dateConverter()
-    {
+    public static StringConverter<LocalDate> dateConverter() {
         return new LocalDateStringConverter(DATE_FORMAT, DATE_FORMAT);
     }
 
-    public static StringConverter<LocalTime> timeConverter()
-    {
-        return new LocalTimeStringConverter(TIME_FORMAT, TIME_FORMAT)
-        {
+    public static StringConverter<LocalTime> timeConverter() {
+        return new LocalTimeStringConverter(TIME_FORMAT, TIME_FORMAT) {
             @Override
-            public String toString(LocalTime time)
-            {
+            public String toString(LocalTime time) {
                 return MIDNIGHT.equals(time) ? "" : super.toString(time);
             }
 
             @Override
-            public LocalTime fromString(String value)
-            {
+            public LocalTime fromString(String value) {
                 return isBlank(value) ? MIDNIGHT : super.fromString(leftPad(value.trim(), 5, "0"));
             }
         };

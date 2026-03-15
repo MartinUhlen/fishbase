@@ -14,8 +14,7 @@ import javafx.scene.image.Image;
  *
  * @author Martin
  */
-class ImageLoader extends Service<Image> implements Supplier<Image>
-{
+class ImageLoader extends Service<Image> implements Supplier<Image> {
     private final Supplier<InputStream> inputStream;
 
     /**
@@ -24,31 +23,25 @@ class ImageLoader extends Service<Image> implements Supplier<Image>
      * @param inputStream to read the image from
      * @param start {@code true} to {@link #start()} this loader immediately
      */
-    ImageLoader(Supplier<InputStream> inputStream, boolean start)
-    {
+    ImageLoader(Supplier<InputStream> inputStream, boolean start) {
         this.inputStream = requireNonNull(inputStream, "inputStream cannott be null");
-        if (start)
-        {
+        if (start) {
             start();
         }
     }
 
     @Override
-    protected Task<Image> createTask()
-    {
-        return new Task<>()
-        {
+    protected Task<Image> createTask() {
+        return new Task<>() {
             @Override
-            protected Image call() throws Exception
-            {
+            protected Image call() throws Exception {
                 return new Image(requireNonNull(inputStream.get(), "inputStream cannott be null"));
             }
         };
     }
 
     @Override
-    public Image get()
-    {
+    public Image get() {
         return getValue();
     }
 }

@@ -36,16 +36,14 @@ import javafx.util.Duration;
  * sudo apt-get dist-upgrade
  * sudo apt-get install ubuntu-restricted-extras
  */
-class VideoPane extends BorderPane
-{
+class VideoPane extends BorderPane {
     private final MediaView mediaView;
     private final Button playButton;
     private final Slider timeSlider;
     private final Label playTime;
     private final Label error;
 
-    VideoPane()
-    {
+    VideoPane() {
         mediaView = new MediaView();
         Pane mediaPane = new Pane();
         mediaPane.getChildren().add(mediaView);
@@ -61,16 +59,13 @@ class VideoPane extends BorderPane
         BorderPane.setAlignment(mediaBar, CENTER);
 
         playButton = new Button(">");
-        playButton.setOnAction(e ->
-        {
+        playButton.setOnAction(e -> {
             MediaPlayer player = getPlayer();
             Status status = player.getStatus();
-            if (status == PAUSED || status == READY || status == STOPPED)
-            {
+            if (status == PAUSED || status == READY || status == STOPPED) {
                 player.play();
             }
-            else if (status == PLAYING || status == STALLED)
-            {
+            else if (status == PLAYING || status == STALLED) {
                 player.pause();
             }
         });
@@ -82,10 +77,8 @@ class VideoPane extends BorderPane
         HBox.setHgrow(timeSlider, ALWAYS);
         timeSlider.setMinWidth(50);
         timeSlider.setMaxWidth(MAX_VALUE);
-        timeSlider.valueProperty().addListener(obs ->
-        {
-            if (timeSlider.isValueChanging())
-            {
+        timeSlider.valueProperty().addListener(obs -> {
+            if (timeSlider.isValueChanging()) {
                 getPlayer().seek(getDuration().multiply(timeSlider.getValue() / 100.0));
             }
         });
@@ -105,42 +98,34 @@ class VideoPane extends BorderPane
         setBottom(new VBox(mediaBar, errorBox));
     }
 
-    void setVideo(Media media, boolean autoPlay)
-    {
+    void setVideo(Media media, boolean autoPlay) {
         disposeCurrentVideo();
-        if (media != null)
-        {
-            try
-            {
+        if (media != null) {
+            try {
                 setPlayer(new MediaPlayer(media), autoPlay);
                 enableControls();
                 updateTime();
             }
-            catch (Exception e)
-            {
+            catch (Exception e) {
                 showError(e.getMessage());
             }
         }
     }
 
-    void disposeCurrentVideo()
-    {
+    void disposeCurrentVideo() {
         MediaPlayer player = getPlayer();
-        if (player != null)
-        {
+        if (player != null) {
             player.stop();
             player.dispose();
             mediaView.setMediaPlayer(null);
         }
     }
 
-    private void setPlayer(MediaPlayer player, boolean autoPlay)
-    {
+    private void setPlayer(MediaPlayer player, boolean autoPlay) {
         player.setAutoPlay(autoPlay);
         mediaView.setMediaPlayer(player);
         player.currentTimeProperty().addListener(obs -> updateTime());
-        player.statusProperty().addListener(obs ->
-        {
+        player.statusProperty().addListener(obs -> {
             updateTime();
             enableControls();
             playButton.setText(getStatus() == PLAYING ? "||" : ">");
@@ -150,117 +135,96 @@ class VideoPane extends BorderPane
         showError("");
         player.setOnError(() -> showError(player.getError().getMessage()));
         
-        player.setOnEndOfMedia(() ->
-        {
+        player.setOnEndOfMedia(() -> {
             player.seek(player.getStartTime());
             player.pause();
         });
     }
 
-    private void showError(String text)
-    {
+    private void showError(String text) {
         error.setText(text);
         error.setVisible(isNotBlank(text));
         error.getParent().setVisible(error.isVisible());
     }
 
-    private void updateTime()
-    {
-        if (hasDuration())
-        {
+    private void updateTime() {
+        if (hasDuration()) {
             Duration duration = getDuration();
             Duration currentTime = getCurrentTime();
             playTime.setText(formatTime(currentTime, duration));
-            if (!timeSlider.isValueChanging())
-            {
+            if (!timeSlider.isValueChanging()) {
                 timeSlider.setValue(currentTime.divide(duration.toMillis()).toMillis() * 100.0);
             }
         }
-        else
-        {
+        else {
             timeSlider.setValue(0);
             playTime.setText("");
         }
     }
 
-    private void enableControls()
-    {
+    private void enableControls() {
         boolean disable = !Set.of(READY, PLAYING, PAUSED, STOPPED, STALLED).contains(getStatus());
         playButton.setDisable(disable);
         timeSlider.setDisable(disable || !hasDuration());
     }
 
-    private boolean hasDuration()
-    {
+    private boolean hasDuration() {
         return !getDuration().isUnknown()
             && !getDuration().isIndefinite()
             && getDuration().greaterThan(ZERO);
     }
 
-    private MediaPlayer getPlayer()
-    {
+    private MediaPlayer getPlayer() {
         return mediaView.getMediaPlayer();
     }
 
-    private Status getStatus()
-    {
+    private Status getStatus() {
         return getPlayer() == null
                 ? DISPOSED
                 : defaultIfNull(getPlayer().getStatus(), DISPOSED);
     }
 
-    private Duration getCurrentTime()
-    {
+    private Duration getCurrentTime() {
         return getPlayer() == null
                 ? Duration.ZERO
                 : getPlayer().getCurrentTime();
     }
 
-    private Duration getDuration()
-    {
+    private Duration getDuration() {
         return getPlayer() == null
                 ? UNKNOWN
                 : getPlayer().getMedia().getDuration();
     }
 
-    private static String formatTime(Duration elapsed, Duration duration)
-    {
+    private static String formatTime(Duration elapsed, Duration duration) {
         int intElapsed = (int) Math.floor(elapsed.toSeconds());
         int elapsedHours = intElapsed / (60 * 60);
-        if (elapsedHours > 0)
-        {
+        if (elapsedHours > 0) {
             intElapsed -= elapsedHours * 60 * 60;
         }
         int elapsedMinutes = intElapsed / 60;
         int elapsedSeconds = intElapsed - elapsedHours * 60 * 60 - elapsedMinutes * 60;
 
-        if (duration.greaterThan(Duration.ZERO))
-        {
+        if (duration.greaterThan(Duration.ZERO)) {
             int intDuration = (int) Math.floor(duration.toSeconds());
             int durationHours = intDuration / (60 * 60);
-            if (durationHours > 0)
-            {
+            if (durationHours > 0) {
                 intDuration -= durationHours * 60 * 60;
             }
             int durationMinutes = intDuration / 60;
             int durationSeconds = intDuration - durationHours * 60 * 60 - durationMinutes * 60;
-            if (durationHours > 0)
-            {
+            if (durationHours > 0) {
                 return String.format("%d:%02d:%02d/%d:%02d:%02d", elapsedHours, elapsedMinutes, elapsedSeconds, durationHours, durationMinutes, durationSeconds);
             }
-            else
-            {
+            else {
                 return String.format("%02d:%02d/%02d:%02d", elapsedMinutes, elapsedSeconds, durationMinutes, durationSeconds);
             }
         }
-        else
-        {
-            if (elapsedHours > 0)
-            {
+        else {
+            if (elapsedHours > 0) {
                 return String.format("%d:%02d:%02d", elapsedHours, elapsedMinutes, elapsedSeconds);
             }
-            else
-            {
+            else {
                 return String.format("%02d:%02d", elapsedMinutes, elapsedSeconds);
             }
         }

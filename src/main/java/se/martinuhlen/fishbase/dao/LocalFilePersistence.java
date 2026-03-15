@@ -10,18 +10,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-public class LocalFilePersistence implements Persistence
-{
+public class LocalFilePersistence implements Persistence {
     private final File directory;
 
-    public LocalFilePersistence(File directory)
-    {
+    public LocalFilePersistence(File directory) {
         this.directory = directory;
     }
 
     @Override
-    public InputStream input(String name) throws IOException
-    {
+    public InputStream input(String name) throws IOException {
         File file = fileOf(name);
         return file.exists()
                 ? new FileInputStream(file)
@@ -29,13 +26,11 @@ public class LocalFilePersistence implements Persistence
     }
 
     @Override
-    public OutputStream output(String name) throws IOException
-    {
+    public OutputStream output(String name) throws IOException {
         return new FileOutputStream(fileOf(name));
     }
 
-    private File fileOf(String name)
-    {
+    private File fileOf(String name) {
         return new File(directory, name);
     }
 }

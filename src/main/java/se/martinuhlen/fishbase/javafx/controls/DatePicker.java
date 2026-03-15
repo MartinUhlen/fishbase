@@ -12,13 +12,11 @@ import javafx.beans.property.Property;
  *
  * @author Martin
  */
-public class DatePicker extends javafx.scene.control.DatePicker
-{
+public class DatePicker extends javafx.scene.control.DatePicker {
     /**
      * Creates a new date picker.
      */
-    public DatePicker()
-    {
+    public DatePicker() {
         super();
         setConverter(dateConverter());
         focusedProperty().addListener(obs -> setValue(getConverter().fromString(getEditor().getText())));  // Workaround value not commited on focus lost
@@ -29,8 +27,7 @@ public class DatePicker extends javafx.scene.control.DatePicker
      * 
      * @param property this picker should be bound to
      */
-    public DatePicker(Property<LocalDate> property)
-    {
+    public DatePicker(Property<LocalDate> property) {
         this();
         valueProperty().bindBidirectional(property);
     }

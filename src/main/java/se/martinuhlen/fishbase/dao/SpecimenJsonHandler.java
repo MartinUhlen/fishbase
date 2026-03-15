@@ -14,19 +14,16 @@ import com.google.gson.JsonSerializationContext;
 import se.martinuhlen.fishbase.domain.Specie;
 import se.martinuhlen.fishbase.domain.Specimen;
 
-class SpecimenJsonHandler extends JsonHandler<Specimen>
-{
+class SpecimenJsonHandler extends JsonHandler<Specimen> {
     private Function<String, Specie> specie;
 
-    SpecimenJsonHandler(Persistence persistence, Function<String, Specie> specie)
-    {
+    SpecimenJsonHandler(Persistence persistence, Function<String, Specie> specie) {
         super(Specimen.class, persistence);
         this.specie = specie;
     }
 
     @Override
-    public JsonElement serialize(Specimen s, Type typeOfSrc, JsonSerializationContext context)
-    {
+    public JsonElement serialize(Specimen s, Type typeOfSrc, JsonSerializationContext context) {
         JsonObject json = new JsonObject();
         json.addProperty("id", s.getId());
         json.addProperty("trip", s.getTripId());
@@ -43,8 +40,7 @@ class SpecimenJsonHandler extends JsonHandler<Specimen>
     }
 
     @Override
-    public Specimen deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException
-    {
+    public Specimen deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
         JsonObject obj = json.getAsJsonObject();
         return Specimen.asPersisted(obj.get("id").getAsString())
                 .tripId(obj.get("trip").getAsString())

@@ -18,11 +18,9 @@ import org.junit.jupiter.api.Test;
  *
  * @author Martin
  */
-public class PhotoTest
-{
+public class PhotoTest {
     @Test
-    public void properties()
-    {
+    public void properties() {
         Photo photo = Photo.asPersisted("thePhotoId")
                 .tripId("theTripId")
                 .specimens(Set.of("s1", "s2"))
@@ -39,15 +37,13 @@ public class PhotoTest
     }
 
     @Test
-    public void starred()
-    {
+    public void starred() {
         assertTrue(photo1InTrip1().withStarred(true).isStarred());
         assertFalse(photo1InTrip1().withStarred(false).isStarred());
     }
 
     @Test
-    public void specimens()
-    {
+    public void specimens() {
         Photo photo = TestData.newPhoto("photoId", "tripId");
         assertTrue(photo.getSpecimens().isEmpty());
 
@@ -68,8 +64,7 @@ public class PhotoTest
     }
 
     @Test
-    public void equalsAndHashCode()
-    {
+    public void equalsAndHashCode() {
         assertEquals(photo1InTrip1(), photo1InTrip1());
         assertEquals(photo2InTrip1(), photo2InTrip1());
         assertEquals(photo1InTrip2(), photo1InTrip2());

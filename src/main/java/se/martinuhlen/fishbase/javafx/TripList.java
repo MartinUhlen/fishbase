@@ -29,14 +29,12 @@ import se.martinuhlen.fishbase.domain.Specimen;
 import se.martinuhlen.fishbase.domain.Trip;
 import se.martinuhlen.fishbase.filter.TripTextPredicate;
 
-class TripList extends VBox
-{
+class TripList extends VBox {
     private final TextField filter;
     private final ObservableList<Trip> list;
     private final ListView<Trip> listView;
 
-    TripList(Consumer<Trip> selectionHandler)
-    {
+    TripList(Consumer<Trip> selectionHandler) {
         list = FXCollections.observableArrayList();
         FilteredList<Trip> filteredList = list.filtered(t -> true);
         filter = createFilter(filteredList);
@@ -49,22 +47,17 @@ class TripList extends VBox
         getChildren().setAll(filter, listView, label);
     }
 
-    private TextField createFilter(FilteredList<Trip> filteredList)
-    {
+    private TextField createFilter(FilteredList<Trip> filteredList) {
         TextField filter = TextFields.createClearableTextField();
         filter.setPromptText("Filter...");
         filter.textProperty().addListener(obs -> filteredList.setPredicate(new TripTextPredicate(filter.getText())));
-        filter.onKeyPressedProperty().set(e ->
-        {
-            if (e.getCode() == ESCAPE)
-            {
+        filter.onKeyPressedProperty().set(e -> {
+            if (e.getCode() == ESCAPE) {
                 filter.setText("");
             }
-            else if (e.getCode() == DOWN)
-            {
+            else if (e.getCode() == DOWN) {
                 listView.requestFocus();
-                if (!listView.getItems().isEmpty() && listView.getSelectionModel().getSelectedIndex() == -1)
-                {
+                if (!listView.getItems().isEmpty() && listView.getSelectionModel().getSelectedIndex() == -1) {
                     listView.getSelectionModel().select(0);
                 }
             }
@@ -72,41 +65,32 @@ class TripList extends VBox
         return filter;
     }
 
-    private ListView<Trip> createListView(Consumer<Trip> selectionHandler, FilteredList<Trip> filteredList)
-    {
+    private ListView<Trip> createListView(Consumer<Trip> selectionHandler, FilteredList<Trip> filteredList) {
         ListView<Trip> listView = new ListView<>(filteredList);
         listView.setCellFactory(list -> new TripCell());
-        listView.getSelectionModel().selectedItemProperty().addListener((obs, oldTrip, newTrip) ->
-        {
-            if (newTrip != null)
-            {
+        listView.getSelectionModel().selectedItemProperty().addListener((obs, oldTrip, newTrip) -> {
+            if (newTrip != null) {
                 selectionHandler.accept(newTrip);
             }
         });
-        listView.addEventFilter(KeyEvent.KEY_PRESSED, e ->
-        {
-            if (e.getCode() == UP && listView.getSelectionModel().getSelectedIndex() <= 0)
-            {
+        listView.addEventFilter(KeyEvent.KEY_PRESSED, e -> {
+            if (e.getCode() == UP && listView.getSelectionModel().getSelectedIndex() <= 0) {
                 filter.requestFocus();
             }
         });
         return listView;
     }
 
-    private static class TripCell extends ListCell<Trip>
-    {
+    private static class TripCell extends ListCell<Trip> {
         private static final Font BOLD_FONT = Font.font(Font.getDefault().getFamily(), BOLD, Font.getDefault().getSize() - 2);
 
         @Override
-        protected void updateItem(Trip trip, boolean empty)
-        {
+        protected void updateItem(Trip trip, boolean empty) {
             super.updateItem(trip, empty);
             setGraphic(null);
-            if (!empty)
-            {
+            if (!empty) {
                 VBox box = new VBox(new Text(trip.getStartDate() + "\n" + trip.getDescription()));
-                if (!trip.getSpecimens().isEmpty())
-                {
+                if (!trip.getSpecimens().isEmpty()) {
                     Text specimens = new Text(trip.getSpecimens()
                             .stream()
                             .sorted(comparing(Specimen::getRatio).reversed())
@@ -120,26 +104,21 @@ class TripList extends VBox
         }
     }
 
-    void setTrips(Collection<Trip> trips)
-    {
+    void setTrips(Collection<Trip> trips) {
         list.setAll(trips);
     }
 
-    void selectTrip(String tripId)
-    {
+    void selectTrip(String tripId) {
         listView.getSelectionModel().clearSelection();
         listView.getItems().stream()
                 .filter(trip -> trip.getId().equals(tripId))
                 .findAny()
-                .ifPresentOrElse(trip ->
-                {
+                .ifPresentOrElse(trip -> {
                     listView.getSelectionModel().select(trip);
                     listView.scrollTo(trip);
                 },
-                () ->
-                {
-                    if (!filter.getText().equals(""))
-                    {
+                () -> {
+                    if (!filter.getText().equals("")) {
                         filter.setText("");
                         selectTrip(tripId);
                     }

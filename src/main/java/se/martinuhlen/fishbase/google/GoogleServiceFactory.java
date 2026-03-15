@@ -26,8 +26,7 @@ import java.util.stream.Stream;
 
 import se.martinuhlen.fishbase.google.photos.PickerClient;
 
-public class GoogleServiceFactory
-{
+public class GoogleServiceFactory {
     private static final String USER_ID = "user_v3";
     private static final java.io.File LOCAL_FOLDER = new java.io.File(System.getProperty("user.home"), "." + APPLICATION_NAME.toLowerCase());
 
@@ -35,20 +34,16 @@ public class GoogleServiceFactory
             Stream.of("https://www.googleapis.com/auth/photospicker.mediaitems.readonly"),
             DriveScopes.all().stream()).toList();
 
-    public static GoogleServiceFactory get()
-    {
-        try
-        {
+    public static GoogleServiceFactory get() {
+        try {
             return getImpl();
         }
-        catch (GeneralSecurityException | IOException e)
-        {
+        catch (GeneralSecurityException | IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private static GoogleServiceFactory getImpl() throws GeneralSecurityException, IOException
-    {
+    private static GoogleServiceFactory getImpl() throws GeneralSecurityException, IOException {
         HttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
         FileDataStoreFactory dataStoreFactory = new FileDataStoreFactory(LOCAL_FOLDER);
         JsonFactory jsonFactory = GsonFactory.getDefaultInstance();
@@ -59,22 +54,18 @@ public class GoogleServiceFactory
                 .build();
 
         Credential credential = flow.loadCredential(USER_ID);
-        if (credential == null)
-        {
+        if (credential == null) {
             credential = new AuthorizationCodeInstalledApp(flow, new LocalServerReceiver()).authorize(USER_ID);
         }
         return new GoogleServiceFactory(httpTransport, jsonFactory, clientSecrets, credential);
     }
 
-    private static GoogleClientSecrets readClientSecrets(JsonFactory jsonFactory) throws IOException
-    {
+    private static GoogleClientSecrets readClientSecrets(JsonFactory jsonFactory) throws IOException {
         InputStream stream = GoogleServiceFactory.class.getResourceAsStream("/ClientSecrets.json");
-        if (stream == null)
-        {
+        if (stream == null) {
             throw new IllegalStateException("ClientSecrets.json is missing from the classpath. Please add it to src/main/resources.");
         }
-        try (Reader reader = new InputStreamReader(stream))
-        {
+        try (Reader reader = new InputStreamReader(stream)) {
             return GoogleClientSecrets.load(jsonFactory, reader);
         }
     }
@@ -84,35 +75,28 @@ public class GoogleServiceFactory
     private final GoogleClientSecrets clientSecrets;
     private final Credential credential;
 
-    private GoogleServiceFactory(HttpTransport httpTransport, JsonFactory jsonFactory, GoogleClientSecrets clientSecrets, Credential credential)
-    {
+    private GoogleServiceFactory(HttpTransport httpTransport, JsonFactory jsonFactory, GoogleClientSecrets clientSecrets, Credential credential) {
         this.httpTransport = httpTransport;
         this.jsonFactory = jsonFactory;
         this.clientSecrets = clientSecrets;
         this.credential = credential;
     }
 
-    public Drive createDrive()
-    {
+    public Drive createDrive() {
         return new Drive.Builder(httpTransport, jsonFactory, credential)
                 .setApplicationName(APPLICATION_NAME)
                 .build();
     }
 
-    public PickerClient createPickerClient()
-    {
-        Supplier<String> accessToken = () ->
-        {
-            try
-            {
-                if (credential.getAccessToken() == null || credential.getExpiresInSeconds() != null && credential.getExpiresInSeconds() <= 60)
-                {
+    public PickerClient createPickerClient() {
+        Supplier<String> accessToken = () -> {
+            try {
+                if (credential.getAccessToken() == null || credential.getExpiresInSeconds() != null && credential.getExpiresInSeconds() <= 60) {
                     credential.refreshToken();
                 }
                 return credential.getAccessToken();
             }
-            catch (IOException e)
-            {
+            catch (IOException e) {
                 throw new RuntimeException("Failed to get access token", e);
             }
         };

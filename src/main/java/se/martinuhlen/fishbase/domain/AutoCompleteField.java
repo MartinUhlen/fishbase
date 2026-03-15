@@ -5,8 +5,7 @@ package se.martinuhlen.fishbase.domain;
  *
  * @author Martin
  */
-public enum AutoCompleteField
-{
+public enum AutoCompleteField {
     /**
      * @see Specimen#withLocation(String)
      */

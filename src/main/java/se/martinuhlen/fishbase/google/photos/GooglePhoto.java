@@ -9,8 +9,7 @@ import java.time.LocalDateTime;
  *
  * @author Martin
  */
-public interface GooglePhoto
-{
+public interface GooglePhoto {
     /**
      * Gets the unique ID of this photo.
      *
@@ -44,8 +43,7 @@ public interface GooglePhoto
      *
      * @return {@code true} if this photo is an image, {@code false} for video
      */
-    default boolean isImage()
-    {
+    default boolean isImage() {
         return !isVideo();
     }
 

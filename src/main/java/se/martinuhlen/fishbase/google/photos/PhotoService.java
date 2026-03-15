@@ -11,8 +11,7 @@ import se.martinuhlen.fishbase.google.drive.DriveService;
  *
  * @author martin
  */
-public interface PhotoService
-{
+public interface PhotoService {
     /**
      * Loads a list of photos.
      *
@@ -46,8 +45,7 @@ public interface PhotoService
      * @param driveService to upload picked photos
      * @return new photo service
      */
-    public static PhotoService create(PickerClient pickerClient, DriveService driveService)
-    {
+    public static PhotoService create(PickerClient pickerClient, DriveService driveService) {
         return new PhotoServiceImpl(pickerClient, driveService);
     }
 }

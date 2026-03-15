@@ -7,8 +7,7 @@ import java.io.InputStream;
  *
  * @author Martin
  */
-public interface PhotoData
-{
+public interface PhotoData {
     /**
      * Gets an URL to where the photo is located.
      * 

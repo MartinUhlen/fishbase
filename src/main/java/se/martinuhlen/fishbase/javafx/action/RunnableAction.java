@@ -6,39 +6,32 @@ import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.event.ActionEvent;
 
-public class RunnableAction implements Action, Runnable
-{
+public class RunnableAction implements Action, Runnable {
     private final SimpleBooleanProperty enabledProperty;
     private final Runnable action;
 
-    public RunnableAction(boolean enabled, Runnable action)
-    {
+    public RunnableAction(boolean enabled, Runnable action) {
         enabledProperty = new SimpleBooleanProperty(enabled);
         this.action = requireNonNull(action, "action can't be null");
     }
 
-    public void setEnabled(boolean value)
-    {
+    public void setEnabled(boolean value) {
         enabledProperty.set(value);
     }
 
     @Override
-    public ReadOnlyBooleanProperty enabledProperty()
-    {
+    public ReadOnlyBooleanProperty enabledProperty() {
         return enabledProperty;
     }
 
     @Override
-    public void handle(ActionEvent event)
-    {
+    public void handle(ActionEvent event) {
         run();
     }
 
     @Override
-    public void run()
-    {
-        if (enabledProperty().get())
-        {
+    public void run() {
+        if (enabledProperty().get()) {
             action.run();
         }
     }
