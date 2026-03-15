@@ -3,12 +3,12 @@ package se.martinuhlen.fishbase.utils;
 import java.util.Collection;
 
 
-public interface Cursor<T> {
-    static <X> Cursor<X> of(Collection<? extends X> elements, int currentIndex) {
-        if (elements == null || elements.isEmpty()) {
+public interface Cursor<T> {
+    static <X> Cursor<X> of(Collection<? extends X> elements, int currentIndex) {
+        if (elements == null || elements.isEmpty()) {
             return EmptyCursor.emptyCursor();
         }
-        else {
+        else {
             return new ListCursor<>(elements, currentIndex);
         }
     }
@@ -41,7 +41,7 @@ public interface Cursor<T> {
 
     int size();
 
-    default boolean isEmpty() {
+    default boolean isEmpty() {
         return size() == 0;
     }
 

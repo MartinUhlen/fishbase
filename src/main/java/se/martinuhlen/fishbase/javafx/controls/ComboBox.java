@@ -16,36 +16,36 @@ import javafx.scene.input.KeyEvent;
  *
  * @author Martin
  */
-public class ComboBox<T> extends javafx.scene.control.ComboBox<T> {
-    public ComboBox(ObservableList<T> items) {
+public class ComboBox<T> extends javafx.scene.control.ComboBox<T> {
+    public ComboBox(ObservableList<T> items) {
         super(items);
         setOnKeyTyped(new KeyHandler());
     }
 
-    public ComboBox() {
+    public ComboBox() {
         this(emptyObservableList());
     }
 
-    private class KeyHandler implements EventHandler<KeyEvent> {
+    private class KeyHandler implements EventHandler<KeyEvent> {
         private String typedText = "";
         private Instant typedTextAt = Instant.now();
 
         @Override
-        public void handle(KeyEvent event) {
+        public void handle(KeyEvent event) {
             Instant now = Instant.now();
-            if (typedTextAt.plusSeconds(1).isBefore(now)) {
+            if (typedTextAt.plusSeconds(1).isBefore(now)) {
                 typedText = "";
             }
             typedTextAt = now;
 
-            if (isPopupTrigger(event)) {
+            if (isPopupTrigger(event)) {
                 show();
                 return;
             }
-            else if (event.getCharacter().equals(CHAR_UNDEFINED)) {
+            else if (event.getCharacter().equals(CHAR_UNDEFINED)) {
                 return;
             }
-            else {
+            else {
                 typedText += event.getCharacter().toLowerCase();
             }
 
@@ -55,11 +55,11 @@ public class ComboBox<T> extends javafx.scene.control.ComboBox<T> {
                     .ifPresent(this::selectItem);
         }
 
-        private boolean isPopupTrigger(KeyEvent event) {
+        private boolean isPopupTrigger(KeyEvent event) {
             return event.getCharacter().equals(" ") && event.isControlDown();
         }
 
-        private void selectItem(T item) {
+        private void selectItem(T item) {
             @SuppressWarnings("unchecked")
             ListView<T> lv = (ListView<T>) ((ComboBoxListViewSkin<T>) getSkin()).getPopupContent();
             lv.scrollTo(item);

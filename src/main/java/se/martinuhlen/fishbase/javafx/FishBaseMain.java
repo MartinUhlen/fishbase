@@ -13,20 +13,20 @@ import java.util.logging.StreamHandler;
 
 import se.martinuhlen.fishbase.utils.LogFormatter;
 
-public class FishBaseMain {
-    public static void main(String[] args) {
+public class FishBaseMain {
+    public static void main(String[] args) {
         configureLogging();
         FishBaseApplication.main(args);
     }
 
-    private static void configureLogging() {
+    private static void configureLogging() {
         Logger rootLogger = Logger.getLogger("");
-        for (Handler handler : rootLogger.getHandlers()) {
+        for (Handler handler : rootLogger.getHandlers()) {
             rootLogger.removeHandler(handler);
         }
-        StreamHandler stdout = new StreamHandler(System.out, new LogFormatter()) {
+        StreamHandler stdout = new StreamHandler(System.out, new LogFormatter()) {
             @Override
-            public synchronized void publish(LogRecord record) {
+            public synchronized void publish(LogRecord record) {
                 super.publish(record);
                 flush();
             }

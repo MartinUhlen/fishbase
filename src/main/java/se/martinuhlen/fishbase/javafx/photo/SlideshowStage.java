@@ -23,8 +23,8 @@ import se.martinuhlen.fishbase.utils.Cursor;
  *
  * @author Martin
  */
-class SlideshowStage {
-    private SlideshowStage() {
+class SlideshowStage {
+    private SlideshowStage() {
     }
 
     /**
@@ -33,20 +33,20 @@ class SlideshowStage {
      * @param callback accepts the clicked photo and returns cursor over all photos
      * @return mouse clicked handler
      */
-    static EventHandler<MouseEvent> openOnClick(Function<HasPhoto, Cursor<GooglePhoto>> callback) // FIXME Function -> Supplier? {
-        return new EventHandler<>() {
+    static EventHandler<MouseEvent> openOnClick(Function<HasPhoto, Cursor<GooglePhoto>> callback) // FIXME Function -> Supplier? {
+        return new EventHandler<>() {
             private SlideshowPane slideshow;
             private Stage slideshowStage;
 
             @Override
-            public void handle(MouseEvent event) {
-                if (event.getClickCount() == 1 && event.getButton() == PRIMARY) {
+            public void handle(MouseEvent event) {
+                if (event.getClickCount() == 1 && event.getButton() == PRIMARY) {
                     showSlideshow(event);
                 }
             }
 
-            private void showSlideshow(MouseEvent event) {
-                if (slideshow == null) {
+            private void showSlideshow(MouseEvent event) {
+                if (slideshow == null) {
                     slideshow = new SlideshowPane(false);
                     slideshowStage = new Stage(UTILITY);
                     slideshowStage.initModality(WINDOW_MODAL);

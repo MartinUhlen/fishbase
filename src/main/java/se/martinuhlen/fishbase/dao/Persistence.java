@@ -9,7 +9,7 @@ import java.io.OutputStream;
  *
  * @author Martin
  */
-public interface Persistence {
+public interface Persistence {
     /**
      * Gets an input stream with given name.
      * 

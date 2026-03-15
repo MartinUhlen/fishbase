@@ -16,15 +16,15 @@ import se.martinuhlen.fishbase.domain.Specie;
 import se.martinuhlen.fishbase.domain.Specimen;
 import se.martinuhlen.fishbase.domain.Trip;
 
-public interface FishBaseDao {
-    public static FishBaseDao create(Persistence persistence) {
+public interface FishBaseDao {
+    public static FishBaseDao create(Persistence persistence) {
         CompletableFuture<JsonDao> futureDao = supplyAsync(() -> new JsonDao(persistence));
-        return (FishBaseDao) newProxyInstance(currentThread().getContextClassLoader(), new Class<?>[] {FishBaseDao.class}, (proxy, method, args) -> {
+        return (FishBaseDao) newProxyInstance(currentThread().getContextClassLoader(), new Class<?>[] {FishBaseDao.class}, (proxy, method, args) -> {
             JsonDao dao = futureDao.get();
-            try {
+            try {
                 return method.invoke(dao, args);
             }
-            catch (InvocationTargetException e) {
+            catch (InvocationTargetException e) {
                 throw e.getCause();
             }
         });

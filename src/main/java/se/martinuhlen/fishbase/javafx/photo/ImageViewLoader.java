@@ -11,7 +11,7 @@ import javafx.scene.image.ImageView;
  *
  * @author Martin
  */
-class ImageViewLoader extends ImageLoader {
+class ImageViewLoader extends ImageLoader {
     private final ImageView view;
 
     /**
@@ -20,13 +20,13 @@ class ImageViewLoader extends ImageLoader {
      * @param view whose image to load
      * @param inputStream to read the image from
      */
-    ImageViewLoader(ImageView view, Supplier<InputStream> inputStream) {
+    ImageViewLoader(ImageView view, Supplier<InputStream> inputStream) {
         super(inputStream, false);
         this.view = view;
     }
 
     @Override
-    protected void succeeded() {
+    protected void succeeded() {
         view.setImage(getValue());
     }
 }

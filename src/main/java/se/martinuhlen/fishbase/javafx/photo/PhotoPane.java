@@ -52,7 +52,7 @@ import se.martinuhlen.fishbase.utils.Cursor;
  *
  * @author Martin
  */
-public class PhotoPane extends BorderPane {
+public class PhotoPane extends BorderPane {
     private final PhotoService service;
     private final ObservableValue<LocalDate> startDate;
     private final ObservableValue<LocalDate> endDate;
@@ -71,7 +71,7 @@ public class PhotoPane extends BorderPane {
 
     public PhotoPane(
             PhotoService service, ObservableValue<LocalDate> startDate, ObservableValue<LocalDate> endDate,
-            ObservableValue<String> tripId, ObservableValue<List<Specimen>> specimens, ObservableList<FishingPhoto> fishingPhotos) {
+            ObservableValue<String> tripId, ObservableValue<List<Specimen>> specimens, ObservableList<FishingPhoto> fishingPhotos) {
         this.service= service;
         this.startDate = startDate;
         this.endDate = endDate;
@@ -95,12 +95,12 @@ public class PhotoPane extends BorderPane {
         thumbnailToggle.setToggleGroup(toggleGroup);
         slideShowToggle.setToggleGroup(toggleGroup);
         toggleGroup.selectToggle(thumbnailToggle);
-        toggleGroup.selectedToggleProperty().addListener((obs, oldToggle, newToggle) -> {
+        toggleGroup.selectedToggleProperty().addListener((obs, oldToggle, newToggle) -> {
             boolean thumbnail = toggleGroup.getSelectedToggle() == thumbnailToggle;
             Pane pane = thumbnail ? thumbnailPane : slideshowPane;
-            if (pane != getCenter()) {
+            if (pane != getCenter()) {
                 setCenter(pane);
-                if (!thumbnail) {
+                if (!thumbnail) {
                     setPhotosToSlideshow();
                 }
             }
@@ -123,17 +123,17 @@ public class PhotoPane extends BorderPane {
     }
 
     // FIXME Such sophisticated sync is not needed anymore when FishingPhoto(Impl) is mutable?
-    private void initPhotoSync() {
-        fishingPhotos.addListener((Observable obs) -> {
-            if (!syncing.get()) {
+    private void initPhotoSync() {
+        fishingPhotos.addListener((Observable obs) -> {
+            if (!syncing.get()) {
                 syncing.set(true);
                 thumbnailPane.setPhotos(fishingPhotos);
                 setPhotosToSlideshow();
                 syncing.set(false);
             }
         });
-        thumbnailPane.getPhotos().addListener((Observable obs) -> {
-            if (!syncing.get()) {
+        thumbnailPane.getPhotos().addListener((Observable obs) -> {
+            if (!syncing.get()) {
                 syncing.set(true);
                 List<FishingPhoto> photos = thumbnailPane.getPhotos().stream().map(FishingPhoto.class::cast).collect(toList());
                 fishingPhotos.setAll(photos);
@@ -143,20 +143,20 @@ public class PhotoPane extends BorderPane {
         });
     }
 
-    private void setPhotosToSlideshow() {
-        if (getCenter() == slideshowPane) {
+    private void setPhotosToSlideshow() {
+        if (getCenter() == slideshowPane) {
             slideshowPane.setPhotos(Cursor.of(thumbnailPane.getPhotos(), 0)); // FIXME Remember previous index, in case of specimen editing
         }
     }
 
-    private void addPhotos() {
+    private void addPhotos() {
         // Step 1 — Waiting dialog: open browser + show progress while user picks in Google Photos
-        Service<List<GooglePhoto>> pickService = new Service<>() {
+        Service<List<GooglePhoto>> pickService = new Service<>() {
             @Override
-            protected Task<List<GooglePhoto>> createTask() {
-                return new Task<>() {
+            protected Task<List<GooglePhoto>> createTask() {
+                return new Task<>() {
                     @Override
-                    protected List<GooglePhoto> call() throws Exception {
+                    protected List<GooglePhoto> call() throws Exception {
                         return service.pick();
                     }
                 };
@@ -174,11 +174,11 @@ public class PhotoPane extends BorderPane {
         waitDialog.setDialogPane(waitingPane);
         waitDialog.setResizable(false);
 
-        pickService.setOnSucceeded(e -> {
+        pickService.setOnSucceeded(e -> {
             waitDialog.setResult(ButtonType.OK);
             waitDialog.close();
         });
-        pickService.setOnFailed(e -> {
+        pickService.setOnFailed(e -> {
             waitDialog.setResult(ButtonType.CANCEL);
             waitDialog.close();
         });
@@ -187,13 +187,13 @@ public class PhotoPane extends BorderPane {
         waitDialog.showAndWait();
 
         // If user cancelled, or pick failed/was interrupted, do nothing
-        if (waitDialog.getResult() != ButtonType.OK) {
+        if (waitDialog.getResult() != ButtonType.OK) {
             pickService.cancel();
             return;
         }
 
         List<GooglePhoto> pickedPhotos = pickService.getValue();
-        if (pickedPhotos == null || pickedPhotos.isEmpty()) {
+        if (pickedPhotos == null || pickedPhotos.isEmpty()) {
             return;
         }
 
@@ -205,7 +205,7 @@ public class PhotoPane extends BorderPane {
         reviewDialogPane.setContent(reviewPane);
         reviewDialogPane.setPrefWidth(Region.USE_COMPUTED_SIZE);
 
-        SetChangeListener<GooglePhoto> listener = (Change<? extends GooglePhoto> change) -> {
+        SetChangeListener<GooglePhoto> listener = (Change<? extends GooglePhoto> change) -> {
             Button button = (Button) reviewDialogPane.lookupButton(OK);
             ObservableSet<GooglePhoto> photos = reviewPane.getSelectedPhotos();
             button.setDisable(photos.isEmpty());
@@ -227,7 +227,7 @@ public class PhotoPane extends BorderPane {
 
         reviewDialog.showAndWait()
             .filter(b -> b == OK)
-            .ifPresent(b -> {
+            .ifPresent(b -> {
                 List<FishingPhoto> newPhotos = reviewPane.getSelectedPhotos()
                         .stream()
                         .map(photo -> service.create(photo, tripId.getValue()))
@@ -236,20 +236,20 @@ public class PhotoPane extends BorderPane {
             });
     }
 
-    private void initContextMenu() {
+    private void initContextMenu() {
         ContextMenu contextMenu = new ContextMenu();
         RemovePhotoMenuItem removeItem = new RemovePhotoMenuItem();
         StarPhotoMenuItem starItem = new StarPhotoMenuItem();
         Menu specimenMenu = new Menu("Specimens");
         contextMenu.getItems().addAll(removeItem, starItem, specimenMenu);
-        specimens.addListener((Observable obs) -> {
+        specimens.addListener((Observable obs) -> {
             specimenMenu.getItems().setAll(specimens.getValue()
                     .stream()
                     .map(specimen -> new SpecimenMenuItem(specimen))
                     .collect(toList()));
         });
 
-        thumbnailPane.setPhotoContextMenuHandler(e -> {
+        thumbnailPane.setPhotoContextMenuHandler(e -> {
             HasPhoto hasPhoto = (HasPhoto) e.getSource();
             specimenMenu.setVisible(!specimenMenu.getItems().isEmpty());
             specimenMenu.getItems().stream().map(SpecimenMenuItem.class::cast).forEach(item -> item.setPhotoSource(hasPhoto));
@@ -259,83 +259,83 @@ public class PhotoPane extends BorderPane {
         });
     }
 
-    private class RemovePhotoMenuItem extends MenuItem implements PhotoMenuItem {
+    private class RemovePhotoMenuItem extends MenuItem implements PhotoMenuItem {
         private HasPhoto photoSource;
 
-        RemovePhotoMenuItem() {
+        RemovePhotoMenuItem() {
             super("Remove photo", getImageView16("delete.png"));
             setOnAction(e -> thumbnailPane.removePhoto(photoSource.getPhoto()));
         }
 
         @Override
-        public void setPhotoSource(HasPhoto photoSource) {
+        public void setPhotoSource(HasPhoto photoSource) {
             this.photoSource = photoSource;
         }
     }
 
-    private class StarPhotoMenuItem extends MenuItem implements PhotoMenuItem {
+    private class StarPhotoMenuItem extends MenuItem implements PhotoMenuItem {
         private HasPhoto photoSource;
 
-        StarPhotoMenuItem() {
+        StarPhotoMenuItem() {
             super("Starred");
             setOnAction(e -> toggle());
         }
 
         @Override
-        public void setPhotoSource(HasPhoto photoSource) {
+        public void setPhotoSource(HasPhoto photoSource) {
             this.photoSource = photoSource;
             updateIcon();
         }
 
-        private FishingPhoto getPhoto() {
+        private FishingPhoto getPhoto() {
             requireNonNull(photoSource, "photoSource must be set");
             return (FishingPhoto) requireNonNull(photoSource.getPhoto(), "photo cant be null");
         }
 
-        private void toggle() {
+        private void toggle() {
             FishingPhoto photo = getPhoto();
             photo.setStarred(!photo.isStarred());
             updateIcon();
         }
 
-        private void updateIcon() {
+        private void updateIcon() {
             boolean starred = getPhoto().isStarred();
             setGraphic(getImageView16(starred ? "star_yellow.png" : "star_grey.png"));
         }
     }
 
-    private class SpecimenMenuItem extends CheckMenuItem implements PhotoMenuItem {
+    private class SpecimenMenuItem extends CheckMenuItem implements PhotoMenuItem {
         private final Specimen specimen;
         private HasPhoto photoSource;
 
-        SpecimenMenuItem(Specimen specimen) {
+        SpecimenMenuItem(Specimen specimen) {
             super(specimen.getLabel());
             this.specimen = specimen;
             setOnAction(e -> toggle());
         }
 
         @Override
-        public void setPhotoSource(HasPhoto photoSource) {
+        public void setPhotoSource(HasPhoto photoSource) {
             this.photoSource = photoSource;
             setSelected(getPhoto().containsSpecimen(specimen.getId()));
         }
 
-        private FishingPhoto getPhoto() {
+        private FishingPhoto getPhoto() {
             requireNonNull(photoSource, "photoSource must be set");
             return (FishingPhoto) requireNonNull(photoSource.getPhoto(), "photo cant be null");
         }
 
-        private void toggle() {
-            if (isSelected()) {
+        private void toggle() {
+            if (isSelected()) {
                 getPhoto().addSpecimen(specimen.getId());
             }
-            else {
+            else {
                 getPhoto().removeSpecimen(specimen.getId());
             }
         }
     }
 
-    private interface PhotoMenuItem {
+    private interface PhotoMenuItem {
         void setPhotoSource(HasPhoto photoSource);
     }
 }

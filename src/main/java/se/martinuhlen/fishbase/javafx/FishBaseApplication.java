@@ -53,7 +53,7 @@ import se.martinuhlen.fishbase.javafx.action.Action;
 import se.martinuhlen.fishbase.javafx.action.ReplaceableAction;
 import se.martinuhlen.fishbase.javafx.utils.Images;
 
-public class FishBaseApplication extends Application {
+public class FishBaseApplication extends Application {
     /*
      * http://fxexperience.com/controlsfx/features/
      * FontAwesomeFX
@@ -68,7 +68,7 @@ public class FishBaseApplication extends Application {
      * Fish icon: https://www.iconexperience.com/v_collection/search/?q=fish
      */
 
-    public static void main(String[] args) {
+    public static void main(String[] args) {
         Application.launch(args);
     }
 
@@ -95,13 +95,13 @@ public class FishBaseApplication extends Application {
             SpecieView.class, () -> new SpecieView(dao),
             PhotoView.class, () -> new PhotoView(photoService, dao, tripOpener));
 
-    public FishBaseApplication() {
+    public FishBaseApplication() {
         scene = new Scene(new Label());
         tabPane = new TabPane();
     }
 
     @Override
-    public void start(Stage stage) throws Exception {
+    public void start(Stage stage) throws Exception {
         this.stage = stage;
         driveService = new DriveService(GoogleServiceFactory.get().createDrive());
         photoService = PhotoService.create(GoogleServiceFactory.get().createPickerClient(), driveService);
@@ -131,8 +131,8 @@ public class FishBaseApplication extends Application {
         stage.setMaximized(true);
         stage.show();
 
-        stage.onCloseRequestProperty().set(e -> {
-            if (tabPane.getTabs().stream().map(tab -> tabToView.getOrDefault(tab, EMPTY_VIEW)).anyMatch(View::hasChanges)) {
+        stage.onCloseRequestProperty().set(e -> {
+            if (tabPane.getTabs().stream().map(tab -> tabToView.getOrDefault(tab, EMPTY_VIEW)).anyMatch(View::hasChanges)) {
                 Alert alert = new Alert(CONFIRMATION);
                 alert.setTitle("Discard changes?");
                 alert.setHeaderText("There are unsaved changes, discard them and exit anyway?");
@@ -145,7 +145,7 @@ public class FishBaseApplication extends Application {
         });
     }
 
-    private Button createStartButton() {
+    private Button createStartButton() {
         ContextMenu menu = new ContextMenu(
                 createOpenItem("Trips", "F1", TripView.class),
                 createOpenItem("Specimens", "F2", SpecimenView.class),
@@ -157,14 +157,14 @@ public class FishBaseApplication extends Application {
         menu.setAutoHide(true);
 
         Button button = createButton("Menu", "menu.png", "CTRL+SPACE");
-        button.setOnAction(e -> {
+        button.setOnAction(e -> {
             menu.show(button, BOTTOM, 0, 0);
             menu.requestFocus();
         });
         return button;
     }
 
-    private <V extends View> MenuItem createOpenItem(String text, String shortcut, Class<V> typeOfView) {
+    private <V extends View> MenuItem createOpenItem(String text, String shortcut, Class<V> typeOfView) {
         MenuItem item = new MenuItem(text);
         item.setOnAction(e -> openTab(typeOfView));
         item.setAccelerator(keyCombination(shortcut));
@@ -172,14 +172,14 @@ public class FishBaseApplication extends Application {
         return item;
     }
 
-    private Button createActionButton(String text, String imageName, String shortcut, Action action) {
+    private Button createActionButton(String text, String imageName, String shortcut, Action action) {
         Button button = createButton(text, imageName, shortcut);
         button.setOnAction(action);
         button.disableProperty().bind(action.enabledProperty().not());
         return button;
     }
 
-    private Button createButton(String text, String imageName, String shortcut) {
+    private Button createButton(String text, String imageName, String shortcut) {
         KeyCombination keyCombination = KeyCombination.valueOf(shortcut);
         Button button = new Button();
         button.setGraphic(image(imageName));
@@ -188,9 +188,9 @@ public class FishBaseApplication extends Application {
         return button;
     }
 
-    private MenuItem createAboutItem() {
+    private MenuItem createAboutItem() {
         MenuItem about = new MenuItem("About", getImageView16("fish.png"));
-        about.setOnAction(e -> {
+        about.setOnAction(e -> {
             Alert alert = new Alert(INFORMATION);
             alert.setTitle("About");
             alert.setHeaderText("FishBase 0.3");
@@ -200,18 +200,18 @@ public class FishBaseApplication extends Application {
         return about;
     }
 
-    private MenuItem createExitItem() {
+    private MenuItem createExitItem() {
         MenuItem exit = new MenuItem("Exit");
         exit.setAccelerator(keyCombination("ALT+F4"));
         exit.setOnAction(e -> stage.fireEvent(new WindowEvent(stage, WINDOW_CLOSE_REQUEST)));
         return exit;
     }
 
-    private ImageView image(String name) {
+    private ImageView image(String name) {
         return Images.getImageView32(name);
     }
 
-    private void selectView() {
+    private void selectView() {
         View view = selectedView();
         addAction.setAction(view.addAction());
         saveAction.setAction(view.saveAction());
@@ -219,13 +219,13 @@ public class FishBaseApplication extends Application {
         deleteAction.setAction(view.deleteAction());
     }
 
-    private View selectedView() {
+    private View selectedView() {
         Tab selectedTab = tabPane.getSelectionModel().getSelectedItem();
         return tabToView.getOrDefault(selectedTab, EMPTY_VIEW);
     }
 
-    private <V extends View> V openTab(Class<V> typeOfView) {
-        try {
+    private <V extends View> V openTab(Class<V> typeOfView) {
+        try {
             Optional<Entry<Tab, View>> tabWithView = tabToView
                     .entrySet()
                     .stream()
@@ -247,7 +247,7 @@ public class FishBaseApplication extends Application {
         }
     }
 
-    private <V extends View> void addTab(Class<V> typeOfView) {
+    private <V extends View> void addTab(Class<V> typeOfView) {
         @SuppressWarnings("unchecked")
         Supplier<V> supplier = (Supplier<V>) viewSuppliers.get(typeOfView);
         V view = supplier.get();
@@ -259,8 +259,8 @@ public class FishBaseApplication extends Application {
                 () -> view.getTitle() + (view.hasChanges() ? " *" : ""),
                 view.titleProperty(), saveAction.enabledProperty()));
 
-        tab.setOnCloseRequest(e -> {
-            if (view.hasChanges() && !view.discardChanges()) {
+        tab.setOnCloseRequest(e -> {
+            if (view.hasChanges() && !view.discardChanges()) {
                 e.consume();
             }
         });
@@ -270,14 +270,14 @@ public class FishBaseApplication extends Application {
         selectTab(tab);
     }
 
-    private void selectTab(Tab tab) {
+    private void selectTab(Tab tab) {
         tabPane.getSelectionModel().select(tab);
     }
 
     @Override
-    public void stop() throws Exception {
+    public void stop() throws Exception {
         super.stop();
-        if (drivePersistence != null) {
+        if (drivePersistence != null) {
             drivePersistence.shutdown();
         }
     }

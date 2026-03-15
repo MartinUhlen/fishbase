@@ -28,7 +28,7 @@ import se.martinuhlen.fishbase.javafx.utils.ImageSize;
 import se.martinuhlen.fishbase.javafx.utils.Images;
 import se.martinuhlen.fishbase.utils.Cursor;
 
-public class SlideshowPane extends BorderPane {
+public class SlideshowPane extends BorderPane {
     private static final Supplier<Image> NULL_SUPPLIER = () -> null;
 
     private final ImageView imageView;
@@ -56,7 +56,7 @@ public class SlideshowPane extends BorderPane {
      * 
      * @param openStageOnClick {@code true} to open a new slideshow in a modal stage when this slideshow is clicked
      */
-    public SlideshowPane(boolean openStageOnClick) {
+    public SlideshowPane(boolean openStageOnClick) {
         imageView = new ImageView();
         imageView.setPreserveRatio(true);
         imageView.setSmooth(true);
@@ -79,7 +79,7 @@ public class SlideshowPane extends BorderPane {
         bottomBox = new VBox(statusLabel, buttons);
         setBottom(bottomBox);
 
-        if (openStageOnClick) {
+        if (openStageOnClick) {
             imageView.setOnMouseClicked(SlideshowStage.openOnClick(hasPhoto -> photos.copy()));
         }
     }
@@ -87,16 +87,16 @@ public class SlideshowPane extends BorderPane {
     /**
      * Creates a new slideshow pane, passing {@code true} to {@link SlideshowPane#SlideshowPane(boolean)}.
      */
-    public SlideshowPane() {
+    public SlideshowPane() {
         this(true);
     }
 
-    public void setButtonSize(ImageSize size) {
+    public void setButtonSize(ImageSize size) {
         this.buttonSize = size;
         setButtonIcons();
     }
 
-    private void setButtonIcons() {
+    private void setButtonIcons() {
         ImageSize size = buttonSize != null ? buttonSize : (getHeight() < 600 ? SIZE_16 : SIZE_32);
         firstButton.setGraphic(getImage("navigate_beginning.png", size));
         previousButton.setGraphic(getImage("navigate_left.png", size));
@@ -104,11 +104,11 @@ public class SlideshowPane extends BorderPane {
         lastButton.setGraphic(getImage("navigate_end.png", size));
     }
 
-    private Node getImage(String name, ImageSize size) {
+    private Node getImage(String name, ImageSize size) {
         return Images.getImageView(name, size);
     }
 
-    private Button button(String tooltip, Runnable action) {
+    private Button button(String tooltip, Runnable action) {
         Button button = new Button();
         button.setTooltip(new Tooltip(tooltip));
         button.setDisable(true);
@@ -116,117 +116,117 @@ public class SlideshowPane extends BorderPane {
         return button;
     }
 
-    public void setPhotos(Cursor<GooglePhoto> photos) {
+    public void setPhotos(Cursor<GooglePhoto> photos) {
         this.photos = requireNonNull(photos);
         previousImage = NULL_SUPPLIER;
         nextImage = NULL_SUPPLIER;
         imageView.setImage(null);
         videoPane.disposeCurrentVideo();
 
-        if (photos.hasCurrent()) {
+        if (photos.hasCurrent()) {
             showPhoto(photos.current(), NULL_SUPPLIER);
             preloadPrevious();
             preloadNext();
         }
-        else {
+        else {
             setCenter(null);
             updateState(null);
         }
     }
 
-    private void showFirstPhoto() {
+    private void showFirstPhoto() {
         previousImage = NULL_SUPPLIER;
         showPhoto(photos.first(), NULL_SUPPLIER);
         preloadNext();
     }
 
-    private void showPreviousPhoto() {
+    private void showPreviousPhoto() {
         nextImage = currentImage();
         showPhoto(photos.previous(), previousImage);
         preloadPrevious();
     }
 
-    private void showNextPhoto() {
+    private void showNextPhoto() {
         previousImage = currentImage();
         showPhoto(photos.next(), nextImage);
         preloadNext();
     }
 
-    private Supplier<Image> currentImage() {
-        if (photos.current().isVideo()) {
+    private Supplier<Image> currentImage() {
+        if (photos.current().isVideo()) {
             return NULL_SUPPLIER;
         }
-        else {
+        else {
             return ofNullable(imageView.getImage())
                     .map(img -> (Supplier<Image>) () -> img)
                     .orElseGet(() -> new ImageLoader(() -> photos.current().getContent().getStream(), true));
         }
     }
 
-    private void showLastPhoto() {
+    private void showLastPhoto() {
         nextImage = NULL_SUPPLIER;
         showPhoto(photos.last(), NULL_SUPPLIER);
         preloadPrevious();
     }
 
-    private void preloadPrevious() {
+    private void preloadPrevious() {
         previousImage = NULL_SUPPLIER;
-        if (photos.hasPrevious()) {
+        if (photos.hasPrevious()) {
             previousImage = preload(photos.peekPrevious());
         }
     }
 
-    private void preloadNext() {
+    private void preloadNext() {
         nextImage = NULL_SUPPLIER;
-        if (photos.hasNext()) {
+        if (photos.hasNext()) {
             nextImage = preload(photos.peekNext());
         }
     }
 
-    private Supplier<Image> preload(GooglePhoto photo) {
-        if (photo.isVideo()) {
+    private Supplier<Image> preload(GooglePhoto photo) {
+        if (photo.isVideo()) {
             return NULL_SUPPLIER;
         }
-        else {
+        else {
             return new ImageLoader(() -> photo.getContent().getStream(), true);
         }
     }
 
-    private void showPhoto(GooglePhoto photo, Supplier<Image> supplier) {
-        if (photo.isVideo()) {
+    private void showPhoto(GooglePhoto photo, Supplier<Image> supplier) {
+        if (photo.isVideo()) {
             showVideo(photo);
         }
-        else {
+        else {
             videoPane.disposeCurrentVideo();
             showImage(photo, supplier);
         }
         updateState(photo);
     }
 
-    private void showVideo(GooglePhoto photo) {
+    private void showVideo(GooglePhoto photo) {
         videoPane.setVideo(null, false);
         setCenter(videoPane);
-        new Service<Media>() {
+        new Service<Media>() {
             @Override
-            protected Task<Media> createTask() {
-                return new Task<>() {
+            protected Task<Media> createTask() {
+                return new Task<>() {
                     @Override
-                    protected Media call() throws Exception {
+                    protected Media call() throws Exception {
                         return new Media(photo.getContent().getUrl());
                     }
                 };
             }
 
             @Override
-            protected void succeeded() {
-                if (photos.current().equals(photo)) {
+            protected void succeeded() {
+                if (photos.current().equals(photo)) {
                     videoPane.setVideo(getValue(), true);
                 }
             }
         }.start();        
     }
 
-    private void showImage(GooglePhoto photo, Supplier<Image> supplier) {
+    private void showImage(GooglePhoto photo, Supplier<Image> supplier) {
         setCenter(imageView);
         imageView.setImage(null);
         ofNullable(supplier.get())
@@ -235,15 +235,15 @@ public class SlideshowPane extends BorderPane {
                         () -> loadImage(photo));
     }
 
-    private void loadImage(GooglePhoto photo) {
-        if (loader != null) {
+    private void loadImage(GooglePhoto photo) {
+        if (loader != null) {
             loader.cancel();
         }
         loader = new ImageViewLoader(imageView, () -> photo.getContent().getStream());
         loader.start();
     }
 
-    private void updateState(GooglePhoto photo) {
+    private void updateState(GooglePhoto photo) {
         statusLabel.setText(photo == null ? "" : getStatusText(photo));
         firstButton.setDisable(photos.isFirst() || photos.isEmpty());
         previousButton.setDisable(!photos.hasPrevious());
@@ -251,7 +251,7 @@ public class SlideshowPane extends BorderPane {
         lastButton.setDisable(photos.isLast() || photos.isEmpty());
     }
 
-    private String getStatusText(GooglePhoto photo) {
+    private String getStatusText(GooglePhoto photo) {
         return String.format("%s (%s/%s)",
                 photo.getName(),
                 (photos.currentIndex() + 1), photos.size());
@@ -263,7 +263,7 @@ public class SlideshowPane extends BorderPane {
      * @param fitWidthValue maximum width to fit within
      * @param fitHeightValue maximum height to fit within
      */
-    public void bindSizeToFitWithin(ObservableValue<? extends Number> fitWidthValue, ObservableValue<? extends Number> fitHeightValue) {
+    public void bindSizeToFitWithin(ObservableValue<? extends Number> fitWidthValue, ObservableValue<? extends Number> fitHeightValue) {
         this.fitWidthValue = fitWidthValue;
         this.fitHeightValue = fitHeightValue;
         imageView.fitWidthProperty().unbind();
@@ -285,15 +285,15 @@ public class SlideshowPane extends BorderPane {
         imageView.imageProperty().addListener(listener);
     }
 
-    private void fitSize() {
+    private void fitSize() {
         Image image = imageView.getImage();
-        if (image == null) {
+        if (image == null) {
             return;
         }
 
         double imageWidth = image.getWidth();
         double imageHeight = image.getHeight();
-        if (imageWidth <= 0 || imageHeight <= 0) {
+        if (imageWidth <= 0 || imageHeight <= 0) {
             return;
         }
 
@@ -309,9 +309,9 @@ public class SlideshowPane extends BorderPane {
         imageView.setFitHeight(0);    // FIXME Needed with ResizableImageView?
     }
 
-    private class ImageView extends ResizableImageView implements HasPhoto {
+    private class ImageView extends ResizableImageView implements HasPhoto {
         @Override
-        public GooglePhoto getPhoto() {
+        public GooglePhoto getPhoto() {
             return photos.hasCurrent() ? photos.current() : null;
         }
     }

@@ -10,8 +10,8 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.util.jar.Manifest;
 
-public final class Constants {
-    private Constants() {
+public final class Constants {
+    private Constants() {
     }
 
     public static final String APPLICATION_NAME = "FishBase";
@@ -30,21 +30,21 @@ public final class Constants {
 
     public static final LocalDateTime BUILD_TIME = readBuildTime();
 
-    private static LocalDateTime readBuildTime() {
+    private static LocalDateTime readBuildTime() {
             URL resource = Constants.class.getResource("/META-INF/MANIFEST.MF");
-            try (InputStream is = resource.openStream()) {
+            try (InputStream is = resource.openStream()) {
                 String buildValue = new Manifest(is)
                         .getMainAttributes()
                         .getValue("Build-Time");
 
-                if (isBlank(buildValue)) // Empty when debugging {
+                if (isBlank(buildValue)) // Empty when debugging {
                     return LocalDateTime.now();
                 }
-                else {
+                else {
                     return LocalDateTime.parse(buildValue, DateTimeFormatter.ofPattern("yyyyMMdd-HHmm"));
                 }
             }
-            catch (IOException ex) {
+            catch (IOException ex) {
                 ex.printStackTrace();
                 throw new RuntimeException("Failed to read build time from manifest", ex);
             }

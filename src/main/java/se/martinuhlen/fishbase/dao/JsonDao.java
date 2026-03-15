@@ -35,7 +35,7 @@ import se.martinuhlen.fishbase.domain.Specie;
 import se.martinuhlen.fishbase.domain.Specimen;
 import se.martinuhlen.fishbase.domain.Trip;
 
-class JsonDao implements FishBaseDao {
+class JsonDao implements FishBaseDao {
     private final JsonHandler<Photo> photoHandler;
     private final JsonHandler<Specie> specieHandler;
     private final JsonHandler<Specimen> specimenHandler;
@@ -47,7 +47,7 @@ class JsonDao implements FishBaseDao {
     private final Map<String, Trip> trips;
     private Map<AutoCompleteField, SortedSet<String>> autoCompleteMap;
 
-    JsonDao(Persistence persistence) {
+    JsonDao(Persistence persistence) {
         photoHandler = new PhotoJsonHandler(persistence);
         specieHandler = new SpecieJsonHandler(persistence);
         specimenHandler = new SpecimenJsonHandler(persistence, this::getSpecie);
@@ -76,7 +76,7 @@ class JsonDao implements FishBaseDao {
     }
 
     @VisibleForTesting
-    JsonDao(Persistence persistence, Collection<Specie> testSpecies, Collection<Trip> testTrips) {
+    JsonDao(Persistence persistence, Collection<Specie> testSpecies, Collection<Trip> testTrips) {
         this(persistence);
         this.photos.clear();
         this.photos.putAll(testTrips.stream().flatMap(t -> t.getPhotos().stream()).collect(toMap(Photo::getId, identity())));
@@ -89,57 +89,57 @@ class JsonDao implements FishBaseDao {
     }
 
     @VisibleForTesting
-    void writeAll() {
+    void writeAll() {
         writePhotos();
         writeSpecies();
         writeSpecimens();
         writeTrips();
     }
 
-    private void writePhotos() {
+    private void writePhotos() {
         photoHandler.write(photos.values());
     }
 
-    private void writeSpecies() {
+    private void writeSpecies() {
         specieHandler.write(getSpecies());
     }
 
-    private void writeSpecimens() {
+    private void writeSpecimens() {
         autoCompleteMap = null;
         specimenHandler.write(streamSpecimens()
                 .sorted(comparing(Specimen::getInstant).thenComparing(Specimen::getId))
                 .collect(toList()));
     }
 
-    private void writeTrips() {
+    private void writeTrips() {
         tripHandler.write(streamTrips()
                 .sorted(comparing(Trip::getStartDate).thenComparing(Trip::getDescription))
                 .collect(toList()));
     }
 
-    private Stream<Specimen> streamSpecimens() {
+    private Stream<Specimen> streamSpecimens() {
         return specimens.values().stream();
     }
 
-    private Stream<Trip> streamTrips() {
+    private Stream<Trip> streamTrips() {
         return trips.values().stream();
     }
 
-    private Stream<Specie> streamSpecies() {
+    private Stream<Specie> streamSpecies() {
         return species.values().stream();
     }
 
     @Override
-    public Photo getPhoto(String id) {
+    public Photo getPhoto(String id) {
         Photo photo = photos.get(id);
-        if (photo == null) {
+        if (photo == null) {
             throw new IllegalArgumentException("There's no Photo with id="+id);
         }
         return photo;
     }
 
     @Override
-    public List<Photo> getPhotos() {
+    public List<Photo> getPhotos() {
         return photos
                 .values()
                 .stream()
@@ -148,24 +148,24 @@ class JsonDao implements FishBaseDao {
     }
 
     @Override
-    public Specie getSpecie(String id) {
+    public Specie getSpecie(String id) {
         Specie specie = species.get(id);
-        if (specie == null) {
+        if (specie == null) {
             throw new IllegalArgumentException("There's no Specie with id="+id);
         }
         return specie;
     }
 
     @Override
-    public List<Specie> getSpecies() {
+    public List<Specie> getSpecies() {
         return streamSpecies()
                 .sorted(comparing(Specie::getName, CASE_INSENSITIVE_ORDER))
                 .collect(toList());
     }
 
     @Override
-    public void saveSpecies(Collection<Specie> species) {
-        if (!species.isEmpty()) {
+    public void saveSpecies(Collection<Specie> species) {
+        if (!species.isEmpty()) {
             Map<String, Specie> specieMap = species.stream().collect(toMap(Specie::getId, identity()));
             this.species.putAll(specieMap);
             writeSpecies();
@@ -181,15 +181,15 @@ class JsonDao implements FishBaseDao {
     }
 
     @Override
-    public boolean isSpecieDeletable(Specie specie) {
+    public boolean isSpecieDeletable(Specie specie) {
         return !streamSpecimens()
                 .anyMatch(s -> s.getSpecie().equalsId(specie));
     }
 
     @Override
-    public void deleteSpecies(Collection<Specie> species) {
-        species.forEach(s -> {
-            if (!isSpecieDeletable(s)) {
+    public void deleteSpecies(Collection<Specie> species) {
+        species.forEach(s -> {
+            if (!isSpecieDeletable(s)) {
                 throw new IllegalArgumentException("Specie is not deletable: " + s);
             }
         });
@@ -198,16 +198,16 @@ class JsonDao implements FishBaseDao {
     }
 
     @Override
-    public Specimen getSpecimen(String id) {
+    public Specimen getSpecimen(String id) {
         Specimen specimen = specimens.get(id);
-        if (specimen == null) {
+        if (specimen == null) {
             throw new IllegalArgumentException("There's no Specimen with id="+id);
         }
         return specimen;
     }
 
     @Override
-    public List<Specimen> getSpecimens() {
+    public List<Specimen> getSpecimens() {
         return streamSpecimens()
                 .sorted(comparing((Specimen s) -> s.getSpecie().getName())
                         .thenComparing(comparing(Specimen::getWeight).reversed()))
@@ -215,19 +215,19 @@ class JsonDao implements FishBaseDao {
     }
 
     @Override
-    public void saveSpecimens(Collection<Specimen> specimens) {
-        if (!specimens.isEmpty()) {
+    public void saveSpecimens(Collection<Specimen> specimens) {
+        if (!specimens.isEmpty()) {
             saveSpecimens(specimens, true);
         }
     }
 
-    private void saveSpecimens(Collection<Specimen> specimens, boolean writeSpecimens) {
+    private void saveSpecimens(Collection<Specimen> specimens, boolean writeSpecimens) {
         Map<String, Specimen> specimenMap = specimens.stream().collect(toMap(Specimen::getId, identity()));
         Map<String, Set<Specimen>> tripSpecimens = specimens.stream()
                 .collect(groupingBy(Specimen::getTripId, toSet()));
 
         Map<String, Trip> modifiedTrips = tripSpecimens.entrySet().stream()
-                .map(e -> {
+                .map(e -> {
                     Trip trip = getTrip(e.getKey());
                     ArrayList<Specimen> newSpecimens = new ArrayList<>(trip.getSpecimens());
                     newSpecimens.removeIf(s -> specimenMap.containsKey(s.getId()));
@@ -245,11 +245,11 @@ class JsonDao implements FishBaseDao {
 
         specimens.forEach(specimen -> this.specimens.put(specimen.getId(), specimen));
 
-        if (writeTrips) {
+        if (writeTrips) {
             writeTrips();
         }
 
-        if (writeSpecimens) {
+        if (writeSpecimens) {
             writeSpecimens();
         }
 
@@ -257,13 +257,13 @@ class JsonDao implements FishBaseDao {
     }
 
     @Override
-    public void deleteSpecimens(Collection<Specimen> specimens) {
-        if (!specimens.isEmpty()) {
+    public void deleteSpecimens(Collection<Specimen> specimens) {
+        if (!specimens.isEmpty()) {
             Map<String, Set<Specimen>> tripSpecimens = specimens.stream()
                     .collect(groupingBy(Specimen::getTripId, toSet()));
 
             trips.putAll(tripSpecimens.entrySet().stream()
-                    .map(e -> {
+                    .map(e -> {
                         Trip trip = getTrip(e.getKey());
                         List<Specimen> newSpecimens = new ArrayList<>(trip.getSpecimens());
                         newSpecimens.removeAll(tripSpecimens.get(trip.getId()));
@@ -279,23 +279,23 @@ class JsonDao implements FishBaseDao {
     }
 
     @Override
-    public List<Trip> getTrips() {
+    public List<Trip> getTrips() {
         return streamTrips()
                 .sorted(comparing(Trip::getStartDate).reversed().thenComparing(Trip::getDescription))
                 .collect(toList());
     }
 
     @Override
-    public Trip getTrip(String id) {
+    public Trip getTrip(String id) {
         Trip trip = trips.get(id);
-        if (trip == null) {
+        if (trip == null) {
             throw new IllegalArgumentException("There's no Trip with id="+id);
         }
         return trip;
     }
 
     @Override
-    public void saveTrip(Trip trip) {
+    public void saveTrip(Trip trip) {
         requireNonNull(trip, "trip cannot be null");
         checkPhotoIntegrity(trip);
 
@@ -321,21 +321,21 @@ class JsonDao implements FishBaseDao {
 
         trips.put(trip.getId(), trip);
 
-        if (tripChanged) {
+        if (tripChanged) {
             writeTrips();
             trip.markPersisted();
         }
-        if (specimensChanged) {
+        if (specimensChanged) {
             writeSpecimens();
             trip.getSpecimens().forEach(Specimen::markPersisted);
         }
-        if (photosChanged) {
+        if (photosChanged) {
             writePhotos();
             trip.getPhotos().forEach(Photo::markPersisted);
         }
     }
 
-    private void checkPhotoIntegrity(Trip trip) {
+    private void checkPhotoIntegrity(Trip trip) {
         trip.getPhotos()
                 .stream()
                 .map(p -> photos.get(p.getId()))
@@ -343,57 +343,57 @@ class JsonDao implements FishBaseDao {
                 .filter(p -> !p.getTripId().equals(trip.getId()))
                 .map(p -> trips.get(p.getTripId()))
                 .findAny()
-                .ifPresent(t -> {
+                .ifPresent(t -> {
                     throw new IllegalArgumentException("Photo is already contained in another trip: " + t.getLabel());
                 });
     }
 
-    private boolean isTripChanged(Trip trip) {
+    private boolean isTripChanged(Trip trip) {
         return trip.isNew()
             || !trips.get(trip.getId()).equalsWithoutCollections(trip)
             || !getSpecimenIds(trips.get(trip.getId())).equals(getSpecimenIds(trip))
             || !getPhotoIds(trips.get(trip.getId())).equals(getPhotoIds(trip));
     }
 
-    private Set<String> getSpecimenIds(Trip trip) {
+    private Set<String> getSpecimenIds(Trip trip) {
         return trip.getSpecimens().stream().map(Specimen::getId).collect(toSet());
     }
 
-    private Set<String> getPhotoIds(Trip trip) {
+    private Set<String> getPhotoIds(Trip trip) {
         return trip.getPhotos().stream().map(Photo::getId).collect(toSet());
     }
 
-    private boolean isSpecimensChanged(Trip trip) {
+    private boolean isSpecimensChanged(Trip trip) {
         return (trip.isNew() && trip.hasSpecimens())
             || !trips.getOrDefault(trip.getId(), EMPTY_TRIP).getSpecimens().equals(trip.getSpecimens());
     }
 
-    private boolean isPhotosChanged(Trip trip) {
+    private boolean isPhotosChanged(Trip trip) {
         return (trip.isNew() && trip.hasPhotos())
             || !trips.getOrDefault(trip.getId(), EMPTY_TRIP).getPhotos().equals(trip.getPhotos());
     }
 
     @Override
-    public void deleteTrip(Trip tripToDelete) {
+    public void deleteTrip(Trip tripToDelete) {
         String id = tripToDelete.getId();
-        if (trips.containsKey(id)) {
+        if (trips.containsKey(id)) {
             Trip trip = trips.remove(id);
             trip.getSpecimens().stream().map(Specimen::getId).forEach(specimens::remove);
             trip.getPhotos().stream().map(Photo::getId).forEach(photos::remove);
 
             writeTrips();
-            if (trip.hasSpecimens()) {
+            if (trip.hasSpecimens()) {
                 writeSpecimens();
             }
-            if (trip.hasPhotos()) {
+            if (trip.hasPhotos()) {
                 writePhotos();
             }
         }
     }
 
     @Override
-    public SortedSet<String> getAutoCompletions(AutoCompleteField field) {
-        if (autoCompleteMap == null) {
+    public SortedSet<String> getAutoCompletions(AutoCompleteField field) {
+        if (autoCompleteMap == null) {
             autoCompleteMap = streamSpecimens()
                     .map(Specimen::getAutoCompletions)
                     .flatMap(map -> map.entrySet().stream())

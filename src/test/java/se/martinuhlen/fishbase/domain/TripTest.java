@@ -21,9 +21,9 @@ import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
-public class TripTest {
+public class TripTest {
     @Test
-    public void properties() {
+    public void properties() {
         Trip trip = Trip.asNew()
                 .withDescription("A good trip")
                 .withStartDate(parse("2015-03-13"))
@@ -49,7 +49,7 @@ public class TripTest {
     }
 
     @Test
-    public void equalsAndHashCode() {
+    public void equalsAndHashCode() {
         assertEquals(trip3(), trip3());
         assertEquals(trip2(), trip2());
         assertEquals(trip1(), trip1());
@@ -69,7 +69,7 @@ public class TripTest {
     }
 
     @Test
-    public void asPersisted() {
+    public void asPersisted() {
         Trip t = TestData.trip2();
         assertTrue(t.isPersisted());
         assertFalse(t.isNew());
@@ -80,7 +80,7 @@ public class TripTest {
     }
 
     @Test
-    public void asNew() {
+    public void asNew() {
         Trip t = Trip.asNew();
         assertNotNull(t.getId());
         assertFalse(t.isPersisted());
@@ -92,7 +92,7 @@ public class TripTest {
     }
 
     @Test
-    public void specimensAreSorted() {
+    public void specimensAreSorted() {
         Specimen first = trip2().getSpecimens().get(0).withInstant(LocalDateTime.parse("2018-03-13T09:30"));
         Specimen second = trip2().getSpecimens().get(1).withInstant(LocalDateTime.parse("2018-03-13T14:45"));
         Trip trip = trip2().withSpecimens(asList(second, first));
@@ -101,7 +101,7 @@ public class TripTest {
     }
 
     @Test
-    public void phtotosAreSorted() {
+    public void phtotosAreSorted() {
         Trip trip = TestData.newTrip();
         Photo photo1 = TestData.newPhoto("photo#1", trip.getId(), LocalDateTime.parse("2020-03-16T20:41"));
         Photo photo2 = TestData.newPhoto("photo#2", trip.getId(), LocalDateTime.parse("2020-03-16T21:42"));
@@ -114,18 +114,18 @@ public class TripTest {
     }
 
     @Test
-    public void hasSpecimens() {
+    public void hasSpecimens() {
         assertTrue(trip2().hasSpecimens());
         assertFalse(newTrip().hasSpecimens());
     }
 
     @Test
-    public void specimensMustHaveTripId() {
+    public void specimensMustHaveTripId() {
         assertThrows(IllegalArgumentException.class, () -> trip1().withSpecimens(asList(Specimen.asNew("?"))));
     }
 
     @Test
-    public void invariants() {
+    public void invariants() {
         Trip t = Trip.asNew();
         assertThrows(IllegalArgumentException.class, () -> Trip.asPersisted(null));
         assertThrows(IllegalArgumentException.class, () -> t.withDescription(null));

@@ -24,29 +24,29 @@ import se.martinuhlen.fishbase.domain.Specimen;
  * Unit tests of {@link SpecimenWrapper}.
  *
  */
-public class SpecimenWrapperTest extends WrapperTestCase<Specimen, SpecimenWrapper> {
+public class SpecimenWrapperTest extends WrapperTestCase<Specimen, SpecimenWrapper> {
     @Override
-    protected SpecimenWrapper createWrapper() {
+    protected SpecimenWrapper createWrapper() {
         return new SpecimenWrapper(bream5120(), listener);
     }
 
     @Test
-    public void specieProperty() {
+    public void specieProperty() {
         testProperty("specie", wrapper::specieProperty, Specimen::getSpecie, perch(), bream(), tench());
     }
 
     @Test
-    public void weightProperty() {
+    public void weightProperty() {
         testProperty("weight", wrapper::weightProperty, Specimen::getWeight, 3875, 4470, 5120);
     }
 
     @Test
-    public void lengthProperty() {
+    public void lengthProperty() {
         testProperty("length", wrapper::lengthProperty, Specimen::getLength, 64f, 66.5f, 68f);
     }
 
     @Test
-    public void ratioProperty() {
+    public void ratioProperty() {
         wrapper.specieProperty().setValue(perch().withRegWeight(1000));
         wrapper.weightProperty().setValue(500);
         ReadOnlyProperty<Double> ratio = wrapper.ratioProperty();
@@ -65,12 +65,12 @@ public class SpecimenWrapperTest extends WrapperTestCase<Specimen, SpecimenWrapp
     }
 
     @Test
-    public void locationProperty() {
+    public void locationProperty() {
         testProperty("location", wrapper::locationProperty, Specimen::getLocation, "A", "B", "C");
     }
 
     @Test
-    public void dateProperty() {
+    public void dateProperty() {
         testProperty("date", wrapper::dateProperty, s -> s.getInstant().toLocalDate(), LocalDate.parse("2017-04-10"), LocalDate.parse("2017-08-24"), LocalDate.parse("2018-02-12"));
 
         wrapper.setWrapee(wrapper.getWrapee().withInstant(LocalDateTime.parse("2017-02-09T19:53")));
@@ -79,7 +79,7 @@ public class SpecimenWrapperTest extends WrapperTestCase<Specimen, SpecimenWrapp
     }
 
     @Test
-    public void timeProperty() {
+    public void timeProperty() {
         testProperty("time", wrapper::timeProperty, s -> s.getInstant().toLocalTime(), LocalTime.parse("20:04"), LocalTime.parse("13:37"), LocalTime.parse("21:45"));
 
         wrapper.setWrapee(wrapper.getWrapee().withInstant(LocalDateTime.parse("2017-02-09T19:53")));
@@ -88,22 +88,22 @@ public class SpecimenWrapperTest extends WrapperTestCase<Specimen, SpecimenWrapp
     }
 
     @Test
-    public void methodProperty() {
+    public void methodProperty() {
         testProperty("method", wrapper::methodProperty, Specimen::getMethod, "A", "B", "C");
     }
 
     @Test
-    public void baitProperty() {
+    public void baitProperty() {
         testProperty("bait", wrapper::baitProperty, Specimen::getBait, "A", "B", "C");
     }
 
     @Test
-    public void weatherProperty() {
+    public void weatherProperty() {
         testProperty("weather", wrapper::weatherProperty, Specimen::getWeather, "A", "B", "C");
     }
 
     @Test
-    public void textProperty() {
+    public void textProperty() {
         testProperty("text", wrapper::textProperty, Specimen::getText, "A", "B", "C");
     }
 }

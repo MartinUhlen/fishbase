@@ -13,11 +13,11 @@ import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
  *
  * @author Martin
  */
-public abstract class Domain<D extends Domain<D>> {
+public abstract class Domain<D extends Domain<D>> {
     private final String id;
     private boolean persisted;
 
-    protected Domain(String id, boolean persisted) {
+    protected Domain(String id, boolean persisted) {
         this.id = requireNonNull(id, "id can't be null");
         this.persisted = persisted;
     }
@@ -27,7 +27,7 @@ public abstract class Domain<D extends Domain<D>> {
      * 
      * @return ID that uniquely identifies this object.
      */
-    public final String getId() {
+    public final String getId() {
         return id;
     }
 
@@ -36,21 +36,21 @@ public abstract class Domain<D extends Domain<D>> {
      * 
      * @return {@code true} if persisted
      */
-    public final boolean isPersisted() {
+    public final boolean isPersisted() {
         return persisted;
     }
 
     /**
      * @return the opposite of {@link #isPersisted()}
      */
-    public final boolean isNew() {
+    public final boolean isNew() {
         return !isPersisted();
     }
 
     /**
      * Marks this object as {@link #isPersisted() persisted}.
      */
-    public final void markPersisted() {
+    public final void markPersisted() {
         this.persisted = true;
     }
 
@@ -77,24 +77,24 @@ public abstract class Domain<D extends Domain<D>> {
     public abstract D copy();
 
     @Override
-    public final String toString() {
+    public final String toString() {
         return ReflectionToStringBuilder.toString(this, SHORT_PREFIX_STYLE);
     }
 
     @Override
-    public final int hashCode() {
+    public final int hashCode() {
         return new HashCodeBuilder().append(getId()).toHashCode();
     }
 
     @Override
-    public final boolean equals(Object obj) {
-        if (obj == this) {
+    public final boolean equals(Object obj) {
+        if (obj == this) {
             return true;
         }
-        else if (obj == null || obj.getClass() != this.getClass()) {
+        else if (obj == null || obj.getClass() != this.getClass()) {
             return false;
         }
-        else {
+        else {
             @SuppressWarnings("unchecked")
             D that = (D) obj;
             return equalsId(that)
@@ -108,7 +108,7 @@ public abstract class Domain<D extends Domain<D>> {
      * @param that object whose ID to compare against this object's ID
      * @return {@code true} if they have equal ID
      */
-    public final boolean equalsId(D that) {
+    public final boolean equalsId(D that) {
         return that != null
             && this.getId().equals(that.getId())
             && this.isPersisted() == that.isPersisted();
@@ -131,8 +131,8 @@ public abstract class Domain<D extends Domain<D>> {
      * @return {@code value} when not {@code null}
      * @throws IllegalArgumentException if value is {@code null}
      */
-    protected static <T> T requireNonNull(T value, String message) {
-        if (value == null) {
+    protected static <T> T requireNonNull(T value, String message) {
+        if (value == null) {
             throw new IllegalArgumentException(message);
         }
         return value;
@@ -145,8 +145,8 @@ public abstract class Domain<D extends Domain<D>> {
      * @return value when not blank
      * @throws IllegalArgumentException if value is blank
      */
-    protected static String requireNonBlank(String value, String message) {
-        if (isBlank(value)) {
+    protected static String requireNonBlank(String value, String message) {
+        if (isBlank(value)) {
             throw new IllegalArgumentException(message);
         }
         return value;
@@ -159,7 +159,7 @@ public abstract class Domain<D extends Domain<D>> {
      * @param message in case value is negative
      * @return given {@code value}
      */
-    protected static int requireNonNegative(int value, String message) {
+    protected static int requireNonNegative(int value, String message) {
         return (int) requireNonNegative((float) value, message);
     }
 
@@ -170,18 +170,18 @@ public abstract class Domain<D extends Domain<D>> {
      * @param message in case value is negative
      * @return given {@code value}
      */
-    protected static float requireNonNegative(float value, String message) {
-        if (value < 0.0f) {
+    protected static float requireNonNegative(float value, String message) {
+        if (value < 0.0f) {
             throw new IllegalArgumentException(message);
         }
         return value;
     }
 
-    protected abstract static class Builder<D extends Domain<D>> {
+    protected abstract static class Builder<D extends Domain<D>> {
         protected final String id;
         protected final boolean persisted;
 
-        protected Builder(String id, boolean persisted) {
+        protected Builder(String id, boolean persisted) {
             this.id = requireNonBlank(id, "id cannot be blank");
             this.persisted = persisted;
         }

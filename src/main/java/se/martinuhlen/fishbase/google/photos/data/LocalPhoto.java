@@ -11,7 +11,7 @@ import java.io.OutputStream;
 
 public class LocalPhoto {
     private static final java.io.File CACHE_DIR = new java.io.File(new java.io.File(System.getProperty("user.home"), ".fishbase"), "cache");
-    static    {
+    static    {
         CACHE_DIR.mkdirs();
     }
 

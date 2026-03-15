@@ -45,7 +45,7 @@ import se.martinuhlen.fishbase.javafx.data.SpecimenWrapper;
 import se.martinuhlen.fishbase.javafx.photo.SlideshowPane;
 import se.martinuhlen.fishbase.utils.Cursor;
 
-class SpecimenView extends AbstractTableView<SpecimenWrapper, Specimen> {
+class SpecimenView extends AbstractTableView<SpecimenWrapper, Specimen> {
     private final FishBaseDao dao;
     private final PhotoService photoService;
     private final SlideshowPane slideshow;
@@ -55,7 +55,7 @@ class SpecimenView extends AbstractTableView<SpecimenWrapper, Specimen> {
     private final Slider ratioSlider;
     private final CheckBox personalBestCheckBox;
 
-    SpecimenView(FishBaseDao dao, PhotoService photoService, Consumer<String> tripOpener) {
+    SpecimenView(FishBaseDao dao, PhotoService photoService, Consumer<String> tripOpener) {
         super("Specimens", dao::getSpecimens, dao::saveSpecimens, dao::deleteSpecimens);
         this.dao = dao;
         this.photoService = photoService;
@@ -72,7 +72,7 @@ class SpecimenView extends AbstractTableView<SpecimenWrapper, Specimen> {
     }
 
     @Override
-    Node createTopNode() {
+    Node createTopNode() {
         filterField.setPrefWidth(200);
         ratioSlider.setPrefWidth(200);
         ratioSlider.setShowTickLabels(true);
@@ -94,7 +94,7 @@ class SpecimenView extends AbstractTableView<SpecimenWrapper, Specimen> {
     }
 
     @Override
-    TableView<SpecimenWrapper> createTable() {
+    TableView<SpecimenWrapper> createTable() {
         FilteredList<SpecimenWrapper> filteredList = list.filtered(createFilterPredicate());
         SpecimenTable specimenTable = new SpecimenTable(filteredList, dao::getSpecies, dao::getAutoCompletions, tripOpener);
         specimenTable.getSelectionModel().selectedItemProperty().addListener(obs -> photoLoader.restart());
@@ -106,7 +106,7 @@ class SpecimenView extends AbstractTableView<SpecimenWrapper, Specimen> {
         return specimenTable;
     }
 
-    private boolean hasPhotos(SpecimenWrapper wrapper) {
+    private boolean hasPhotos(SpecimenWrapper wrapper) {
         Specimen specimen = wrapper.getWrapee();
         return dao.getTrip(specimen.getTripId())
                 .getPhotos()
@@ -114,11 +114,11 @@ class SpecimenView extends AbstractTableView<SpecimenWrapper, Specimen> {
                 .anyMatch(photo -> photo.getSpecimens().contains(specimen.getId()));
     }
     
-    private Predicate<SpecimenWrapper> createFilterPredicate() {
+    private Predicate<SpecimenWrapper> createFilterPredicate() {
         Predicate<Specimen> textPredicate = new SpecimenTextPredicate(filterField.getText());
         Predicate<Specimen> ratioPredicate = s -> s.getRatio() >= ratioSlider.getValue();
         Predicate<Specimen> personalBestPredicate = w -> true;
-        if (personalBestCheckBox.isSelected()) {
+        if (personalBestCheckBox.isSelected()) {
             Map<Specie, Specimen> personalBest = list
                     .stream()
                     .map(SpecimenWrapper::getWrapee)
@@ -135,7 +135,7 @@ class SpecimenView extends AbstractTableView<SpecimenWrapper, Specimen> {
     }
 
     @Override
-    Node createTableNode() {
+    Node createTableNode() {
         StackPane stackPane = new StackPane(getTable(), slideshow);
         slideshow.setVisible(false);
         slideshow.setButtonSize(SIZE_16);
@@ -148,27 +148,27 @@ class SpecimenView extends AbstractTableView<SpecimenWrapper, Specimen> {
     }
 
     @Override
-    SpecimenWrapper wrap(Specimen specimen) {
+    SpecimenWrapper wrap(Specimen specimen) {
         return new SpecimenWrapper(specimen);
     }
 
     @Override
-    void removeSelected() {
+    void removeSelected() {
         ((SpecimenTable) getTable()).removeSelected();
     }
 
-    private class PhotoLoader extends Service<List<FishingPhoto>> {
+    private class PhotoLoader extends Service<List<FishingPhoto>> {
         @Override
-        protected Task<List<FishingPhoto>> createTask() {
+        protected Task<List<FishingPhoto>> createTask() {
             slideshow.setPhotos(emptyCursor());
             SpecimenWrapper selectedItem = getTable().getSelectionModel().getSelectedItem();
-            return new Task<>() {
+            return new Task<>() {
                 @Override
-                protected List<FishingPhoto> call() throws Exception {
-                    if (selectedItem == null) {
+                protected List<FishingPhoto> call() throws Exception {
+                    if (selectedItem == null) {
                         return emptyList();
                     }
-                    else {
+                    else {
                         Specimen specimen = selectedItem.getWrapee();
                         List<Photo> photos = dao.getTrip(specimen.getTripId())
                                 .getPhotos()
@@ -183,7 +183,7 @@ class SpecimenView extends AbstractTableView<SpecimenWrapper, Specimen> {
         }
 
         @Override
-        protected void succeeded() {
+        protected void succeeded() {
             List<FishingPhoto> photos = getValue();            
             slideshow.setPhotos(Cursor.of(photos, 0));
             slideshow.setVisible(!photos.isEmpty());
