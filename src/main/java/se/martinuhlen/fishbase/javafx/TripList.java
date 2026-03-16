@@ -5,11 +5,14 @@ import static java.util.stream.Collectors.joining;
 import static javafx.scene.input.KeyCode.DOWN;
 import static javafx.scene.input.KeyCode.ESCAPE;
 import static javafx.scene.input.KeyCode.UP;
+import static javafx.scene.input.KeyEvent.KEY_PRESSED;
+import static javafx.scene.layout.HBox.setHgrow;
 import static javafx.scene.layout.Priority.ALWAYS;
 import static javafx.scene.text.FontWeight.BOLD;
 
 import java.util.Collection;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import org.controlsfx.control.textfield.TextFields;
 
@@ -17,11 +20,12 @@ import javafx.beans.Observable;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
-import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
@@ -30,27 +34,36 @@ import se.martinuhlen.fishbase.domain.Trip;
 import se.martinuhlen.fishbase.filter.TripTextPredicate;
 
 class TripList extends VBox {
-    private final TextField filter;
+
+    private static final Predicate<Trip> ACCEPT_ALL = _ -> true;
+
+    private final TextField textFilter;
+    private final CheckBox photoCheckBox;
+    private final CheckBox specimenCheckBox;
     private final ObservableList<Trip> list;
+    private final FilteredList<Trip> filteredList;
     private final ListView<Trip> listView;
 
     TripList(Consumer<Trip> selectionHandler) {
         list = FXCollections.observableArrayList();
-        FilteredList<Trip> filteredList = list.filtered(_ -> true);
-        filter = createFilter(filteredList);
+        filteredList = list.filtered(ACCEPT_ALL);
+        textFilter = createFilter();
+        photoCheckBox = createCheckBox("Photos");
+        specimenCheckBox = createCheckBox("Specimens");
         listView = createListView(selectionHandler, filteredList);
 
         Label label = new Label();
         filteredList.addListener((Observable _) -> label.setText(filteredList.size() + " trips"));
 
         setVgrow(listView, ALWAYS);
-        getChildren().setAll(filter, listView, label);
+        setHgrow(textFilter, ALWAYS);
+        getChildren().setAll(new HBox(textFilter, photoCheckBox, specimenCheckBox), listView, label);
     }
 
-    private TextField createFilter(FilteredList<Trip> filteredList) {
+    private TextField createFilter() {
         TextField filter = TextFields.createClearableTextField();
         filter.setPromptText("Filter...");
-        filter.textProperty().addListener(_ -> filteredList.setPredicate(new TripTextPredicate(filter.getText())));
+        filter.textProperty().addListener(_ -> applyFilter());
         filter.onKeyPressedProperty().set(e -> {
             if (e.getCode() == ESCAPE) {
                 filter.setText("");
@@ -73,12 +86,32 @@ class TripList extends VBox {
                 selectionHandler.accept(newTrip);
             }
         });
-        listView.addEventFilter(KeyEvent.KEY_PRESSED, e -> {
+        listView.addEventFilter(KEY_PRESSED, e -> {
             if (e.getCode() == UP && listView.getSelectionModel().getSelectedIndex() <= 0) {
-                filter.requestFocus();
+                textFilter.requestFocus();
             }
         });
         return listView;
+    }
+
+    private CheckBox createCheckBox(String label) {
+        CheckBox checkBox = new CheckBox(label);
+        checkBox.selectedProperty().addListener(_ -> applyFilter());
+        return checkBox;
+    }
+
+    private void applyFilter() {
+        Predicate<Trip> filter = ACCEPT_ALL;
+        if (!textFilter.getText().isBlank()) {
+            filter = filter.and(new TripTextPredicate(textFilter.getText()));
+        }
+        if (photoCheckBox.isSelected()) {
+            filter = filter.and(Trip::hasPhotos);
+        }
+        if (specimenCheckBox.isSelected()) {
+            filter = filter.and(Trip::hasSpecimens);
+        }
+        filteredList.setPredicate(filter);
     }
 
     private static class TripCell extends ListCell<Trip> {
@@ -118,8 +151,8 @@ class TripList extends VBox {
                     listView.scrollTo(trip);
                 },
                 () -> {
-                    if (!filter.getText().equals("")) {
-                        filter.setText("");
+                    if (!textFilter.getText().equals("")) {
+                        textFilter.setText("");
                         selectTrip(tripId);
                     }
                 });
