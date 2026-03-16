@@ -25,18 +25,18 @@ public class DrivePersistence implements Persistence {
     }
 
     @Override
-    public InputStream input(String name) throws IOException {
+    public InputStream input(String dir, String name) throws IOException {
         PipedInputStream input = new PipedInputStream(1_000_000);
         PipedOutputStream output = new PipedOutputStream(input);
-        execute(name, () ->    service.download(name, output));
+        execute(name, () -> service.download(dir, name, output));
         return input;
     }
 
     @Override
-    public OutputStream output(String name) throws IOException {
+    public OutputStream output(String dir, String name) throws IOException {
         PipedInputStream input = new PipedInputStream(1_000_000);
         PipedOutputStream output = new PipedOutputStream(input);
-        execute(name, () -> service.upload(name, input));
+        execute(name, () -> service.upload(dir, name, input));
         return output;
     }
 

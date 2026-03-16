@@ -32,14 +32,14 @@ public class DriveService {
         this.drive = drive;
     }
 
-    public void upload(String name, InputStream input) {
+    public void upload(String dir, String name, InputStream input) {
         InputStreamContent content = new InputStreamContent(null, input);
-        findFile(name).ifPresentOrElse(
-                $(file -> updateFile(file, content)),
-                $(() -> insertFile(name, content)));
+        findFile(dir, name).ifPresentOrElse(
+                $(file -> updateFile(dir, file, content)),
+                $(() -> insertFile(dir, name, content)));
     }
 
-    private void updateFile(File file, AbstractInputStreamContent content) throws IOException {
+    private void updateFile(String dir, File file, AbstractInputStreamContent content) throws IOException {
         LOG.atInfo().log("Starting update of '" + file.getName() + "'");
         Update update = drive.files().update(file.getId(), null, content);
         update.getMediaHttpUploader().setDirectUploadEnabled(true);
@@ -47,7 +47,7 @@ public class DriveService {
         LOG.atInfo().log("Finished updating '" + file.getName() + "'");
     }
 
-    private void insertFile(String name, AbstractInputStreamContent content) throws IOException {
+    private void insertFile(String dir, String name, AbstractInputStreamContent content) throws IOException {
         LOG.atInfo().log("Starting insert of '" + name + "'");
         File file = new File();
         file.setName(name);
@@ -56,14 +56,14 @@ public class DriveService {
         LOG.atInfo().log("Finished inserting '" + name + "'");
     }
 
-    public boolean download(String name, OutputStream output) {
-        boolean downloaded = download(name, () -> output);
+    public boolean download(String dir, String name, OutputStream output) {
+        boolean downloaded = download(dir, name, () -> output);
         run(() -> output.close());
         return downloaded;
     }
 
-    public boolean download(String name, Callable<OutputStream> outputSupplier) {
-        File file = findFile(name).orElse(null);
+    public boolean download(String dir, String name, Callable<OutputStream> outputSupplier) {
+        File file = findFile(dir, name).orElse(null);
         if (file != null) {
             run(() -> {
                 LOG.atInfo().log("Starting download of '" + name + "'");
@@ -78,7 +78,7 @@ public class DriveService {
         }
     }
 
-    private Optional<File> findFile(String name) {
+    private Optional<File> findFile(String dir, String name) {
         Optional<File> file = get(() -> drive.files()
                 .list()
                 .setQ("name='"+name+"' and parents in '"+getApplicationFolder().getId()+"' and trashed=false")

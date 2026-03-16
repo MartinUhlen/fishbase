@@ -31,6 +31,6 @@ public final class PhotoDataFactory {
     }
 
     private void downloadFromDrive(LocalPhoto localPhoto) {
-        driveService.download(localPhoto.getFileName(), () -> localPhoto.getOutputStream());
+        driveService.download("photos", localPhoto.getFileName(), () -> localPhoto.getOutputStream());
     }
 }

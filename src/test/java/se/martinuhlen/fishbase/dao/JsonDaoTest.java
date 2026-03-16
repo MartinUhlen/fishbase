@@ -9,6 +9,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
@@ -143,7 +145,7 @@ public class JsonDaoTest {
 
         dao.saveSpecies(species);
 
-        verify(persistence, never()).output("Specimen.json");
+        verify(persistence, never()).output(any(), eq("Specimen.json"));
         species.forEach(s -> assertSpecieEquals(s));
         assertEquals(bream, getSpecimen(bream5120().getId()).getSpecie());
         assertEquals(tench, getSpecimen(tench3540().getId()).getSpecie());
@@ -165,7 +167,7 @@ public class JsonDaoTest {
 
         dao.saveSpecimens(specimens);
 
-        verify(persistence, never()).output("Trip.json");
+        verify(persistence, never()).output(any(), eq("Trip.json"));
         specimens.forEach(s -> assertSpecimenEquals(s));
         assertTripEquals(trip2().withSpecimens(asList(perch, tench)));
     }
@@ -320,7 +322,7 @@ public class JsonDaoTest {
 
         dao.saveTrip(newTrip());
 
-        verify(persistence, times(1)).output("Trip.json");
+        verify(persistence, times(1)).output("data", "Trip.json");
         verifyNoMoreInteractions(persistence);
     }
 
@@ -423,8 +425,10 @@ public class JsonDaoTest {
     @Test
     public void deleteTripWithoutSpecimensOrPhotos() throws Exception {
         reset(persistence);
+
         dao.deleteTrip(trip3());
-        verify(persistence, times(1)).output("Trip.json");
+
+        verify(persistence, times(1)).output("data", "Trip.json");
         verifyNoMoreInteractions(persistence);
         assertTripsEquals(asList(trip2(), trip1()));
     }
@@ -453,7 +457,7 @@ public class JsonDaoTest {
             });
         };
 
-        asserter.run();        
+        asserter.run();
         createDao();
         asserter.run();
     }

@@ -11,20 +11,22 @@ import java.io.OutputStream;
  */
 public interface Persistence {
     /**
-     * Gets an input stream with given name.
-     * 
-     * @param name of the data to read
-     * @return input stream with given name
-     * @throws IOException if data can't be read
+     * Gets an input stream from a file with given name.
+     *
+     * @param dir directory where the file is located
+     * @param name of the file to read
+     * @return input stream for the given file
+     * @throws IOException if the file can't be read
      */
-    InputStream input(String name) throws IOException;
+    InputStream input(String dir, String name) throws IOException;
 
     /**
-     * Gets an output stream with given name.
-     * 
-     * @param name of the data to write
-     * @return output stream with given name
-     * @throws IOException if data can't be written
+     * Gets an output stream to a file with given name.
+     *
+     * @param dir directory where the file is located
+     * @param name of the file to write
+     * @return output stream for the given file
+     * @throws IOException if the file can't be written
      */
-    OutputStream output(String name) throws IOException;
+    OutputStream output(String dir, String name) throws IOException;
 }

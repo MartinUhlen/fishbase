@@ -107,8 +107,8 @@ class PhotoServiceImpl implements PhotoService {
                 .time(photo.getTime())
                 .starred(false);
 
-        driveService.upload(photo.getContentFileName(), photo.getContent().getStream());
-        driveService.upload(photo.getThumbnailFileName(), photo.getThumbnail().getStream());
+        driveService.upload("photos", photo.getContentFileName(), photo.getContent().getStream());
+        driveService.upload("photos", photo.getThumbnailFileName(), photo.getThumbnail().getStream());
 
         return new FishingPhotoImpl(domain, _ -> photo.getContent(), _ -> photo.getThumbnail());
     }

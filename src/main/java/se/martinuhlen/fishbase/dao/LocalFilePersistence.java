@@ -18,19 +18,21 @@ public class LocalFilePersistence implements Persistence {
     }
 
     @Override
-    public InputStream input(String name) throws IOException {
-        File file = fileOf(name);
+    public InputStream input(String dir, String name) throws IOException {
+        File file = fileOf(dir, name);
         return file.exists()
                 ? new FileInputStream(file)
                 : new ByteArrayInputStream(EMPTY_BYTE_ARRAY);
     }
 
     @Override
-    public OutputStream output(String name) throws IOException {
-        return new FileOutputStream(fileOf(name));
+    public OutputStream output(String dir, String name) throws IOException {
+        return new FileOutputStream(fileOf(dir, name));
     }
 
-    private File fileOf(String name) {
-        return new File(directory, name);
+    private File fileOf(String dir, String name) {
+        File fileDirectory = new File(directory, dir);
+        fileDirectory.mkdirs();
+        return new File(fileDirectory, name);
     }
 }
