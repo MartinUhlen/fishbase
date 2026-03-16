@@ -6,6 +6,7 @@ import static javafx.scene.input.KeyCode.DOWN;
 import static javafx.scene.input.KeyCode.ESCAPE;
 import static javafx.scene.input.KeyCode.UP;
 import static javafx.scene.input.KeyEvent.KEY_PRESSED;
+import static javafx.geometry.Pos.CENTER_LEFT;
 import static javafx.scene.layout.HBox.setHgrow;
 import static javafx.scene.layout.Priority.ALWAYS;
 import static javafx.scene.text.FontWeight.BOLD;
@@ -57,7 +58,9 @@ class TripList extends VBox {
 
         setVgrow(listView, ALWAYS);
         setHgrow(textFilter, ALWAYS);
-        getChildren().setAll(new HBox(textFilter, photoCheckBox, specimenCheckBox), listView, label);
+        HBox filterBar = new HBox(5, textFilter, photoCheckBox, specimenCheckBox);
+        filterBar.setAlignment(CENTER_LEFT);
+        getChildren().setAll(filterBar, listView, label);
     }
 
     private TextField createFilter() {
