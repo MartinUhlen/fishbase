@@ -4,6 +4,8 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
+import static se.martinuhlen.fishbase.dao.PersistenceDirectory.PHOTOS;
+import static se.martinuhlen.fishbase.dao.PersistenceDirectory.THUMBNAILS;
 
 import com.google.common.flogger.FluentLogger;
 
@@ -107,8 +109,8 @@ class PhotoServiceImpl implements PhotoService {
                 .time(photo.getTime())
                 .starred(false);
 
-        driveService.upload(photo.getContentFileName(), photo.getContent().getStream());
-        driveService.upload(photo.getThumbnailFileName(), photo.getThumbnail().getStream());
+        driveService.upload(PHOTOS, photo.getContentFileName(), photo.getContent().getStream());
+        driveService.upload(THUMBNAILS, photo.getThumbnailFileName(), photo.getThumbnail().getStream());
 
         return new FishingPhotoImpl(domain, _ -> photo.getContent(), _ -> photo.getThumbnail());
     }

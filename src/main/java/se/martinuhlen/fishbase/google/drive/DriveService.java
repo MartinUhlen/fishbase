@@ -16,8 +16,12 @@ import com.google.common.flogger.FluentLogger;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Callable;
+
+import se.martinuhlen.fishbase.dao.PersistenceDirectory;
 
 public class DriveService {
 
@@ -27,19 +31,20 @@ public class DriveService {
     private final Drive drive;
 
     private File applicationFolder;
+    private final Map<PersistenceDirectory, File> subFolders = new HashMap<>();
 
     public DriveService(Drive drive) {
         this.drive = drive;
     }
 
-    public void upload(String name, InputStream input) {
+    public void upload(PersistenceDirectory dir, String name, InputStream input) {
         InputStreamContent content = new InputStreamContent(null, input);
-        findFile(name).ifPresentOrElse(
-                $(file -> updateFile(file, content)),
-                $(() -> insertFile(name, content)));
+        findFile(dir, name).ifPresentOrElse(
+                $(file -> updateFile(dir, file, content)),
+                $(() -> insertFile(dir, name, content)));
     }
 
-    private void updateFile(File file, AbstractInputStreamContent content) throws IOException {
+    private void updateFile(PersistenceDirectory dir, File file, AbstractInputStreamContent content) throws IOException {
         LOG.atInfo().log("Starting update of '" + file.getName() + "'");
         Update update = drive.files().update(file.getId(), null, content);
         update.getMediaHttpUploader().setDirectUploadEnabled(true);
@@ -47,23 +52,23 @@ public class DriveService {
         LOG.atInfo().log("Finished updating '" + file.getName() + "'");
     }
 
-    private void insertFile(String name, AbstractInputStreamContent content) throws IOException {
+    private void insertFile(PersistenceDirectory dir, String name, AbstractInputStreamContent content) throws IOException {
         LOG.atInfo().log("Starting insert of '" + name + "'");
         File file = new File();
         file.setName(name);
-        file.setParents(asList(getApplicationFolder().getId()));
+        file.setParents(asList(getSubFolder(dir).getId()));
         drive.files().create(file, content).execute();
         LOG.atInfo().log("Finished inserting '" + name + "'");
     }
 
-    public boolean download(String name, OutputStream output) {
-        boolean downloaded = download(name, () -> output);
+    public boolean download(PersistenceDirectory dir, String name, OutputStream output) {
+        boolean downloaded = download(dir, name, () -> output);
         run(() -> output.close());
         return downloaded;
     }
 
-    public boolean download(String name, Callable<OutputStream> outputSupplier) {
-        File file = findFile(name).orElse(null);
+    public boolean download(PersistenceDirectory dir, String name, Callable<OutputStream> outputSupplier) {
+        File file = findFile(dir, name).orElse(null);
         if (file != null) {
             run(() -> {
                 LOG.atInfo().log("Starting download of '" + name + "'");
@@ -78,10 +83,10 @@ public class DriveService {
         }
     }
 
-    private Optional<File> findFile(String name) {
+    private Optional<File> findFile(PersistenceDirectory dir, String name) {
         Optional<File> file = get(() -> drive.files()
                 .list()
-                .setQ("name='"+name+"' and parents in '"+getApplicationFolder().getId()+"' and trashed=false")
+                .setQ("name='"+name+"' and parents in '"+getSubFolder(dir).getId()+"' and trashed=false")
                 .execute()
                 .getFiles()
                 .stream()
@@ -96,23 +101,35 @@ public class DriveService {
     }
 
 
+    private synchronized File getSubFolder(PersistenceDirectory dir) {
+        return subFolders.computeIfAbsent(dir, d -> findOrCreateFolder(d.name().toLowerCase(), getApplicationFolder().getId()));
+    }
+
     private synchronized File getApplicationFolder() {
         if (applicationFolder == null) {
-            applicationFolder = get(() -> drive.files()
-                    .list()
-                    .setQ("name = '" + APPLICATION_NAME + "' and trashed = false and mimeType = '" + MIMETYPE_FOLDER + "'")
-                    .setFields("files(id, name)")
-                    .execute())
-                        .getFiles()
-                        .stream()
-                        .findAny()
-                        .orElseGet($(() -> {
-                            File file = new File()
-                                    .setName(APPLICATION_NAME)
-                                    .setMimeType(MIMETYPE_FOLDER);
-                            return drive.files().create(file).execute();
-                        }));
+            applicationFolder = findOrCreateFolder(APPLICATION_NAME, null);
         }
         return applicationFolder;
+    }
+
+    private File findOrCreateFolder(String name, String parentId) {
+        String parentFilter = parentId != null ? " and parents in '" + parentId + "'" : "";
+        return get(() -> drive.files()
+                .list()
+                .setQ("name = '" + name + "'" + parentFilter + " and trashed = false and mimeType = '" + MIMETYPE_FOLDER + "'")
+                .setFields("files(id, name)")
+                .execute())
+                    .getFiles()
+                    .stream()
+                    .findAny()
+                    .orElseGet($(() -> {
+                        File folder = new File()
+                                .setName(name)
+                                .setMimeType(MIMETYPE_FOLDER);
+                        if (parentId != null) {
+                            folder.setParents(asList(parentId));
+                        }
+                        return drive.files().create(folder).execute();
+                    }));
     }
 }

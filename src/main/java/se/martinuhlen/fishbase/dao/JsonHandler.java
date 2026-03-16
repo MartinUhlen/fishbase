@@ -5,6 +5,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 import static java.util.Objects.requireNonNullElse;
 import static java.util.stream.Collectors.toUnmodifiableList;
+import static se.martinuhlen.fishbase.dao.PersistenceDirectory.DATA;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -46,12 +47,12 @@ abstract class JsonHandler<D extends Domain<D>> implements JsonSerializer<D>, Js
 
     /**
      * Gets a new reader.
-     * 
+     *
      * @return new reader instance
      */
     Reader reader() {
         try {
-            return new Reader(new InputStreamReader(persistence.input(fileName), UTF_8));
+            return new Reader(new InputStreamReader(persistence.input(DATA, fileName), UTF_8));
         }
         catch (IOException e) {
             throw new RuntimeException(e);
@@ -61,7 +62,7 @@ abstract class JsonHandler<D extends Domain<D>> implements JsonSerializer<D>, Js
     /**
      * Reads data from persistence.
      * <p>
-     * The read operation is divided into two steps; 
+     * The read operation is divided into two steps;
      * First a reader is constructed so that data from persistence can start to buffer immediately and then when desired, the data can be read.
      */
     class Reader {
@@ -83,7 +84,7 @@ abstract class JsonHandler<D extends Domain<D>> implements JsonSerializer<D>, Js
 
     void write(Collection<D> objects) {
         requireNonNull(objects);
-        try (Writer writer = new OutputStreamWriter(persistence.output(fileName), UTF_8)) {
+        try (Writer writer = new OutputStreamWriter(persistence.output(DATA, fileName), UTF_8)) {
             gson.toJson(objects, writer);
         }
         catch (IOException e) {
