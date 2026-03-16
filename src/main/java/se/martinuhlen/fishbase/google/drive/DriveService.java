@@ -16,6 +16,8 @@ import com.google.common.flogger.FluentLogger;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 
@@ -27,6 +29,7 @@ public class DriveService {
     private final Drive drive;
 
     private File applicationFolder;
+    private final Map<String, File> subFolders = new HashMap<>();
 
     public DriveService(Drive drive) {
         this.drive = drive;
@@ -51,7 +54,7 @@ public class DriveService {
         LOG.atInfo().log("Starting insert of '" + name + "'");
         File file = new File();
         file.setName(name);
-        file.setParents(asList(getApplicationFolder().getId()));
+        file.setParents(asList(getSubFolder(dir).getId()));
         drive.files().create(file, content).execute();
         LOG.atInfo().log("Finished inserting '" + name + "'");
     }
@@ -81,7 +84,7 @@ public class DriveService {
     private Optional<File> findFile(String dir, String name) {
         Optional<File> file = get(() -> drive.files()
                 .list()
-                .setQ("name='"+name+"' and parents in '"+getApplicationFolder().getId()+"' and trashed=false")
+                .setQ("name='"+name+"' and parents in '"+getSubFolder(dir).getId()+"' and trashed=false")
                 .execute()
                 .getFiles()
                 .stream()
@@ -96,23 +99,35 @@ public class DriveService {
     }
 
 
+    private synchronized File getSubFolder(String dir) {
+        return subFolders.computeIfAbsent(dir, d -> findOrCreateFolder(d, getApplicationFolder().getId()));
+    }
+
     private synchronized File getApplicationFolder() {
         if (applicationFolder == null) {
-            applicationFolder = get(() -> drive.files()
-                    .list()
-                    .setQ("name = '" + APPLICATION_NAME + "' and trashed = false and mimeType = '" + MIMETYPE_FOLDER + "'")
-                    .setFields("files(id, name)")
-                    .execute())
-                        .getFiles()
-                        .stream()
-                        .findAny()
-                        .orElseGet($(() -> {
-                            File file = new File()
-                                    .setName(APPLICATION_NAME)
-                                    .setMimeType(MIMETYPE_FOLDER);
-                            return drive.files().create(file).execute();
-                        }));
+            applicationFolder = findOrCreateFolder(APPLICATION_NAME, null);
         }
         return applicationFolder;
+    }
+
+    private File findOrCreateFolder(String name, String parentId) {
+        String parentFilter = parentId != null ? " and parents in '" + parentId + "'" : "";
+        return get(() -> drive.files()
+                .list()
+                .setQ("name = '" + name + "'" + parentFilter + " and trashed = false and mimeType = '" + MIMETYPE_FOLDER + "'")
+                .setFields("files(id, name)")
+                .execute())
+                    .getFiles()
+                    .stream()
+                    .findAny()
+                    .orElseGet($(() -> {
+                        File folder = new File()
+                                .setName(name)
+                                .setMimeType(MIMETYPE_FOLDER);
+                        if (parentId != null) {
+                            folder.setParents(asList(parentId));
+                        }
+                        return drive.files().create(folder).execute();
+                    }));
     }
 }
