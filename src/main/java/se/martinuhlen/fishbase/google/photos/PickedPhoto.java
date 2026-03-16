@@ -48,7 +48,7 @@ final class PickedPhoto implements GooglePhoto {
 
     @Override
     public PhotoData getThumbnail() {
-        return new RemotePhotoData(baseUrl + "=w512-h512", accessToken);
+        return new RemotePhotoData(baseUrl + "=w256-h256", accessToken);
     }
 
     @Override

@@ -1,6 +1,7 @@
 package se.martinuhlen.fishbase.google.photos;
 
 import static org.apache.commons.io.FilenameUtils.getExtension;
+import static se.martinuhlen.fishbase.utils.Constants.THUMBNAIL_SUFFIX;
 
 import java.time.LocalDateTime;
 
@@ -64,7 +65,7 @@ public interface GooglePhoto {
     PhotoData getContent();
 
     default String getThumbnailFileName() {
-        return getFileName("_thumb");
+        return getFileName(THUMBNAIL_SUFFIX);
     }
 
     default String getContentFileName() {

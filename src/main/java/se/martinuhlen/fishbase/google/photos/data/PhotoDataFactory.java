@@ -1,9 +1,12 @@
 package se.martinuhlen.fishbase.google.photos.data;
 
 import static se.martinuhlen.fishbase.dao.PersistenceDirectory.PHOTOS;
+import static se.martinuhlen.fishbase.dao.PersistenceDirectory.THUMBNAILS;
+import static se.martinuhlen.fishbase.utils.Constants.THUMBNAIL_SUFFIX;
 
 import com.google.common.flogger.FluentLogger;
 
+import se.martinuhlen.fishbase.dao.PersistenceDirectory;
 import se.martinuhlen.fishbase.google.drive.DriveService;
 
 /**
@@ -33,6 +36,7 @@ public final class PhotoDataFactory {
     }
 
     private void downloadFromDrive(LocalPhoto localPhoto) {
-        driveService.download(PHOTOS, localPhoto.getFileName(), () -> localPhoto.getOutputStream());
+        PersistenceDirectory dir = localPhoto.getFileName().contains(THUMBNAIL_SUFFIX) ? THUMBNAILS : PHOTOS;
+        driveService.download(dir, localPhoto.getFileName(), () -> localPhoto.getOutputStream());
     }
 }

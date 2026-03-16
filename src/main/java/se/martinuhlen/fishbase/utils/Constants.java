@@ -16,6 +16,8 @@ public final class Constants {
 
     public static final String APPLICATION_NAME = "FishBase";
 
+    public static final String THUMBNAIL_SUFFIX = "_thumb";
+
     public static final DateTimeFormatter DATE_FORMAT =  DateTimeFormatter.ISO_LOCAL_DATE;
 
     public static final DateTimeFormatter TIME_FORMAT = new DateTimeFormatterBuilder()
