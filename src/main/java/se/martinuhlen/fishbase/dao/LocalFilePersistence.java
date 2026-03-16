@@ -18,7 +18,7 @@ public class LocalFilePersistence implements Persistence {
     }
 
     @Override
-    public InputStream input(String dir, String name) throws IOException {
+    public InputStream input(PersistenceDirectory dir, String name) throws IOException {
         File file = fileOf(dir, name);
         return file.exists()
                 ? new FileInputStream(file)
@@ -26,12 +26,12 @@ public class LocalFilePersistence implements Persistence {
     }
 
     @Override
-    public OutputStream output(String dir, String name) throws IOException {
+    public OutputStream output(PersistenceDirectory dir, String name) throws IOException {
         return new FileOutputStream(fileOf(dir, name));
     }
 
-    private File fileOf(String dir, String name) {
-        File fileDirectory = new File(directory, dir);
+    private File fileOf(PersistenceDirectory dir, String name) {
+        File fileDirectory = new File(directory, dir.name().toLowerCase());
         fileDirectory.mkdirs();
         return new File(fileDirectory, name);
     }

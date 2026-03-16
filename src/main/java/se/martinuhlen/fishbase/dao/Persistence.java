@@ -18,7 +18,7 @@ public interface Persistence {
      * @return input stream for the given file
      * @throws IOException if the file can't be read
      */
-    InputStream input(String dir, String name) throws IOException;
+    InputStream input(PersistenceDirectory dir, String name) throws IOException;
 
     /**
      * Gets an output stream to a file with given name.
@@ -28,5 +28,5 @@ public interface Persistence {
      * @return output stream for the given file
      * @throws IOException if the file can't be written
      */
-    OutputStream output(String dir, String name) throws IOException;
+    OutputStream output(PersistenceDirectory dir, String name) throws IOException;
 }

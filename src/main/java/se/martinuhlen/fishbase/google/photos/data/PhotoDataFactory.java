@@ -1,5 +1,7 @@
 package se.martinuhlen.fishbase.google.photos.data;
 
+import static se.martinuhlen.fishbase.dao.PersistenceDirectory.PHOTOS;
+
 import com.google.common.flogger.FluentLogger;
 
 import se.martinuhlen.fishbase.google.drive.DriveService;
@@ -31,6 +33,6 @@ public final class PhotoDataFactory {
     }
 
     private void downloadFromDrive(LocalPhoto localPhoto) {
-        driveService.download("photos", localPhoto.getFileName(), () -> localPhoto.getOutputStream());
+        driveService.download(PHOTOS, localPhoto.getFileName(), () -> localPhoto.getOutputStream());
     }
 }

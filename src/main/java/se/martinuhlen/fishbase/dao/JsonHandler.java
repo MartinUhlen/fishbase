@@ -52,7 +52,7 @@ abstract class JsonHandler<D extends Domain<D>> implements JsonSerializer<D>, Js
      */
     Reader reader() {
         try {
-            return new Reader(new InputStreamReader(persistence.input(DATA.name().toLowerCase(), fileName), UTF_8));
+            return new Reader(new InputStreamReader(persistence.input(DATA, fileName), UTF_8));
         }
         catch (IOException e) {
             throw new RuntimeException(e);
@@ -84,7 +84,7 @@ abstract class JsonHandler<D extends Domain<D>> implements JsonSerializer<D>, Js
 
     void write(Collection<D> objects) {
         requireNonNull(objects);
-        try (Writer writer = new OutputStreamWriter(persistence.output(DATA.name().toLowerCase(), fileName), UTF_8)) {
+        try (Writer writer = new OutputStreamWriter(persistence.output(DATA, fileName), UTF_8)) {
             gson.toJson(objects, writer);
         }
         catch (IOException e) {

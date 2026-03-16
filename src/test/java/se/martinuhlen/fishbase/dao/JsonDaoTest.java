@@ -17,6 +17,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static se.martinuhlen.fishbase.dao.PersistenceDirectory.DATA;
 import static se.martinuhlen.fishbase.domain.AutoCompleteField.BAIT;
 import static se.martinuhlen.fishbase.domain.AutoCompleteField.LOCATION;
 import static se.martinuhlen.fishbase.domain.AutoCompleteField.METHOD;
@@ -322,7 +323,7 @@ public class JsonDaoTest {
 
         dao.saveTrip(newTrip());
 
-        verify(persistence, times(1)).output("data", "Trip.json");
+        verify(persistence, times(1)).output(DATA, "Trip.json");
         verifyNoMoreInteractions(persistence);
     }
 
@@ -428,7 +429,7 @@ public class JsonDaoTest {
 
         dao.deleteTrip(trip3());
 
-        verify(persistence, times(1)).output("data", "Trip.json");
+        verify(persistence, times(1)).output(DATA, "Trip.json");
         verifyNoMoreInteractions(persistence);
         assertTripsEquals(asList(trip2(), trip1()));
     }
