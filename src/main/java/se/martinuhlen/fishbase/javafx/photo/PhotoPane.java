@@ -39,6 +39,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.Screen;
+import javafx.stage.Window;
 import se.martinuhlen.fishbase.domain.Specimen;
 import se.martinuhlen.fishbase.domain.Trip;
 import se.martinuhlen.fishbase.google.photos.FishingPhoto;
@@ -149,6 +150,8 @@ public class PhotoPane extends BorderPane {
     }
 
     private void addPhotos() {
+        Window owner = getScene().getWindow();
+
         // Step 1 — Waiting dialog: open browser + show progress while user picks in Google Photos
         Service<List<GooglePhoto>> pickService = new Service<>() {
             @Override
@@ -169,6 +172,7 @@ public class PhotoPane extends BorderPane {
         waitingPane.setContent(new VBox(10, waitLabel, waitProgress));
 
         Dialog<ButtonType> waitDialog = new Dialog<>();
+        waitDialog.initOwner(owner);
         waitDialog.setTitle("Add photos");
         waitDialog.setDialogPane(waitingPane);
         waitDialog.setResizable(false);
@@ -215,6 +219,7 @@ public class PhotoPane extends BorderPane {
         listener.onChanged(null);
 
         Dialog<ButtonType> reviewDialog = new Dialog<>();
+        reviewDialog.initOwner(owner);
         reviewDialog.setTitle("Add photos");
         reviewDialog.setDialogPane(reviewDialogPane);
         reviewDialog.setResizable(true);
@@ -254,6 +259,7 @@ public class PhotoPane extends BorderPane {
                 uploadPane.setContent(new VBox(10, uploadLabel, uploadProgress));
 
                 Dialog<ButtonType> uploadDialog = new Dialog<>();
+                uploadDialog.initOwner(owner);
                 uploadDialog.setTitle("Add photos");
                 uploadDialog.setDialogPane(uploadPane);
                 uploadDialog.setResizable(false);
