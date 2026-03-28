@@ -54,23 +54,17 @@ public class Checked {
         };
     }
 
-//    public interface Function<T, R>
-//    {
-//        R apply(T t) throws Exception;
-//    }
-//
-//    public static <T, R> java.util.function.Function<T, R> $(Function<T, R> function)
-//    {
-//        return t ->
-//        {
-//            try
-//            {
-//                return function.apply(t);
-//            }
-//            catch (Exception e)
-//            {
-//                throw new RuntimeException(e);
-//            }
-//        };
-//    }
+    public interface Function<T, R> {
+        R apply(T t) throws Exception;
+    }
+
+    public static <T, R> java.util.function.Function<T, R> apply(Function<T, R> function) {
+        return t -> {
+            try {
+                return function.apply(t);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        };
+    }
 }

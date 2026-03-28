@@ -226,10 +226,8 @@ public class PhotoPane extends BorderPane {
         reviewDialog.showAndWait()
             .filter(b -> b == OK)
             .ifPresent(_ -> {
-                List<FishingPhoto> newPhotos = reviewPane.getSelectedPhotos()
-                        .stream()
-                        .map(photo -> service.create(photo, tripId.getValue()))
-                        .collect(toList());
+                ObservableSet<GooglePhoto> selectedPhotos = reviewPane.getSelectedPhotos();
+                List<FishingPhoto> newPhotos = service.createAll(selectedPhotos, tripId.getValue());
                 thumbnailPane.addPhotos(newPhotos);
             });
     }

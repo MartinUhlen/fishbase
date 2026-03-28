@@ -1,5 +1,6 @@
 package se.martinuhlen.fishbase.google.photos;
 
+import java.util.Collection;
 import java.util.List;
 
 import se.martinuhlen.fishbase.domain.Photo;
@@ -28,6 +29,15 @@ public interface PhotoService {
      * @return a list of all photos picked by the user
      */
     List<GooglePhoto> pick();
+
+    /**
+     * Creates a set of fishing photos from a set of taken photo.
+     *
+     * @param photos taken on fishing {@link Trip trip}
+     * @param tripId identifies the fishing trip
+     * @return new fishing photos
+     */
+    List<FishingPhoto> createAll(Collection<? extends GooglePhoto> photos, String tripId);
 
     /**
      * Creates a fishing photo of a taken photo.

@@ -6,12 +6,18 @@ import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 import static se.martinuhlen.fishbase.dao.PersistenceDirectory.PHOTOS;
 import static se.martinuhlen.fishbase.dao.PersistenceDirectory.THUMBNAILS;
+import static se.martinuhlen.fishbase.utils.Checked.apply;
+import static se.martinuhlen.fishbase.utils.Checked.run;
 
 import com.google.common.flogger.FluentLogger;
 
 import java.awt.Desktop;
 import java.net.URI;
+import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import se.martinuhlen.fishbase.domain.Photo;
 import se.martinuhlen.fishbase.google.drive.DriveService;
@@ -26,6 +32,7 @@ import se.martinuhlen.fishbase.google.photos.data.PhotoDataFactory;
 class PhotoServiceImpl implements PhotoService {
     private static final FluentLogger LOG = FluentLogger.forEnclosingClass();
     private static final long TIMEOUT_MS = 30L * 60L * 1000L; // 30 minutes
+    private static final ExecutorService UPLOAD_EXECUTOR = Executors.newVirtualThreadPerTaskExecutor();
 
     private final PickerClient pickerClient;
     private final DriveService driveService;
@@ -101,6 +108,19 @@ class PhotoServiceImpl implements PhotoService {
     }
 
     @Override
+    public List<FishingPhoto> createAll(Collection<? extends GooglePhoto> photos, String tripId) {
+        List<Future<FishingPhoto>> futurePhotos = photos
+                .stream()
+                .map(photo -> UPLOAD_EXECUTOR.submit(() -> create(photo, tripId)))
+                .toList();
+
+        return futurePhotos
+                .stream()
+                .map(apply(Future::get))
+                .toList();
+    }
+
+    @Override
     public FishingPhoto create(GooglePhoto photo, String tripId) {
         Photo domain = Photo.asNew(photo.getId())
                 .tripId(tripId)
@@ -109,8 +129,10 @@ class PhotoServiceImpl implements PhotoService {
                 .time(photo.getTime())
                 .starred(false);
 
-        driveService.upload(PHOTOS, photo.getContentFileName(), photo.getContent().getStream());
-        driveService.upload(THUMBNAILS, photo.getThumbnailFileName(), photo.getThumbnail().getStream());
+        Future<?> futurePhoto = UPLOAD_EXECUTOR.submit(() -> driveService.upload(PHOTOS, photo.getContentFileName(), photo.getContent().getStream()));
+        Future<?> futureThumbnail = UPLOAD_EXECUTOR.submit(() -> driveService.upload(THUMBNAILS, photo.getThumbnailFileName(), photo.getThumbnail().getStream()));
+        run(() -> futurePhoto.get());
+        run(() -> futureThumbnail.get());
 
         return new FishingPhotoImpl(domain, _ -> photo.getContent(), _ -> photo.getThumbnail());
     }
