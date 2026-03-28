@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.toList;
 import static javafx.scene.control.ButtonBar.setButtonUniformSize;
 import static javafx.scene.control.ButtonType.CANCEL;
 import static javafx.scene.control.ButtonType.OK;
+import static javafx.stage.StageStyle.UNDECORATED;
 import static se.martinuhlen.fishbase.javafx.utils.Images.getImageView16;
 
 import java.time.LocalDate;
@@ -39,6 +40,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.Screen;
+import javafx.stage.StageStyle;
 import javafx.stage.Window;
 import se.martinuhlen.fishbase.domain.Specimen;
 import se.martinuhlen.fishbase.domain.Trip;
@@ -256,11 +258,12 @@ public class PhotoPane extends BorderPane {
                 uploadLabel.textProperty().bind(uploadTask.messageProperty());
 
                 DialogPane uploadPane = new DialogPane();
+                uploadPane.setHeaderText("Add photos");
                 uploadPane.setContent(new VBox(10, uploadLabel, uploadProgress));
 
                 Dialog<ButtonType> uploadDialog = new Dialog<>();
+                uploadDialog.initStyle(UNDECORATED);
                 uploadDialog.initOwner(owner);
-                uploadDialog.setTitle("Add photos");
                 uploadDialog.setDialogPane(uploadPane);
                 uploadDialog.setResizable(false);
 
