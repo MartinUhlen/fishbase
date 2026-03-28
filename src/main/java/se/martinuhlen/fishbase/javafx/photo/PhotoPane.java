@@ -29,6 +29,7 @@ import javafx.scene.control.DialogPane;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
@@ -52,8 +53,8 @@ import se.martinuhlen.fishbase.utils.Cursor;
  */
 public class PhotoPane extends BorderPane {
     private final PhotoService service;
-    private final ObservableValue<LocalDate> startDate; // TODO Left unsed after transition to Picker API
-    private final ObservableValue<LocalDate> endDate;   // TODO Left unsed after transition to Picker API
+    private final ObservableValue<LocalDate> startDate; // TODO Left unused after transition to Picker API
+    private final ObservableValue<LocalDate> endDate;   // TODO Left unused after transition to Picker API
     private final ObservableValue<String> tripId;
     private final ObservableValue<List<Specimen>> specimens;
     private final ObservableList<FishingPhoto> fishingPhotos;
@@ -173,11 +174,11 @@ public class PhotoPane extends BorderPane {
         waitDialog.setResizable(false);
 
         pickService.setOnSucceeded(_ -> {
-            waitDialog.setResult(ButtonType.OK);
+            waitDialog.setResult(OK);
             waitDialog.close();
         });
         pickService.setOnFailed(_ -> {
-            waitDialog.setResult(ButtonType.CANCEL);
+            waitDialog.setResult(CANCEL);
             waitDialog.close();
         });
 
@@ -185,7 +186,7 @@ public class PhotoPane extends BorderPane {
         waitDialog.showAndWait();
 
         // If user cancelled, or pick failed/was interrupted, do nothing
-        if (waitDialog.getResult() != ButtonType.OK) {
+        if (waitDialog.getResult() != OK) {
             pickService.cancel();
             return;
         }
@@ -201,7 +202,7 @@ public class PhotoPane extends BorderPane {
         DialogPane reviewDialogPane = new DialogPane();
         reviewDialogPane.getButtonTypes().setAll(CANCEL, OK);
         reviewDialogPane.setContent(reviewPane);
-        reviewDialogPane.setPrefWidth(Region.USE_COMPUTED_SIZE);
+        reviewDialogPane.setPrefWidth(USE_COMPUTED_SIZE);
 
         SetChangeListener<GooglePhoto> listener = _ -> {
             Button button = (Button) reviewDialogPane.lookupButton(OK);
@@ -227,8 +228,48 @@ public class PhotoPane extends BorderPane {
             .filter(b -> b == OK)
             .ifPresent(_ -> {
                 ObservableSet<GooglePhoto> selectedPhotos = reviewPane.getSelectedPhotos();
-                List<FishingPhoto> newPhotos = service.createAll(selectedPhotos, tripId.getValue());
-                thumbnailPane.addPhotos(newPhotos);
+                int total = selectedPhotos.size();
+
+                // Step 3 — Upload dialog: show progress bar while photos are uploaded
+                Task<List<FishingPhoto>> uploadTask = new Task<>() {
+                    @Override
+                    protected List<FishingPhoto> call() {
+                        updateProgress(0, total);
+                        updateMessage("Uploading 0 / " + total);
+                        return service.createAll(selectedPhotos, tripId.getValue(), done -> {
+                            updateProgress(done, total);
+                            updateMessage("Uploading " + done + " / " + total);
+                        });
+                    }
+                };
+
+                ProgressBar uploadProgress = new ProgressBar();
+                uploadProgress.progressProperty().bind(uploadTask.progressProperty());
+                uploadProgress.setPrefWidth(300);
+
+                Label uploadLabel = new Label();
+                uploadLabel.textProperty().bind(uploadTask.messageProperty());
+
+                DialogPane uploadPane = new DialogPane();
+                uploadPane.setContent(new VBox(10, uploadLabel, uploadProgress));
+
+                Dialog<ButtonType> uploadDialog = new Dialog<>();
+                uploadDialog.setTitle("Add photos");
+                uploadDialog.setDialogPane(uploadPane);
+                uploadDialog.setResizable(false);
+
+                uploadTask.setOnSucceeded(_ -> {
+                    thumbnailPane.addPhotos(uploadTask.getValue());
+                    uploadDialog.setResult(OK);
+                    uploadDialog.close();
+                });
+                uploadTask.setOnFailed(_ -> {
+                    uploadDialog.setResult(CANCEL);
+                    uploadDialog.close();
+                });
+
+                Thread.ofVirtual().start(uploadTask);
+                uploadDialog.showAndWait();
             });
     }
 

@@ -6,7 +6,6 @@ import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 import static se.martinuhlen.fishbase.dao.PersistenceDirectory.PHOTOS;
 import static se.martinuhlen.fishbase.dao.PersistenceDirectory.THUMBNAILS;
-import static se.martinuhlen.fishbase.utils.Checked.apply;
 import static se.martinuhlen.fishbase.utils.Checked.run;
 
 import com.google.common.flogger.FluentLogger;
@@ -15,9 +14,12 @@ import java.awt.Desktop;
 import java.net.URI;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.IntConsumer;
 
 import se.martinuhlen.fishbase.domain.Photo;
 import se.martinuhlen.fishbase.google.drive.DriveService;
@@ -108,15 +110,18 @@ class PhotoServiceImpl implements PhotoService {
     }
 
     @Override
-    public List<FishingPhoto> createAll(Collection<? extends GooglePhoto> photos, String tripId) {
-        List<Future<FishingPhoto>> futurePhotos = photos
+    public List<FishingPhoto> createAll(Collection<? extends GooglePhoto> photos, String tripId, IntConsumer onPhotoUploaded) {
+        AtomicInteger done = new AtomicInteger(0);
+        List<CompletableFuture<FishingPhoto>> futures = photos
                 .stream()
-                .map(photo -> UPLOAD_EXECUTOR.submit(() -> create(photo, tripId)))
+                .map(photo -> CompletableFuture
+                        .supplyAsync(() -> create(photo, tripId), UPLOAD_EXECUTOR)
+                        .whenComplete((_, _) -> onPhotoUploaded.accept(done.incrementAndGet())))
                 .toList();
 
-        return futurePhotos
+        return futures
                 .stream()
-                .map(apply(Future::get))
+                .map(CompletableFuture::join)
                 .toList();
     }
 

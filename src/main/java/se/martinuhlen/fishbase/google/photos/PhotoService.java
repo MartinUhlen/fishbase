@@ -2,6 +2,7 @@ package se.martinuhlen.fishbase.google.photos;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.function.IntConsumer;
 
 import se.martinuhlen.fishbase.domain.Photo;
 import se.martinuhlen.fishbase.domain.Trip;
@@ -35,9 +36,10 @@ public interface PhotoService {
      *
      * @param photos taken on fishing {@link Trip trip}
      * @param tripId identifies the fishing trip
+     * @param onPhotoUploaded called with the number of photos uploaded so far after each photo completes
      * @return new fishing photos
      */
-    List<FishingPhoto> createAll(Collection<? extends GooglePhoto> photos, String tripId);
+    List<FishingPhoto> createAll(Collection<? extends GooglePhoto> photos, String tripId, IntConsumer onPhotoUploaded);
 
     /**
      * Creates a fishing photo of a taken photo.
